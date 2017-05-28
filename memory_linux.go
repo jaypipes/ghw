@@ -26,6 +26,7 @@ func memFillInfo(info *MemoryInfo) error {
         return fmt.Errorf("Could not determine total usable bytes of memory")
     }
     info.TotalUsableBytes = tub
+    info.SupportedPageSizes = memSupportedPageSizes()
     return nil
 }
 
@@ -135,9 +136,35 @@ func memTotalUsableBytes() int64 {
         }
         inKb := (len(parts) == 3 && strings.TrimSpace(parts[2]) == "kB")
         if inKb {
-            value = value * 1024
+            value = value * int(KB)
         }
         return int64(value)
     }
     return -1
+}
+
+
+func memSupportedPageSizes() []uint64 {
+    // In Linux, /sys/kernel/mm/hugepages contains a directory per page size
+    // supported by the kernel. The directory name corresponds to the pattern
+    // 'hugepages-{pagesize}kb'
+    dir := "/sys/kernel/mm/hugepages"
+    out := make([]uint64, 0)
+
+    files, err := ioutil.ReadDir(dir)
+    if err != nil {
+        return out
+    }
+    for _, file := range files {
+        parts := strings.Split(file.Name(), "-")
+        sizeStr := parts[1]
+        // Cut off the 'kb'
+        sizeStr = sizeStr[0:len(sizeStr) - 2]
+        size, err := strconv.Atoi(sizeStr)
+        if err != nil {
+            return out
+        }
+        out = append(out, uint64(size * int(KB)))
+    }
+    return out
 }

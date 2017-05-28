@@ -28,4 +28,5 @@ func TestInfo(t *testing.T) {
     if tub < 1 {
         t.Errorf("Expected >0 total usable memory, but got %d", tub)
     }
+    t.Errorf("%v", mem.SupportedPageSizes)
 }
