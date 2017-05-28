@@ -24,4 +24,3 @@ func TestInfo(t *testing.T) {
         t.Errorf("Expected >0 total physical memory, but got %d", tpb)
     }
 }
-

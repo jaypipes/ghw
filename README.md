@@ -43,9 +43,9 @@ import (
 )
 
 func main(args []string) {
-    mem := ghw.MemoryInfo()
+    mem := ghw.NewMemoryInfo()
 
-    fmt.Println("%s", mem.String())
+    fmt.Println(mem.String())
 }
 ```
 
