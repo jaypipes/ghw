@@ -1,11 +1,11 @@
 package ghw
 
-type HwInfo struct {
+type HostInfo struct {
     Memory *MemoryInfo
 }
 
-func NewInfo() (*HwInfo, error) {
-    info := &HwInfo{}
+func NewInfo() (*HostInfo, error) {
+    info := &HostInfo{}
     mem, err := NewMemoryInfo()
     if err != nil {
         return nil, err

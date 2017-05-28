@@ -1,8 +1,9 @@
 package ghw
 
 type MemoryInfo struct {
-    TotalPhysicalBytes uint64
-    TotalUsageBytes uint64
+    TotalPhysicalBytes int64
+    TotalUsageBytes int64
+    // An array of sizes, in bytes, of memory pages supported by the host
     SupportedPageSizes []uint64
 }
 

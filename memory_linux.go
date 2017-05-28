@@ -20,6 +20,7 @@ func memFillInfo(info *MemoryInfo) error {
     if tpb < 1 {
         return fmt.Errorf("Could not determine total physical bytes of memory")
     }
+    info.TotalPhysicalBytes = tpb
     return nil
 }
 
@@ -37,7 +38,6 @@ func memTotalPhysicalBytes() int64 {
     findPhysicalKb := func (line string) int64 {
         matches :=  syslogMemLineRe.FindStringSubmatch(line)
         if len(matches) == 2 {
-            fmt.Println(matches)
             i, err := strconv.Atoi(matches[1])
             if err != nil {
                 return -1
