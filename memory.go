@@ -7,7 +7,7 @@ import (
 
 type MemoryInfo struct {
     TotalPhysicalBytes int64
-    TotalUsageBytes int64
+    TotalUsableBytes int64
     // An array of sizes, in bytes, of memory pages supported by the host
     SupportedPageSizes []uint64
 }
@@ -29,5 +29,12 @@ func (i *MemoryInfo) String() string {
         tpb = int64(math.Ceil(float64(i.TotalPhysicalBytes) / float64(unit)))
         tpbs = fmt.Sprintf("%d%s", tpb, unitStr)
     }
-    return fmt.Sprintf("memory (%s physical)", tpbs)
+    tubs := "unknown"
+    if i.TotalUsableBytes > 0 {
+        tub := i.TotalUsableBytes
+        unit, unitStr := unitWithString(tub)
+        tub = int64(math.Ceil(float64(i.TotalUsableBytes) / float64(unit)))
+        tubs = fmt.Sprintf("%d%s", tub, unitStr)
+    }
+    return fmt.Sprintf("memory (%s physical, %s usable)", tpbs, tubs)
 }

@@ -21,6 +21,11 @@ func memFillInfo(info *MemoryInfo) error {
         return fmt.Errorf("Could not determine total physical bytes of memory")
     }
     info.TotalPhysicalBytes = tpb
+    tub := memTotalUsableBytes()
+    if tub < 1 {
+        return fmt.Errorf("Could not determine total usable bytes of memory")
+    }
+    info.TotalUsableBytes = tub
     return nil
 }
 

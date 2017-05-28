@@ -23,4 +23,9 @@ func TestInfo(t *testing.T) {
     if tpb < 1 {
         t.Errorf("Expected >0 total physical memory, but got %d", tpb)
     }
+
+    tub := mem.TotalUsableBytes
+    if tub < 1 {
+        t.Errorf("Expected >0 total usable memory, but got %d", tub)
+    }
 }
