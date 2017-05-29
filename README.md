@@ -49,6 +49,16 @@ func main(args []string) {
 }
 ```
 
+The `ghw.MemoryInfo` struct contains three fields.
+
+* `ghw.MemoryInfo.TotalPhysicalBytes` contains the amount of physical memory on
+  the host.
+* `ghw.MemoryInfo.TotalUsableBytes` contains the amount of memory the
+  system can actually use. Usable memory accounts for things like the kernel's
+  resident memory size and some reserved system bits.
+* `ghw.SupportedPageSizes` is an array of integers representing the size, in
+  bytes, of memory pages the system supports.
+
 ## Developers
 
 Contributions to `ghw` are welcomed! Fork the repo on GitHub and submit a pull
