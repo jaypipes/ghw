@@ -28,4 +28,14 @@ func TestHost(t *testing.T) {
     if tub < 1 {
         t.Errorf("Expected >0 total usable memory, but got %d", tub)
     }
+
+    block := host.Block
+    if block == nil {
+        t.Errorf("Expected non-nil Block but got nil.")
+    }
+
+    blockTpb := block.TotalPhysicalBytes
+    if blockTpb < 1 {
+        t.Errorf("Expected >0 total physical block bytes, but got %d", blockTpb)
+    }
 }

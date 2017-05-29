@@ -2,6 +2,7 @@ package ghw
 
 type HostInfo struct {
     Memory *MemoryInfo
+    Block *BlockInfo
 }
 
 func Host() (*HostInfo, error) {
@@ -11,5 +12,10 @@ func Host() (*HostInfo, error) {
         return nil, err
     }
     info.Memory = mem
+    block, err := Block()
+    if err != nil {
+        return nil, err
+    }
+    info.Block = block
     return info, nil
 }

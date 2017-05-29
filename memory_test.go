@@ -4,7 +4,7 @@ import (
     "testing"
 )
 
-func TestTotalPhysicalBytes(t *testing.T) {
+func TestMemTotalPhysicalBytes(t *testing.T) {
     tpb := memTotalPhysicalBytes()
 
     if tpb < 1 {
@@ -12,7 +12,7 @@ func TestTotalPhysicalBytes(t *testing.T) {
     }
 }
 
-func TestTotalUsableBytes(t *testing.T) {
+func TestMemTotalUsableBytes(t *testing.T) {
     tpb := memTotalUsableBytes()
 
     if tpb < 1 {
@@ -20,7 +20,7 @@ func TestTotalUsableBytes(t *testing.T) {
     }
 }
 
-func TestSupportedPageSizes(t *testing.T) {
+func TestMemSupportedPageSizes(t *testing.T) {
     sps := memSupportedPageSizes()
 
     if sps == nil {

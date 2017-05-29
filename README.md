@@ -27,6 +27,7 @@ You can use the functions in `ghw` to determine various hardware-related
 information about the host computer:
 
 * Memory
+* Block devices
 
 ### Memory
 
