@@ -12,7 +12,7 @@ type MemoryInfo struct {
     SupportedPageSizes []uint64
 }
 
-func NewMemoryInfo() (*MemoryInfo, error) {
+func Memory() (*MemoryInfo, error) {
     info := &MemoryInfo{}
     err := memFillInfo(info)
     if err != nil {

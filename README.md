@@ -31,7 +31,7 @@ information about the host computer:
 ### Memory
 
 Information about the host computer's memory can be retrieved using the
-`ghw.memory()` function which returns a pointer to a `ghw.MemoryInfo` struct:
+`ghw.Memory()` function which returns a pointer to a `ghw.MemoryInfo` struct:
 
 ```go
 package main
@@ -43,7 +43,7 @@ import (
 )
 
 func main(args []string) {
-    mem := ghw.NewMemoryInfo()
+    memory := ghw.Memory()
 
     fmt.Println(mem.String())
 }

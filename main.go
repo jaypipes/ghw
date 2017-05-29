@@ -4,9 +4,9 @@ type HostInfo struct {
     Memory *MemoryInfo
 }
 
-func NewInfo() (*HostInfo, error) {
+func Host() (*HostInfo, error) {
     info := &HostInfo{}
-    mem, err := NewMemoryInfo()
+    mem, err := Memory()
     if err != nil {
         return nil, err
     }
