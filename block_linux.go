@@ -3,6 +3,8 @@
 package ghw
 
 import (
+    "bufio"
+    "io"
     "io/ioutil"
     "os"
     "path/filepath"
@@ -11,6 +13,7 @@ import (
 )
 
 const (
+    PathMtab = "/etc/mtab"
     PathSysBlock = "/sys/block"
     PathDevDiskById = "/dev/disk/by-id"
 )
@@ -97,6 +100,32 @@ func DiskSerialNumber(disk string) string {
     return "unknown"
 }
 
+func DiskPartitions(disk string) []*Partition {
+    out := make([]*Partition, 0)
+    path := filepath.Join(PathSysBlock, disk)
+    files, err := ioutil.ReadDir(path)
+    if err != nil {
+        return nil
+    }
+    for _, file := range files {
+        fname := file.Name()
+        if ! strings.HasPrefix(fname, disk) {
+            continue
+        }
+        size := PartitionSizeBytes(fname)
+        mp, pt, ro := PartitionInfo(fname)
+        p := &Partition{
+            Name: fname,
+            SizeBytes: size,
+            MountPoint: mp,
+            Type: pt,
+            IsReadOnly: ro,
+        }
+        out = append(out, p)
+    }
+    return out
+}
+
 func Disks() []*Disk {
     // In Linux, we could use the fdisk, lshw or blockdev commands to list disk
     // information, however all of these utilities require root privileges to
@@ -133,8 +162,92 @@ func Disks() []*Disk {
             SerialNumber: serialNo,
         }
 
+        parts := DiskPartitions(dname)
+        // Map this Disk object into the Partition...
+        for _, part := range parts {
+            part.Disk = d
+        }
+        d.Partitions = parts
+
         disks = append(disks, d)
     }
 
     return disks
+}
+
+func PartitionSizeBytes(part string) uint64 {
+    // Allow calling PartitionSize with either the full partition name
+    // "/dev/sda1" or just "sda"
+    if strings.HasPrefix(part, "/dev") {
+        part = part[4:len(part)]
+    }
+    disk := part[0:3]
+    path := filepath.Join(PathSysBlock, disk, part, "size")
+    contents, err := ioutil.ReadFile(path)
+    if err != nil {
+        return 0
+    }
+    ss := DiskSectorSize(disk)
+    i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
+    if err != nil {
+        return 0
+    }
+    return uint64(i) * ss
+}
+
+// Given a full or short partition name, returns the mount point, the type of
+// the partition and whether it's readonly
+func PartitionInfo(part string) (string, string, bool) {
+    // Allow calling PartitionInfo with either the full partition name
+    // "/dev/sda1" or just "sda1"
+    if ! strings.HasPrefix(part, "/dev") {
+        part = "/dev/" + part
+    }
+
+    // /etc/mtab entries for mounted partitions look like this:
+    // /dev/sda6 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
+    var r io.ReadCloser
+    r, err := os.Open(PathMtab)
+    if err != nil {
+        return "", "", true
+    }
+    defer r.Close()
+
+    scanner := bufio.NewScanner(r)
+    for scanner.Scan() {
+        line := scanner.Text()
+        if line[0] != '/' {
+            continue
+        }
+        fields := strings.Fields(line)
+        if fields[0] != part {
+            continue
+        }
+        opts := strings.Split(fields[3], ",")
+        ro := true
+        for _, opt := range opts {
+            if opt == "rw" {
+                ro = false
+                break
+            }
+        }
+
+        return fields[1], fields[2], ro
+    }
+    return "", "", true
+}
+
+func PartitionMountPoint(part string) string {
+    mp, _, _ := PartitionInfo(part)
+    return mp
+}
+
+func PartitionType(part string) string {
+    _, pt, _ := PartitionInfo(part)
+    return pt
+}
+
+func PartitionIsReadOnly(part string) bool {
+    _, _, ro := PartitionInfo(part)
+    return ro
 }

@@ -18,7 +18,6 @@ type Disk struct {
 type Partition struct {
     Disk *Disk
     Name string
-    Uuid string
     Label string
     MountPoint string
     SizeBytes uint64
