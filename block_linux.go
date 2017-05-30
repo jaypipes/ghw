@@ -84,7 +84,11 @@ func DiskSerialNumber(disk string) string {
         lname := link.Name()
         lpath := filepath.Join(PathDevDiskById, lname)
         dest, err := os.Readlink(lpath)
-        if err != nil || dest != disk {
+        if err != nil {
+            continue
+        }
+        dest = filepath.Base(dest)
+        if dest != disk {
             continue
         }
         parts := strings.Split(lname, "-")
