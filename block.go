@@ -81,3 +81,28 @@ func (d *Disk) String() string {
         serial,
     )
 }
+
+func (p *Partition) String() string {
+    typeStr := ""
+    if p.Type != "" {
+        typeStr = fmt.Sprintf("[%s]",  p.Type)
+    }
+    mountStr := ""
+    if p.MountPoint != "" {
+        mountStr = fmt.Sprintf(" mounted@%s", p.MountPoint)
+    }
+    sizeStr := "unknown"
+    if p.SizeBytes > 0 {
+        size := p.SizeBytes
+        unit, unitStr := unitWithString(int64(size))
+        size = uint64(math.Ceil(float64(size) / float64(unit)))
+        sizeStr = fmt.Sprintf("%d%s", size, unitStr)
+    }
+    return fmt.Sprintf(
+        "/dev/%s (%s) %s%s",
+        p.Name,
+        sizeStr,
+        typeStr,
+        mountStr,
+    )
+}
