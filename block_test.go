@@ -34,6 +34,9 @@ func TestBlock(t *testing.T) {
     if d0.Partitions == nil {
         t.Errorf("Expected non-nil partitions, but got nil.")
     }
+    if d0.SectorSizeBytes <= 0 {
+        t.Errorf("Expected >0 sector size, but got %d", d0.SectorSizeBytes)
+    }
 
     if len(d0.Partitions) > 0 {
         p0 := d0.Partitions[0]

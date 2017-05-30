@@ -93,7 +93,7 @@ Each `ghw.Disk` struct contains the following fields:
 
 * `ghw.Disk.Name` contains a string with the short name of the disk, e.g. "sda"
 * `ghw.Disk.SizeBytes` contains the amount of storage the disk provides
-* `ghw.Disk.SectorSize` contains the size of the sector used on the disk,
+* `ghw.Disk.SectorSizeBytes` contains the size of the sector used on the disk,
   in bytes
 * `ghw.Disk.BusType` will be either "scsi" or "ide"
 * `ghw.Disk.Vendor` contains a string with the name of the hardware vendor for

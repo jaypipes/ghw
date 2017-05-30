@@ -8,7 +8,7 @@ import (
 type Disk struct {
     Name string
     SizeBytes uint64
-    SectorSize uint64
+    SectorSizeBytes uint64
     BusType string
     Vendor string
     SerialNumber string

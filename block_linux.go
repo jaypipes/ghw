@@ -28,7 +28,7 @@ func blockFillInfo(info *BlockInfo) error {
     return nil
 }
 
-func DiskSectorSize(disk string) uint64 {
+func DiskSectorSizeBytes(disk string) uint64 {
     // We can find the sector size in Linux by looking at the
     // /sys/block/$DEVICE/queue/physical_block_size file in sysfs
     path := filepath.Join(PathSysBlock, disk, "queue", "physical_block_size")
@@ -51,7 +51,7 @@ func DiskSizeBytes(disk string) uint64 {
     if err != nil {
         return 0
     }
-    ss := DiskSectorSize(disk)
+    ss := DiskSectorSizeBytes(disk)
     i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
     if err != nil {
         return 0
@@ -149,14 +149,14 @@ func Disks() []*Disk {
             busType = "IDE"
         }
         size := DiskSizeBytes(dname)
-        ss := DiskSectorSize(dname)
+        ss := DiskSectorSizeBytes(dname)
         vendor := DiskVendor(dname)
         serialNo := DiskSerialNumber(dname)
 
         d := &Disk{
             Name: dname,
             SizeBytes: size,
-            SectorSize: ss,
+            SectorSizeBytes: ss,
             BusType: busType,
             Vendor: vendor,
             SerialNumber: serialNo,
@@ -187,7 +187,7 @@ func PartitionSizeBytes(part string) uint64 {
     if err != nil {
         return 0
     }
-    ss := DiskSectorSize(disk)
+    ss := DiskSectorSizeBytes(disk)
     i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
     if err != nil {
         return 0
