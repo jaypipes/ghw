@@ -79,10 +79,17 @@ func main(args []string) {
     block := ghw.Block()
 
     fmt.Println(block.String())
+
+    for _, disk := range block.Disks {
+        fmt.Println(disk.String()
+        for _, part := range disk.Partitions {
+            fmt.Println(part.String())
+        }
+    }
 }
 ```
 
-The `ghw.MemoryInfo` struct contains two fields:
+The `ghw.BlockInfo` struct contains two fields:
 
 * `ghw.BlockInfo.TotalPhysicalBytes` contains the amount of physical block
   storage on the host
@@ -113,6 +120,9 @@ Each `ghw.Partition` struct contains these fields:
 * `ghw.Partition.Type` contains a string indicated the filesystem type for the
   partition, or "" if the system could not determine the type
 * `ghw.Partition.IsReadOnly` is a bool indicating the partition is read-only
+* `ghw.Partition.Disk` is a pointer to the `ghw.Disk` object associated with
+  the partition. This will be `nil` if the `ghw.Partition` struct was returned
+  by the `ghw.DiskPartitions()` library function.
 
 ## Developers
 
