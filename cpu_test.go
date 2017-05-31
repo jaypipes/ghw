@@ -28,5 +28,9 @@ func TestCPU(t *testing.T) {
         if len(p.Capabilities) == 0 {
             t.Errorf("Expected >0 capabilities but got 0.")
         }
+        if ! p.HasCapability(p.Capabilities[0]) {
+            t.Errorf("Expected p to have capability %s, but did not.",
+                     p.Capabilities[0])
+        }
     }
 }

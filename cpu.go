@@ -19,6 +19,15 @@ type Processor struct {
     CoreMap CoreMap
 }
 
+func (p *Processor) HasCapability(find string) bool {
+    for _, c := range p.Capabilities {
+        if c == find {
+            return true
+        }
+    }
+    return false
+}
+
 type CPUInfo struct {
     TotalCores uint32
     TotalThreads uint32
