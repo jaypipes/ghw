@@ -27,6 +27,7 @@ You can use the functions in `ghw` to determine various hardware-related
 information about the host computer:
 
 * Memory
+* CPU
 * Block storage
 
 ### Memory
@@ -60,6 +61,52 @@ The `ghw.MemoryInfo` struct contains three fields:
 * `ghw.SupportedPageSizes` is an array of integers representing the size, in
   bytes, of memory pages the system supports
 
+### CPU
+
+The `ghw.CPU()` function returns a `ghw.CPUInfo` struct that contains
+information about the CPUs on the host system:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/jaypipes/ghw"
+)
+
+func main(args []string) {
+    cpu := ghw.CPU()
+
+    fmt.Println(cpu.String())
+
+    for _, proc := range cpu.Processors {
+        fmt.Println(proc.String())
+    }
+}
+```
+
+`ghw.CPUInfo` contains the following fields:
+
+* `ghw.CPUInfo.TotalCores` has the total number of physical cores the host
+  system contains
+* `ghw.CPUInfo.TotalCores` has the total number of hardware threads the
+  host system contains
+* `ghw.CPUInfo.Processors` is an array of `ghw.Processor` structs, one for each
+  physical processor package contained in the host
+
+Each `ghw.Processor` struct contains a number of fields:
+
+* `ghw.Processor.Id` is the physical processor ID according to the system
+* `ghw.Processor.NumCores` is the number of physical cores in the processor
+  package
+* `ghw.Processor.NumThreads` is the number of hardware threads in the processor
+  package
+* `ghw.Processor.Vendor` is a string containing the vendor name
+* `ghw.Processor.Model` is a string containing the vendor's model name
+* `ghw.Processor.Capabilities` is an array of strings indicating the features
+  the processor has enabled
+
 ### Block storage
 
 Information about the host computer's local block storage is returned from the
@@ -81,7 +128,7 @@ func main(args []string) {
     fmt.Println(block.String())
 
     for _, disk := range block.Disks {
-        fmt.Println(disk.String()
+        fmt.Println(disk.String())
         for _, part := range disk.Partitions {
             fmt.Println(part.String())
         }
