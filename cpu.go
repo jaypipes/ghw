@@ -15,6 +15,7 @@ type Processor struct {
     NumThreads uint32
     Vendor string
     Model string
+    Capabilities []string
     CoreMap CoreMap
 }
 

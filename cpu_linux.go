@@ -97,6 +97,9 @@ func Processors() []*Processor {
             continue
         }
         p.NumThreads = uint32(numThreads)
+
+        // The flags field is a space-separated list of CPU capabilities
+        p.Capabilities = strings.Split(first["flags"], " ")
         procs = append(procs, p)
     }
     return procs
