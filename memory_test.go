@@ -4,24 +4,21 @@ import (
     "testing"
 )
 
-func TestMemTotalPhysicalBytes(t *testing.T) {
-    tpb := memTotalPhysicalBytes()
-
-    if tpb < 1 {
-        t.Fatalf("Expected >0 total physical memory, got %d", tpb)
+func TestMemory(t *testing.T) {
+    mem, err := Memory()
+    if err != nil {
+        t.Fatalf("Expected nil error, but got %v", err)
     }
-}
 
-func TestMemTotalUsableBytes(t *testing.T) {
-    tpb := memTotalUsableBytes()
+    tpb := mem.TotalPhysicalBytes
+    tub := mem.TotalUsableBytes
 
-    if tpb < 1 {
-        t.Fatalf("Expected >0 total usable memory, got %d", tpb)
+    if tpb < tub {
+        t.Fatalf("Total physical bytes < total usable bytes. %d < %d",
+                 tpb, tub)
     }
-}
 
-func TestMemSupportedPageSizes(t *testing.T) {
-    sps := memSupportedPageSizes()
+    sps := mem.SupportedPageSizes
 
     if sps == nil {
         t.Fatalf("Expected non-nil supported page sizes, but got nil")
