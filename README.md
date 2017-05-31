@@ -45,7 +45,10 @@ import (
 )
 
 func main(args []string) {
-    memory := ghw.Memory()
+    memory, err := ghw.Memory()
+    if err != nil {
+        fmt.Printf("Error getting memory info: %v", err)
+    }
 
     fmt.Println(mem.String())
 }
@@ -76,7 +79,10 @@ import (
 )
 
 func main(args []string) {
-    cpu := ghw.CPU()
+    cpu, err := ghw.CPU()
+    if err != nil {
+        fmt.Printf("Error getting CPU info: %v", err)
+    }
 
     fmt.Println(cpu.String())
 
@@ -141,7 +147,10 @@ import (
 )
 
 func main(args []string) {
-    block := ghw.Block()
+    block, err := ghw.Block()
+    if err != nil {
+        fmt.Printf("Error getting block storage info: %v", err)
+    }
 
     fmt.Println(block.String())
 

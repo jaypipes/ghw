@@ -18,5 +18,10 @@ func Host() (*HostInfo, error) {
         return nil, err
     }
     info.Block = block
+    cpu, err := CPU()
+    if err != nil {
+        return nil, err
+    }
+    info.CPU = cpu
     return info, nil
 }
