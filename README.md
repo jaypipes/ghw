@@ -82,6 +82,9 @@ func main(args []string) {
 
     for _, proc := range cpu.Processors {
         fmt.Println(proc.String())
+        for _, core := range p.Cores {
+            fmt.Println(core.String())
+        }
     }
 }
 ```
@@ -106,6 +109,21 @@ Each `ghw.Processor` struct contains a number of fields:
 * `ghw.Processor.Model` is a string containing the vendor's model name
 * `ghw.Processor.Capabilities` is an array of strings indicating the features
   the processor has enabled
+* `ghw.Processor.Cores is an array of `ghw.ProcessorCore` structs that are
+  packed onto this physical processor
+
+A `ghw.ProcessorCore` has the following fields:
+
+* `ghw.ProcessorCore.Id` is the identifier that the host gave this core. Note
+  that this does *not* necessarily equate to a zero-based index of the core
+  within a physical package. For example, the core IDs for an Intel Core i7
+  are 0, 1, 2, 8, 9, and 10
+* `ghw.ProcessorCore.Index` is the zero-based index of the core on the physical
+  processor package
+* `ghw.ProcessorCore.NumThreads` is the number of hardware threads associated
+  with the core
+* `ghw.LogicalProcessors` is an array of logical processor IDs assigned to any
+  processing unit for the core
 
 ### Block storage
 

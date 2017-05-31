@@ -57,7 +57,7 @@ func Processors() []*Processor {
         curProcAttrs[key] = value
     }
 
-    // Built a set of physical processor IDs which represent the physical
+    // Build a set of physical processor IDs which represent the physical
     // package of the CPU
     setPhysicalIds := make(map[ProcessorId]bool, 0)
     for _, attrs := range procAttrs {
@@ -76,11 +76,11 @@ func Processors() []*Processor {
         // processor within the physical processor
         lps := make([]int, 0)
         for x, _ := range procAttrs {
-            lpid, err := strconv.Atoi(procAttrs[x]["physical id"])
+            lppid, err := strconv.Atoi(procAttrs[x]["physical id"])
             if err != nil {
                 continue
             }
-            if pid == ProcessorId(lpid) {
+            if pid == ProcessorId(lppid) {
                 lps = append(lps, x)
             }
         }
@@ -100,6 +100,41 @@ func Processors() []*Processor {
 
         // The flags field is a space-separated list of CPU capabilities
         p.Capabilities = strings.Split(first["flags"], " ")
+
+        cores := make([]*ProcessorCore, 0)
+        for _, lpidx := range lps {
+            lpid, err := strconv.Atoi(procAttrs[lpidx]["processor"])
+            if err != nil {
+                continue
+            }
+            coreId, err := strconv.Atoi(procAttrs[lpidx]["core id"])
+            if err != nil {
+                continue
+            }
+            var core *ProcessorCore
+            for _, c := range cores {
+                if c.Id == ProcessorId(coreId) {
+                    c.LogicalProcessors = append(
+                        c.LogicalProcessors,
+                        ProcessorId(lpid),
+                    )
+                    c.NumThreads = uint32(len(c.LogicalProcessors))
+                    core = c
+                }
+            }
+            if core == nil {
+                coreLps := make([]ProcessorId, 1)
+                coreLps[0] = ProcessorId(lpid)
+                core = &ProcessorCore{
+                    Id: ProcessorId(coreId),
+                    Index: len(cores),
+                    NumThreads: 1,
+                    LogicalProcessors: coreLps,
+                }
+                cores = append(cores, core)
+            }
+        }
+        p.Cores = cores
         procs = append(procs, p)
     }
     return procs

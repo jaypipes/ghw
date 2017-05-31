@@ -5,9 +5,22 @@ import (
 )
 
 type ProcessorId uint32
-type CoreId uint32
 
-type CoreMap map[CoreId][]ProcessorId
+type ProcessorCore struct {
+    Id ProcessorId
+    Index int
+    NumThreads uint32
+    LogicalProcessors []ProcessorId
+}
+
+func (c *ProcessorCore) String() string {
+    return fmt.Sprintf(
+        "processor core #%d (%d threads), logical processors %v",
+        c.Index,
+        c.NumThreads,
+        c.LogicalProcessors,
+    )
+}
 
 type Processor struct {
     Id ProcessorId
@@ -16,7 +29,7 @@ type Processor struct {
     Vendor string
     Model string
     Capabilities []string
-    CoreMap CoreMap
+    Cores []*ProcessorCore
 }
 
 func (p *Processor) HasCapability(find string) bool {
@@ -26,6 +39,25 @@ func (p *Processor) HasCapability(find string) bool {
         }
     }
     return false
+}
+
+func (p *Processor) String() string {
+    ncs := "cores"
+    if p.NumCores == 1 {
+        ncs = "core"
+    }
+    nts := "threads"
+    if p.NumThreads == 1 {
+        nts = "thread"
+    }
+    return fmt.Sprintf(
+        "physical package #%d (%d %s, %d hardware %s)",
+        p.Id,
+        p.NumCores,
+        ncs,
+        p.NumThreads,
+        nts,
+    )
 }
 
 type CPUInfo struct {
@@ -44,10 +76,25 @@ func CPU() (*CPUInfo, error) {
 }
 
 func (i *CPUInfo) String() string {
+    nps := "packages"
+    if len(i.Processors) == 1 {
+        nps = "package"
+    }
+    ncs := "cores"
+    if i.TotalCores == 1 {
+        ncs = "core"
+    }
+    nts := "threads"
+    if i.TotalThreads == 1 {
+        nts = "thread"
+    }
     return fmt.Sprintf(
-        "cpu (%d physical packages, %d cores, %d hardware threads)",
+        "cpu (%d physical %s, %d %s, %d hardware %s)",
         len(i.Processors),
+        nps,
         i.TotalCores,
+        ncs,
         i.TotalThreads,
+        nts,
     )
 }
