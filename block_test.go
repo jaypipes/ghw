@@ -1,11 +1,15 @@
 package ghw
 
 import (
+    "os"
     "strings"
     "testing"
 )
 
 func TestBlock(t *testing.T) {
+    if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+        t.Skip("Skipping block tests.")
+    }
     info, err  := Block()
     if err != nil {
         t.Errorf("Expected no error creating BlockInfo, but got %v", err)

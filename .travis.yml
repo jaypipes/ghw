@@ -1,1 +1,4 @@
 language: go
+env:
+  # Travis containers don't have any disk storage...
+  - GHW_TESTING_SKIP_BLOCK=1
