@@ -3,6 +3,7 @@ package ghw
 type HostInfo struct {
     Memory *MemoryInfo
     Block *BlockInfo
+    CPU *CPUInfo
 }
 
 func Host() (*HostInfo, error) {
