@@ -35,12 +35,12 @@ func TestHost(t *testing.T) {
     }
 
     cores := cpu.TotalCores
-    if cores < 1 }
+    if cores < 1 {
         t.Fatalf("Expected >0 total cores, but got %d", cores)
     }
 
     threads := cpu.TotalThreads
-    if threads < 1 }
+    if threads < 1 {
         t.Fatalf("Expected >0 total threads, but got %d", threads)
     }
 
