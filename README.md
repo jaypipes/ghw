@@ -1,4 +1,4 @@
-# `gwk` - Golang HardWare discovery/inspection library
+# `gwk` - Golang HardWare discovery/inspection library [![Build Status](https://travis-ci.org/jaypipes/ghw.svg?branch=master)](https://travis-ci.org/jaypipes/ghw)
 
 `ghw` is a small Golang library providing hardware inspection and discovery.
 
