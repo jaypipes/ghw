@@ -1,0 +1,25 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "40vJyUB4ezQSn/NSadsKEOrudMc=",
+			"path": "github.com/inconshreveable/mousetrap",
+			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
+			"revisionTime": "2014-10-17T20:07:13Z"
+		},
+		{
+			"checksumSHA1": "mMmcmOYHSJhD0+LhJuDo1DcCkQY=",
+			"path": "github.com/spf13/cobra",
+			"revision": "8d4ce3549a0bf0e3569df3aae7423b7743cd05a9",
+			"revisionTime": "2017-05-30T19:56:48Z"
+		},
+		{
+			"checksumSHA1": "STxYqRb4gnlSr3mRpT+Igfdz/kM=",
+			"path": "github.com/spf13/pflag",
+			"revision": "e57e3eeb33f795204c1ca35f56c44f83227c6e66",
+			"revisionTime": "2017-05-08T18:43:26Z"
+		}
+	],
+	"rootPath": "github.com/jaypipes/ghw/ghwc"
+}
