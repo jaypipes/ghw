@@ -61,8 +61,8 @@ The `ghw.MemoryInfo` struct contains three fields:
 * `ghw.MemoryInfo.TotalUsableBytes` contains the amount of memory the
   system can actually use. Usable memory accounts for things like the kernel's
   resident memory size and some reserved system bits
-* `ghw.SupportedPageSizes` is an array of integers representing the size, in
-  bytes, of memory pages the system supports
+* `ghw.MemoryInfo.SupportedPageSizes` is an array of integers representing the
+  size, in bytes, of memory pages the system supports
 
 ### CPU
 
@@ -128,8 +128,8 @@ A `ghw.ProcessorCore` has the following fields:
   processor package
 * `ghw.ProcessorCore.NumThreads` is the number of hardware threads associated
   with the core
-* `ghw.LogicalProcessors` is an array of logical processor IDs assigned to any
-  processing unit for the core
+* `ghw.ProcessorCore.LogicalProcessors` is an array of logical processor IDs
+  assigned to any processing unit for the core
 
 ### Block storage
 
