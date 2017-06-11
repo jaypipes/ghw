@@ -17,4 +17,26 @@ func TestTopology(t *testing.T) {
     if len(info.Nodes) == 0 {
         t.Fatalf("Expected >0 nodes but got 0.")
     }
+
+    if info.Architecture == NUMA && len(info.Nodes) == 1 {
+        t.Fatalf("Got NUMA architecture but only 1 node.")
+    }
+
+    for _, n := range info.Nodes {
+        if len(n.Cores) == 0 {
+            t.Fatalf("Expected >0 cores but got 0.")
+        }
+        for _, c := range n.Cores {
+            if len(c.LogicalProcessors) == 0 {
+                t.Fatalf("Expected >0 logical processors but got 0.")
+            }
+            if uint32(len(c.LogicalProcessors)) != c.NumThreads {
+                t.Fatalf(
+                    "Expected NumThreads == len(logical procs) but %d != %d",
+                    c.NumThreads,
+                    len(c.LogicalProcessors),
+                )
+            }
+        }
+    }
 }

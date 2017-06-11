@@ -15,12 +15,14 @@ type NodeId uint32
 
 type Node struct {
     Id NodeId
+    Cores []*ProcessorCore
 }
 
 func (n *Node) String() string {
     return fmt.Sprintf(
-        "node #%d",
+        "node #%d (%d cores)",
         n.Id,
+        len(n.Cores),
     )
 }
 
