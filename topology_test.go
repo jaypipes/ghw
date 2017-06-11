@@ -38,5 +38,8 @@ func TestTopology(t *testing.T) {
                 )
             }
         }
+        if len(n.Caches) == 0 {
+            t.Fatalf("Expected >0 caches but got 0.")
+        }
     }
 }
