@@ -29,6 +29,7 @@ information about the host computer:
 * Memory
 * CPU
 * Block storage
+* Topology
 
 ### Memory
 
@@ -197,6 +198,73 @@ Each `ghw.Partition` struct contains these fields:
 * `ghw.Partition.Disk` is a pointer to the `ghw.Disk` object associated with
   the partition. This will be `nil` if the `ghw.Partition` struct was returned
   by the `ghw.DiskPartitions()` library function.
+
+### Topology
+
+Information about the host computer's architecture (NUMA vs. SMP), the host's
+node layout and processor caches can be retrieved from the `ghw.Topology()`
+function. This function returns a pointer to a `ghw.TopologyInfo` struct:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/jaypipes/ghw"
+)
+
+func main(args []string) {
+    topology, err := ghw.Topology()
+    if err != nil {
+        fmt.Printf("Error getting topology info: %v", err)
+    }
+
+    fmt.Println(topology.String())
+
+    for _, node := range topology.Nodes {
+        fmt.Println(node.String())
+        for _, core := range node.Cores {
+            fmt.Println(core.String())
+        }
+        for _, cache := range node.Caches {
+            fmt.Println(cache.String())
+        }
+    }
+}
+```
+
+The `ghw.TopologyInfo` struct contains two fields:
+
+* `ghw.TopologyInfo.Architecture` contains an enum with the value `ghw.NUMA` or
+  `ghw.SMP` depending on what the topology of the system is
+* `ghw.TopologyInfo.Nodes` is an array of pointers to `ghw.Node` structs, one
+  for each topology node (typically physical processor package) found by the
+  system
+
+Each `ghw.Node` struct contains the following fields:
+
+* `ghw.Node.Id` is the system's identifier for the node
+* `ghw.Node.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
+  are contained in this node
+* `ghw.Node.Caches` is an array of pointers to `ghw.MemoryCache` structs that
+  represent the low-level caches associated with processors and cores on the
+  system
+
+See above in the [CPU](#cpu) section for information about the
+`ghw.ProcessorCore` struct and how to use and query it.
+
+Each `ghw.MemoryCache` struct contains the following fields:
+
+* `ghw.MemoryCache.Type` is an enum that contains one of `ghw.DATA`,
+  `ghw.INSTRUCTION` or `ghw.UNIFIED` depending on whether the cache stores CPU
+  instructions, program data, or both
+* `ghw.MemoryCache.Level` is a 0-based integer indicating how close the cache
+  is to the processor
+* `ghw.MemoryCache.SizeBytes` is an integer containing the number of bytes the
+  cache can contain
+* `ghw.MemoryCache.LogicalProcessors` is an array of integers representing the
+  logical processors that use the cache
 
 ## Developers
 
