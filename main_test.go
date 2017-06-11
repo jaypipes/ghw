@@ -53,4 +53,13 @@ func TestHost(t *testing.T) {
     if blockTpb < 1 {
         t.Fatalf("Expected >0 total physical block bytes, but got %d", blockTpb)
     }
+
+    topology := host.Topology
+    if topology == nil {
+        t.Fatalf("Expected non-nil Topology but got nil.")
+    }
+
+    if len(topology.Nodes) < 1 {
+        t.Fatalf("Expected >0 nodes , but got %d", len(topology.Nodes))
+    }
 }
