@@ -13,7 +13,7 @@ const (
     PathSysClassNet = "/sys/class/net"
 )
 
-func netFillInfo(info *NetInfo) error {
+func netFillInfo(info *NetworkInfo) error {
     info.NICs = NICs()
     return nil
 }

@@ -5,13 +5,13 @@ import (
 )
 
 func TestNet(t *testing.T) {
-    info, err := Net()
+    info, err := Network()
 
     if err != nil {
         t.Fatalf("Expected nil err, but got %v", err)
     }
     if info == nil {
-        t.Fatalf("Expected non-nil NetInfo, but got nil")
+        t.Fatalf("Expected non-nil NetworkInfo, but got nil")
     }
 
     if len(info.NICs) > 0 {

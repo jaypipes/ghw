@@ -38,12 +38,12 @@ func (n *NIC) String() string {
     )
 }
 
-type NetInfo struct {
+type NetworkInfo struct {
     NICs []*NIC
 }
 
-func Net() (*NetInfo, error) {
-    info := &NetInfo{}
+func Network() (*NetworkInfo, error) {
+    info := &NetworkInfo{}
     err := netFillInfo(info)
     if err != nil {
         return nil, err
@@ -51,7 +51,7 @@ func Net() (*NetInfo, error) {
     return info, nil
 }
 
-func (i *NetInfo) String() string {
+func (i *NetworkInfo) String() string {
     return fmt.Sprintf(
         "net (%d NICs)",
         len(i.NICs),

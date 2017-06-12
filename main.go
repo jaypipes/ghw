@@ -5,6 +5,7 @@ type HostInfo struct {
     Block *BlockInfo
     CPU *CPUInfo
     Topology *TopologyInfo
+    Network *NetworkInfo
 }
 
 func Host() (*HostInfo, error) {
@@ -29,5 +30,10 @@ func Host() (*HostInfo, error) {
         return nil, err
     }
     info.Topology = topology
+    net, err := Network()
+    if err != nil {
+        return nil, err
+    }
+    info.Network = net
     return info, nil
 }

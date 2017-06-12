@@ -32,6 +32,7 @@ func init() {
     rootCommand.AddCommand(cpuCommand)
     rootCommand.AddCommand(blockCommand)
     rootCommand.AddCommand(topologyCommand)
+    rootCommand.AddCommand(netCommand)
     rootCommand.SilenceUsage = true
 }
 
@@ -56,6 +57,10 @@ func showAll(cmd *cobra.Command, args []string) error {
         return err
     }
     err = showTopology(cmd, args)
+    if err != nil {
+        return err
+    }
+    err = showNetwork(cmd, args)
     if err != nil {
         return err
     }
@@ -107,5 +112,17 @@ var topologyCommand = &cobra.Command{
 func showTopology(cmd *cobra.Command, args []string) error {
     topology := info.Topology
     fmt.Printf("%v\n", topology)
+    return nil
+}
+
+var netCommand = &cobra.Command{
+    Use: "net",
+    Short: "Show network information for the host system",
+    RunE: showMemory,
+}
+
+func showNetwork(cmd *cobra.Command, args []string) error {
+    net := info.Network
+    fmt.Printf("%v\n", net)
     return nil
 }
