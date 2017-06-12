@@ -3,5 +3,4 @@ language: go
 # allows ghw to actually determine things like host memory or block storage...
 sudo: required
 script:
-  - ls -ls /sys/class/net
-  - for nic in /sys/class/net/*; do ethtool -k $(basename $nic); done
+  - go run ghwc/main.go

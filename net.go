@@ -12,6 +12,7 @@ type NIC struct {
     MacAddress string
     Model string
     Vendor string
+    IsVirtual bool
     EnabledFeatures []string
 }
 
@@ -24,11 +25,16 @@ func (n *NIC) String() string {
     if n.Model != "" {
         modelStr = " - " + strings.TrimSpace(n.Model)
     }
+    isVirtualStr := ""
+    if n.IsVirtual {
+        isVirtualStr = " (virtual)"
+    }
     return fmt.Sprintf(
-        "NIC %s%s%s",
+        "NIC %s%s%s%s",
         n.Name,
         vendorStr,
         modelStr,
+        isVirtualStr,
     )
 }
 

@@ -35,15 +35,14 @@ func NICs() []*NIC {
 
         netPath := filepath.Join(PathSysClassNet, filename)
         dest, _ := os.Readlink(netPath)
+        isVirtual := true
         if strings.Contains(dest, "virtio") {
-            // Don't bother using udevadm for virtual devices... we'll get an
-            // error "query needs a valid device specified by --path= or
-            // --name="
-            continue
+            isVirtual = true
         }
 
         nic := &NIC{
             Name: filename,
+            IsVirtual: isVirtual,
         }
 
         mac := netDeviceMacAddress(filename)
