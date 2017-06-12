@@ -2,3 +2,6 @@ language: go
 # Using sudo triggers a real virtual machine as opposed to a container, which
 # allows ghw to actually determine things like host memory or block storage...
 sudo: required
+script:
+  - ls -ls /sys/class/net
+  - for nic in /sys/class/net/*; do ethtool -k $(basename $nic); done
