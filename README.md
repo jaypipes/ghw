@@ -30,6 +30,7 @@ information about the host computer:
 * CPU
 * Block storage
 * Topology
+* Network
 
 ### Memory
 
@@ -265,6 +266,44 @@ Each `ghw.MemoryCache` struct contains the following fields:
   cache can contain
 * `ghw.MemoryCache.LogicalProcessors` is an array of integers representing the
   logical processors that use the cache
+
+### Network
+
+Information about the host computer's networking hardware is returned from the
+`ghw.Network()` function. This function returns a pointer to a
+`ghw.NetworkInfo` struct:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/jaypipes/ghw"
+)
+
+func main(args []string) {
+    net, err := ghw.Network()
+    if err != nil {
+        fmt.Printf("Error getting network info: %v", err)
+    }
+
+    fmt.Println(net.String())
+
+    for _, nic := range topology.NICs {
+        fmt.Println(nic.String())
+    }
+}
+```
+
+The `ghw.NetworkInfo` struct contains one field:
+
+* `ghw.NetworkInfo.NICs` is an array of pointers to `ghw.NIC` structs, one
+  for each network interface controller found for the systen
+
+Each `ghw.NIC` struct contains the following fields:
+
+* `ghw.NIC.Name` is the system's identifier for the NIC
 
 ## Developers
 
