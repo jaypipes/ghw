@@ -304,6 +304,9 @@ The `ghw.NetworkInfo` struct contains one field:
 Each `ghw.NIC` struct contains the following fields:
 
 * `ghw.NIC.Name` is the system's identifier for the NIC
+* `ghw.NIC.MacAddress` is the MAC address for the NIC, if any
+* `ghw.NIC.IsVirtual` is a boolean indicating if the NIC is a virtualized
+  device
 
 ## Developers
 
