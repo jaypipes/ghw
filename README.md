@@ -26,11 +26,11 @@ attribute and method names.
 You can use the functions in `ghw` to determine various hardware-related
 information about the host computer:
 
-* Memory
-* CPU
-* Block storage
-* Topology
-* Network
+* [Memory](#memory)
+* [CPU](#cpu)
+* [Block storage](#block-storage)
+* [Topology](#topology)
+* [Network](#network)
 
 ### Memory
 
