@@ -88,6 +88,13 @@ var cpuCommand = &cobra.Command{
 func showCPU(cmd *cobra.Command, args []string) error {
 	cpu := info.CPU
 	fmt.Printf("%v\n", cpu)
+
+	for _, proc := range cpu.Processors {
+		fmt.Printf(" %v\n", proc)
+		for _, core := range proc.Cores {
+			fmt.Printf("  %v\n", core)
+		}
+	}
 	return nil
 }
 
@@ -100,6 +107,13 @@ var blockCommand = &cobra.Command{
 func showBlock(cmd *cobra.Command, args []string) error {
 	block := info.Block
 	fmt.Printf("%v\n", block)
+
+	for _, disk := range block.Disks {
+		fmt.Printf(" %v\n", disk)
+		for _, part := range disk.Partitions {
+			fmt.Printf("  %v\n", part)
+		}
+	}
 	return nil
 }
 
@@ -124,5 +138,9 @@ var netCommand = &cobra.Command{
 func showNetwork(cmd *cobra.Command, args []string) error {
 	net := info.Network
 	fmt.Printf("%v\n", net)
+
+	for _, nic := range net.NICs {
+		fmt.Printf(" %v\n", nic)
+	}
 	return nil
 }

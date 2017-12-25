@@ -1,4 +1,4 @@
-# `gwk` - Golang HardWare discovery/inspection library [![Build Status](https://travis-ci.org/jaypipes/ghw.svg?branch=master)](https://travis-ci.org/jaypipes/ghw)
+# `ghw` - Golang HardWare discovery/inspection library [![Build Status](https://travis-ci.org/jaypipes/ghw.svg?branch=master)](https://travis-ci.org/jaypipes/ghw)
 
 `ghw` is a small Golang library providing hardware inspection and discovery.
 
@@ -35,26 +35,7 @@ information about the host computer:
 ### Memory
 
 Information about the host computer's memory can be retrieved using the
-`ghw.Memory()` function which returns a pointer to a `ghw.MemoryInfo` struct:
-
-```go
-package main
-
-import (
-    "fmt"
-
-    "github.com/jaypipes/ghw"
-)
-
-func main(args []string) {
-    memory, err := ghw.Memory()
-    if err != nil {
-        fmt.Printf("Error getting memory info: %v", err)
-    }
-
-    fmt.Println(mem.String())
-}
-```
+`ghw.Memory()` function which returns a pointer to a `ghw.MemoryInfo` struct.
 
 The `ghw.MemoryInfo` struct contains three fields:
 
@@ -66,11 +47,6 @@ The `ghw.MemoryInfo` struct contains three fields:
 * `ghw.MemoryInfo.SupportedPageSizes` is an array of integers representing the
   size, in bytes, of memory pages the system supports
 
-### CPU
-
-The `ghw.CPU()` function returns a `ghw.CPUInfo` struct that contains
-information about the CPUs on the host system:
-
 ```go
 package main
 
@@ -80,22 +56,26 @@ import (
     "github.com/jaypipes/ghw"
 )
 
-func main(args []string) {
-    cpu, err := ghw.CPU()
+func main() {
+    memory, err := ghw.Memory()
     if err != nil {
-        fmt.Printf("Error getting CPU info: %v", err)
+        fmt.Printf("Error getting memory info: %v", err)
     }
 
-    fmt.Println(cpu.String())
-
-    for _, proc := range cpu.Processors {
-        fmt.Println(proc.String())
-        for _, core := range p.Cores {
-            fmt.Println(core.String())
-        }
-    }
+    fmt.Println(mem.String())
 }
 ```
+
+Example output from my personal workstation:
+
+```
+memory (24GB physical, 24GB usable)
+```
+
+### CPU
+
+The `ghw.CPU()` function returns a `ghw.CPUInfo` struct that contains
+information about the CPUs on the host system.
 
 `ghw.CPUInfo` contains the following fields:
 
@@ -117,7 +97,7 @@ Each `ghw.Processor` struct contains a number of fields:
 * `ghw.Processor.Model` is a string containing the vendor's model name
 * `ghw.Processor.Capabilities` is an array of strings indicating the features
   the processor has enabled
-* `ghw.Processor.Cores is an array of `ghw.ProcessorCore` structs that are
+* `ghw.Processor.Cores` is an array of `ghw.ProcessorCore` structs that are
   packed onto this physical processor
 
 A `ghw.ProcessorCore` has the following fields:
@@ -133,12 +113,6 @@ A `ghw.ProcessorCore` has the following fields:
 * `ghw.ProcessorCore.LogicalProcessors` is an array of logical processor IDs
   assigned to any processing unit for the core
 
-### Block storage
-
-Information about the host computer's local block storage is returned from the
-`ghw.Block()` function. This function returns a pointer to a `ghw.BlockInfo`
-struct:
-
 ```go
 package main
 
@@ -148,22 +122,41 @@ import (
     "github.com/jaypipes/ghw"
 )
 
-func main(args []string) {
-    block, err := ghw.Block()
+func main() {
+    cpu, err := ghw.CPU()
     if err != nil {
-        fmt.Printf("Error getting block storage info: %v", err)
+        fmt.Printf("Error getting CPU info: %v", err)
     }
 
-    fmt.Println(block.String())
+	fmt.Printf("%v\n", cpu)
 
-    for _, disk := range block.Disks {
-        fmt.Println(disk.String())
-        for _, part := range disk.Partitions {
-            fmt.Println(part.String())
-        }
-    }
+	for _, proc := range cpu.Processors {
+		fmt.Printf(" %v\n", proc)
+		for _, core := range proc.Cores {
+			fmt.Printf("  %v\n", core)
+		}
+	}
 }
 ```
+
+Example output from my personal workstation:
+
+```
+cpu (1 physical package, 6 cores, 12 hardware threads)
+ physical package #0 (6 cores, 12 hardware threads)
+  processor core #0 (2 threads), logical processors [0 6]
+  processor core #1 (2 threads), logical processors [1 7]
+  processor core #2 (2 threads), logical processors [2 8]
+  processor core #3 (2 threads), logical processors [3 9]
+  processor core #4 (2 threads), logical processors [4 10]
+  processor core #5 (2 threads), logical processors [5 11]
+```
+
+### Block storage
+
+Information about the host computer's local block storage is returned from the
+`ghw.Block()` function. This function returns a pointer to a `ghw.BlockInfo`
+struct.
 
 The `ghw.BlockInfo` struct contains two fields:
 
@@ -200,12 +193,6 @@ Each `ghw.Partition` struct contains these fields:
   the partition. This will be `nil` if the `ghw.Partition` struct was returned
   by the `ghw.DiskPartitions()` library function.
 
-### Topology
-
-Information about the host computer's architecture (NUMA vs. SMP), the host's
-node layout and processor caches can be retrieved from the `ghw.Topology()`
-function. This function returns a pointer to a `ghw.TopologyInfo` struct:
-
 ```go
 package main
 
@@ -215,25 +202,41 @@ import (
     "github.com/jaypipes/ghw"
 )
 
-func main(args []string) {
-    topology, err := ghw.Topology()
+func main() {
+    block, err := ghw.Block()
     if err != nil {
-        fmt.Printf("Error getting topology info: %v", err)
+        fmt.Printf("Error getting block storage info: %v", err)
     }
 
-    fmt.Println(topology.String())
+	fmt.Printf("%v\n", block)
 
-    for _, node := range topology.Nodes {
-        fmt.Println(node.String())
-        for _, core := range node.Cores {
-            fmt.Println(core.String())
-        }
-        for _, cache := range node.Caches {
-            fmt.Println(cache.String())
-        }
-    }
+	for _, disk := range block.Disks {
+		fmt.Printf(" %v\n", disk)
+		for _, part := range disk.Partitions {
+			fmt.Printf("  %v\n", part)
+		}
+	}
 }
 ```
+
+Example output from my personal workstation:
+
+```
+block storage (1 disk, 2TB physical storage)
+ /dev/sda (2TB) [SCSI]  LSI - SN #3600508e000000000f8253aac9a1abd0c
+  /dev/sda1 (100MB) 
+  /dev/sda2 (187GB) 
+  /dev/sda3 (449MB) 
+  /dev/sda4 (1KB) 
+  /dev/sda5 (15GB) 
+  /dev/sda6 (2TB) [ext4] mounted@/
+```
+
+### Topology
+
+Information about the host computer's architecture (NUMA vs. SMP), the host's
+node layout and processor caches can be retrieved from the `ghw.Topology()`
+function. This function returns a pointer to a `ghw.TopologyInfo` struct.
 
 The `ghw.TopologyInfo` struct contains two fields:
 
@@ -267,12 +270,6 @@ Each `ghw.MemoryCache` struct contains the following fields:
 * `ghw.MemoryCache.LogicalProcessors` is an array of integers representing the
   logical processors that use the cache
 
-### Network
-
-Information about the host computer's networking hardware is returned from the
-`ghw.Network()` function. This function returns a pointer to a
-`ghw.NetworkInfo` struct:
-
 ```go
 package main
 
@@ -282,19 +279,47 @@ import (
     "github.com/jaypipes/ghw"
 )
 
-func main(args []string) {
-    net, err := ghw.Network()
+func main() {
+    topology, err := ghw.Topology()
     if err != nil {
-        fmt.Printf("Error getting network info: %v", err)
+        fmt.Printf("Error getting topology info: %v", err)
     }
 
-    fmt.Println(net.String())
-
-    for _, nic := range topology.NICs {
-        fmt.Println(nic.String())
-    }
+    fmt.Println(topology.String())
 }
 ```
+
+Example output from my personal workstation:
+
+```
+topology SMP (1 nodes)
+ node #0 (6 cores)
+  L1i cache (32 KB) shared with logical processors: 0,6
+  L1i cache (32 KB) shared with logical processors: 1,7
+  L1i cache (32 KB) shared with logical processors: 10,4
+  L1i cache (32 KB) shared with logical processors: 2,8
+  L1i cache (32 KB) shared with logical processors: 11,5
+  L1i cache (32 KB) shared with logical processors: 3,9
+  L1d cache (32 KB) shared with logical processors: 10,4
+  L1d cache (32 KB) shared with logical processors: 1,7
+  L1d cache (32 KB) shared with logical processors: 2,8
+  L1d cache (32 KB) shared with logical processors: 11,5
+  L1d cache (32 KB) shared with logical processors: 0,6
+  L1d cache (32 KB) shared with logical processors: 3,9
+  L2 cache (256 KB) shared with logical processors: 11,5
+  L2 cache (256 KB) shared with logical processors: 10,4
+  L2 cache (256 KB) shared with logical processors: 1,7
+  L2 cache (256 KB) shared with logical processors: 0,6
+  L2 cache (256 KB) shared with logical processors: 2,8
+  L2 cache (256 KB) shared with logical processors: 3,9
+  L3 cache (12288 KB) shared with logical processors: 0,1,10,11,2,3,4,5,6,7,8,9
+```
+
+### Network
+
+Information about the host computer's networking hardware is returned from the
+`ghw.Network()` function. This function returns a pointer to a
+`ghw.NetworkInfo` struct.
 
 The `ghw.NetworkInfo` struct contains one field:
 
@@ -307,6 +332,37 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.MacAddress` is the MAC address for the NIC, if any
 * `ghw.NIC.IsVirtual` is a boolean indicating if the NIC is a virtualized
   device
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/jaypipes/ghw"
+)
+
+func main() {
+    net, err := ghw.Network()
+    if err != nil {
+        fmt.Printf("Error getting network info: %v", err)
+    }
+
+    fmt.Println(net.String())
+
+    for _, nic := range net.NICs {
+        fmt.Println(nic.String())
+    }
+}
+```
+
+Example output from my personal workstation:
+
+```
+net (2 NICs)
+NIC enp0s25 (virtual)
+NIC wls1 (virtual)
+```
 
 ## Developers
 
