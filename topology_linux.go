@@ -113,7 +113,9 @@ func coresForNode(nodeId NodeId) ([]*ProcessorCore, error) {
 		if err != nil {
 			continue
 		}
-		coreIdInt, _ := strconv.Atoi(string(coreIdContents))
+		// coreIdContents is a []byte with the last byte being a newline rune
+		coreIdStr := string(coreIdContents[:len(coreIdContents)-1])
+		coreIdInt, _ := strconv.Atoi(coreIdStr)
 		coreId := ProcessorId(coreIdInt)
 
 		core := findCoreById(coreId)
