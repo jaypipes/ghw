@@ -2,6 +2,7 @@ package ghw
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -22,10 +23,16 @@ type Node struct {
 }
 
 func (n *Node) String() string {
+	cacheStr := ""
+	sort.Sort(ByCacheLevel(n.Caches))
+	for _, cache := range n.Caches {
+		cacheStr += "\n  " + cache.String()
+	}
 	return fmt.Sprintf(
-		"node #%d (%d cores)",
+		"node #%d (%d cores)%s",
 		n.Id,
 		len(n.Cores),
+		cacheStr,
 	)
 }
 
@@ -36,6 +43,19 @@ const (
 	INSTRUCTION
 	DATA
 )
+
+type ByCacheLevel []*MemoryCache
+
+func (a ByCacheLevel) Len() int      { return len(a) }
+func (a ByCacheLevel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByCacheLevel) Less(i, j int) bool {
+	if a[i].Level < a[j].Level {
+		return true
+	} else if a[i].Level == a[j].Level {
+		return a[i].Type < a[j].Type
+	}
+	return false
+}
 
 type MemoryCache struct {
 	Level     uint8
@@ -90,9 +110,19 @@ func (i *TopologyInfo) String() string {
 	if i.Architecture == NUMA {
 		archStr = "NUMA"
 	}
-	return fmt.Sprintf(
+	res := fmt.Sprintf(
 		"topology %s (%d nodes)",
 		archStr,
 		len(i.Nodes),
 	)
+	if len(i.Nodes) > 0 {
+		res += "\n"
+		for x, node := range i.Nodes {
+			if x > 0 {
+				res += "\n"
+			}
+			res += " " + node.String()
+		}
+	}
+	return res
 }
