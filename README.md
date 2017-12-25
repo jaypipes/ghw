@@ -128,7 +128,7 @@ func main() {
         fmt.Printf("Error getting CPU info: %v", err)
     }
 
-	fmt.Printf("%v\n", cpu)
+    fmt.Printf("%v\n", cpu)
 
 	for _, proc := range cpu.Processors {
 		fmt.Printf(" %v\n", proc)
@@ -208,7 +208,7 @@ func main() {
         fmt.Printf("Error getting block storage info: %v", err)
     }
 
-	fmt.Printf("%v\n", block)
+    fmt.Printf("%v\n", block)
 
 	for _, disk := range block.Disks {
 		fmt.Printf(" %v\n", disk)
@@ -285,7 +285,7 @@ func main() {
         fmt.Printf("Error getting topology info: %v", err)
     }
 
-	fmt.Printf("%v\n", topology)
+    fmt.Printf("%v\n", topology)
 
 	for _, node := range topology.Nodes {
 		fmt.Printf(" %v\n", node)
@@ -355,7 +355,7 @@ func main() {
         fmt.Printf("Error getting network info: %v", err)
     }
 
-	fmt.Printf("%v\n", net)
+    fmt.Printf("%v\n", net)
 
 	for _, nic := range net.NICs {
 		fmt.Printf(" %v\n", nic)
