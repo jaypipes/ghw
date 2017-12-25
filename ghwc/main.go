@@ -126,6 +126,13 @@ var topologyCommand = &cobra.Command{
 func showTopology(cmd *cobra.Command, args []string) error {
 	topology := info.Topology
 	fmt.Printf("%v\n", topology)
+
+	for _, node := range topology.Nodes {
+		fmt.Printf(" %v\n", node)
+		for _, cache := range node.Caches {
+			fmt.Printf("  %v\n", cache)
+		}
+	}
 	return nil
 }
 

@@ -285,7 +285,14 @@ func main() {
         fmt.Printf("Error getting topology info: %v", err)
     }
 
-    fmt.Println(topology.String())
+	fmt.Printf("%v\n", topology)
+
+	for _, node := range topology.Nodes {
+		fmt.Printf(" %v\n", node)
+		for _, cache := range node.Caches {
+			fmt.Printf("  %v\n", cache)
+		}
+	}
 }
 ```
 
@@ -294,24 +301,24 @@ Example output from my personal workstation:
 ```
 topology SMP (1 nodes)
  node #0 (6 cores)
-  L1i cache (32 KB) shared with logical processors: 0,6
-  L1i cache (32 KB) shared with logical processors: 1,7
-  L1i cache (32 KB) shared with logical processors: 10,4
+  L1i cache (32 KB) shared with logical processors: 3,9
   L1i cache (32 KB) shared with logical processors: 2,8
   L1i cache (32 KB) shared with logical processors: 11,5
-  L1i cache (32 KB) shared with logical processors: 3,9
-  L1d cache (32 KB) shared with logical processors: 10,4
-  L1d cache (32 KB) shared with logical processors: 1,7
-  L1d cache (32 KB) shared with logical processors: 2,8
+  L1i cache (32 KB) shared with logical processors: 10,4
+  L1i cache (32 KB) shared with logical processors: 0,6
+  L1i cache (32 KB) shared with logical processors: 1,7
   L1d cache (32 KB) shared with logical processors: 11,5
-  L1d cache (32 KB) shared with logical processors: 0,6
+  L1d cache (32 KB) shared with logical processors: 10,4
   L1d cache (32 KB) shared with logical processors: 3,9
-  L2 cache (256 KB) shared with logical processors: 11,5
-  L2 cache (256 KB) shared with logical processors: 10,4
-  L2 cache (256 KB) shared with logical processors: 1,7
-  L2 cache (256 KB) shared with logical processors: 0,6
+  L1d cache (32 KB) shared with logical processors: 1,7
+  L1d cache (32 KB) shared with logical processors: 0,6
+  L1d cache (32 KB) shared with logical processors: 2,8
   L2 cache (256 KB) shared with logical processors: 2,8
   L2 cache (256 KB) shared with logical processors: 3,9
+  L2 cache (256 KB) shared with logical processors: 0,6
+  L2 cache (256 KB) shared with logical processors: 10,4
+  L2 cache (256 KB) shared with logical processors: 1,7
+  L2 cache (256 KB) shared with logical processors: 11,5
   L3 cache (12288 KB) shared with logical processors: 0,1,10,11,2,3,4,5,6,7,8,9
 ```
 
@@ -348,11 +355,11 @@ func main() {
         fmt.Printf("Error getting network info: %v", err)
     }
 
-    fmt.Println(net.String())
+	fmt.Printf("%v\n", net)
 
-    for _, nic := range net.NICs {
-        fmt.Println(nic.String())
-    }
+	for _, nic := range net.NICs {
+		fmt.Printf(" %v\n", nic)
+	}
 }
 ```
 
@@ -360,8 +367,8 @@ Example output from my personal workstation:
 
 ```
 net (2 NICs)
-NIC enp0s25 (virtual)
-NIC wls1 (virtual)
+ enp0s25
+ wls1
 ```
 
 ## Developers

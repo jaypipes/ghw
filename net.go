@@ -30,7 +30,7 @@ func (n *NIC) String() string {
 		isVirtualStr = " (virtual)"
 	}
 	return fmt.Sprintf(
-		"NIC %s%s%s%s",
+		"%s%s%s%s",
 		n.Name,
 		vendorStr,
 		modelStr,

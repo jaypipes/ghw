@@ -23,16 +23,10 @@ type Node struct {
 }
 
 func (n *Node) String() string {
-	cacheStr := ""
-	sort.Sort(ByCacheLevel(n.Caches))
-	for _, cache := range n.Caches {
-		cacheStr += "\n  " + cache.String()
-	}
 	return fmt.Sprintf(
-		"node #%d (%d cores)%s",
+		"node #%d (%d cores)",
 		n.Id,
 		len(n.Cores),
-		cacheStr,
 	)
 }
 
@@ -99,6 +93,9 @@ type TopologyInfo struct {
 func Topology() (*TopologyInfo, error) {
 	info := &TopologyInfo{}
 	err := topologyFillInfo(info)
+	for _, node := range info.Nodes {
+		sort.Sort(ByCacheLevel(node.Caches))
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -115,14 +112,5 @@ func (i *TopologyInfo) String() string {
 		archStr,
 		len(i.Nodes),
 	)
-	if len(i.Nodes) > 0 {
-		res += "\n"
-		for x, node := range i.Nodes {
-			if x > 0 {
-				res += "\n"
-			}
-			res += " " + node.String()
-		}
-	}
 	return res
 }

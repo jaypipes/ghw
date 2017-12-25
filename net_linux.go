@@ -35,7 +35,7 @@ func NICs() []*NIC {
 
 		netPath := filepath.Join(PathSysClassNet, filename)
 		dest, _ := os.Readlink(netPath)
-		isVirtual := true
+		isVirtual := false
 		if strings.Contains(dest, "virtio") {
 			isVirtual = true
 		}
