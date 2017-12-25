@@ -188,7 +188,7 @@ func cachesForNode(nodeId NodeId) ([]*MemoryCache, error) {
 				continue
 			}
 			cacheType := UNIFIED
-			switch string(cacheTypeContents) {
+			switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
 			case "Data":
 				cacheType = DATA
 			case "Instruction":
@@ -202,15 +202,18 @@ func cachesForNode(nodeId NodeId) ([]*MemoryCache, error) {
 			if err != nil {
 				continue
 			}
-			level, _ := strconv.Atoi(string(levelContents))
+			// levelContents is now a []byte with the last byte being a newline
+			// character. Trim that off and convert the contents to an integer.
+			level, _ := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
 
 			sizePath := filepath.Join(cachePath, cacheDirFileName, "size")
 			sizeContents, err := ioutil.ReadFile(sizePath)
 			if err != nil {
 				continue
 			}
-			// size comes as Xk, so we trim off the k...
-			size, _ := strconv.Atoi(string(sizeContents[0:len(sizeContents)]))
+			// size comes as XK\n, so we trim off the K and the newline.
+			size, _ := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
+
 			scpuPath := filepath.Join(
 				cachePath,
 				cacheDirFileName,
@@ -223,7 +226,7 @@ func cachesForNode(nodeId NodeId) ([]*MemoryCache, error) {
 			// The cache information is repeated for each node, so here, we
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
-			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
+			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap[:len(sharedCpuMap)-1])
 			if cache, ok := caches[cacheKey]; !ok {
 				cache = &MemoryCache{
 					Level:             uint8(level),
@@ -242,8 +245,10 @@ func cachesForNode(nodeId NodeId) ([]*MemoryCache, error) {
 	}
 
 	cacheVals := make([]*MemoryCache, len(caches))
+	x := 0
 	for _, c := range caches {
-		cacheVals = append(cacheVals, c)
+		cacheVals[x] = c
+		x++
 	}
 
 	return cacheVals, nil
