@@ -51,18 +51,18 @@ The `ghw.MemoryInfo` struct contains three fields:
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw"
 )
 
 func main() {
-    memory, err := ghw.Memory()
-    if err != nil {
-        fmt.Printf("Error getting memory info: %v", err)
-    }
+	memory, err := ghw.Memory()
+	if err != nil {
+		fmt.Printf("Error getting memory info: %v", err)
+	}
 
-    fmt.Println(mem.String())
+	fmt.Println(mem.String())
 }
 ```
 
@@ -117,18 +117,18 @@ A `ghw.ProcessorCore` has the following fields:
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw"
 )
 
 func main() {
-    cpu, err := ghw.CPU()
-    if err != nil {
-        fmt.Printf("Error getting CPU info: %v", err)
-    }
+	cpu, err := ghw.CPU()
+	if err != nil {
+		fmt.Printf("Error getting CPU info: %v", err)
+	}
 
-    fmt.Printf("%v\n", cpu)
+	fmt.Printf("%v\n", cpu)
 
 	for _, proc := range cpu.Processors {
 		fmt.Printf(" %v\n", proc)
@@ -197,18 +197,18 @@ Each `ghw.Partition` struct contains these fields:
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw"
 )
 
 func main() {
-    block, err := ghw.Block()
-    if err != nil {
-        fmt.Printf("Error getting block storage info: %v", err)
-    }
+	block, err := ghw.Block()
+	if err != nil {
+		fmt.Printf("Error getting block storage info: %v", err)
+	}
 
-    fmt.Printf("%v\n", block)
+	fmt.Printf("%v\n", block)
 
 	for _, disk := range block.Disks {
 		fmt.Printf(" %v\n", disk)
@@ -274,18 +274,18 @@ Each `ghw.MemoryCache` struct contains the following fields:
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw"
 )
 
 func main() {
-    topology, err := ghw.Topology()
-    if err != nil {
-        fmt.Printf("Error getting topology info: %v", err)
-    }
+	topology, err := ghw.Topology()
+	if err != nil {
+		fmt.Printf("Error getting topology info: %v", err)
+	}
 
-    fmt.Printf("%v\n", topology)
+	fmt.Printf("%v\n", topology)
 
 	for _, node := range topology.Nodes {
 		fmt.Printf(" %v\n", node)
@@ -344,18 +344,18 @@ Each `ghw.NIC` struct contains the following fields:
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw"
 )
 
 func main() {
-    net, err := ghw.Network()
-    if err != nil {
-        fmt.Printf("Error getting network info: %v", err)
-    }
+	net, err := ghw.Network()
+	if err != nil {
+		fmt.Printf("Error getting network info: %v", err)
+	}
 
-    fmt.Printf("%v\n", net)
+	fmt.Printf("%v\n", net)
 
 	for _, nic := range net.NICs {
 		fmt.Printf(" %v\n", nic)
