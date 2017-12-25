@@ -2,6 +2,8 @@ package ghw
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Architecture int
@@ -53,10 +55,19 @@ func (c *MemoryCache) String() string {
 		typeStr = "d"
 	}
 	cacheIdStr := fmt.Sprintf("L%d%s", c.Level, typeStr)
+	processorMapStr := ""
+	if c.LogicalProcessors != nil {
+		lpStrings := make([]string, len(c.LogicalProcessors))
+		for x, lpid := range c.LogicalProcessors {
+			lpStrings[x] = strconv.Itoa(int(lpid))
+		}
+		processorMapStr = " shared with logical processors: " + strings.Join(lpStrings, ",")
+	}
 	return fmt.Sprintf(
-		"%s cache (%d KB)",
+		"%s cache (%d KB)%s",
 		cacheIdStr,
 		sizeKb,
+		processorMapStr,
 	)
 }
 
