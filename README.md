@@ -4,22 +4,22 @@
 
 ## Design Principles
 
-### No root privileges needed for discovery
+* No root privileges needed for discovery
 
-`ghw` goes the extra mile to be useful without root priveleges. We query for
-host hardware information as directly as possible without relying on shellouts
-to programs like `dmidecode` that require root privileges to execute.
+  `ghw` goes the extra mile to be useful without root priveleges. We query for
+  host hardware information as directly as possible without relying on shellouts
+  to programs like `dmidecode` that require root privileges to execute.
 
-### Well-documented code and plenty of example code
+* Well-documented code and plenty of example code
 
-The code itself should be well-documented, of course, with lots of usage
-examples.
+  The code itself should be well-documented, of course, with lots of usage
+  examples.
 
-### Interfaces should be consistent across modules
+* Interfaces should be consistent across modules
 
-Each module in the library should be structured in a consistent fashion, and
-the structs returned by various library functions should have consistent
-attribute and method names.
+  Each module in the library should be structured in a consistent fashion, and
+  the structs returned by various library functions should have consistent
+  attribute and method names.
 
 ## Usage
 
