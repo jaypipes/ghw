@@ -263,7 +263,7 @@ Each `ghw.MemoryCache` struct contains the following fields:
 * `ghw.MemoryCache.Type` is an enum that contains one of `ghw.DATA`,
   `ghw.INSTRUCTION` or `ghw.UNIFIED` depending on whether the cache stores CPU
   instructions, program data, or both
-* `ghw.MemoryCache.Level` is a 0-based integer indicating how close the cache
+* `ghw.MemoryCache.Level` is a 1-based integer indicating how close the cache
   is to the processor
 * `ghw.MemoryCache.SizeBytes` is an integer containing the number of bytes the
   cache can contain
