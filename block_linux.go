@@ -20,7 +20,7 @@ const (
 )
 
 var RegexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
-var RegexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+p)\d+$`)
+var RegexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
 
 func blockFillInfo(info *BlockInfo) error {
 	info.Disks = Disks()
