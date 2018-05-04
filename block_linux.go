@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -17,6 +18,9 @@ const (
 	PathSysBlock    = "/sys/block"
 	PathDevDiskById = "/dev/disk/by-id"
 )
+
+var RegexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
+var RegexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
 
 func blockFillInfo(info *BlockInfo) error {
 	info.Disks = Disks()
@@ -138,16 +142,19 @@ func Disks() []*Disk {
 	}
 	for _, file := range files {
 		dname := file.Name()
-		// Hard drives start with an 's' or an 'h' (for SCSI and IDE) followed
-		// by a 'd'
-		if !((dname[0] == 's' || dname[0] == 'h') && dname[1] == 'd') {
+
+		var busType string
+		if strings.HasPrefix(dname, "sd") {
+			busType = "SCSI"
+		} else if strings.HasPrefix(dname, "hd") {
+			busType = "IDE"
+		} else if RegexNVMeDev.MatchString(dname) {
+			busType = "NVMe"
+		}
+		if busType == "" {
 			continue
 		}
 
-		busType := "SCSI"
-		if dname[0] == 'h' {
-			busType = "IDE"
-		}
 		size := DiskSizeBytes(dname)
 		ss := DiskSectorSizeBytes(dname)
 		vendor := DiskVendor(dname)
@@ -177,11 +184,14 @@ func Disks() []*Disk {
 
 func PartitionSizeBytes(part string) uint64 {
 	// Allow calling PartitionSize with either the full partition name
-	// "/dev/sda1" or just "sda"
+	// "/dev/sda1" or just "sda1"
 	if strings.HasPrefix(part, "/dev") {
 		part = part[4:len(part)]
 	}
 	disk := part[0:3]
+	if m := RegexNVMePart.FindStringSubmatch(part); len(m) > 0 {
+		disk = m[1]
+	}
 	path := filepath.Join(PathSysBlock, disk, part, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
