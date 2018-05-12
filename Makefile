@@ -9,7 +9,6 @@ test: ghwc/vendor/vendor.json
 
 $(GOVENDOR):
 	go get -u github.com/kardianos/govendor
-	govendor
 
 ghwc/vendor/vendor.json: $(GOVENDOR)
 	cd ghwc; govendor sync
