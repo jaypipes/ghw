@@ -3,4 +3,5 @@ language: go
 # allows ghw to actually determine things like host memory or block storage...
 sudo: required
 script:
+  - make test
   - go run ghwc/main.go
