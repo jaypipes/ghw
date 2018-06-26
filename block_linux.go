@@ -82,6 +82,22 @@ func DiskSerialNumber(disk string) string {
 	// primary SCSI disk (/dev/sda) is represented as a symbolic link named
 	// /dev/disk/by-id/scsi-3600508e000000000f8253aac9a1abd0c. The serial
 	// number is 3600508e000000000f8253aac9a1abd0c.
+	//
+	// Some SATA drives (or rather, disk drive vendors) use inconsistent ways
+	// of putting the serial numbers of the disks in this symbolic link name.
+	// For example, here are two SATA drive identifiers (examples come from
+	// @antylama on GH Issue #19):
+	//
+	// /dev/disk/by-id/ata-AXIOMTEK_Corp.-FSA032G300MW5T-H_BCA11704240020001
+	//
+	// in the above identifier, "BCA11704240020001" is the drive serial number.
+	// The vendor name along with what appears to be a vendor model name
+	// (FSA032G300MW5T-H) are also included in the symbolic link name.
+	//
+	// /dev/disk/by-id/ata-WDC_WD10JFCX-68N6GN0_WD-WX31A76R3KFS
+	//
+	// in the above identifier, the serial number of the disk is actually
+	// WD-WX31A76R3KFS, not WX31A76R3KFS. Go figure...
 	path := filepath.Join(PathDevDiskById)
 	links, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -98,8 +114,10 @@ func DiskSerialNumber(disk string) string {
 		if dest != disk {
 			continue
 		}
-		parts := strings.Split(lname, "-")
-		return parts[1]
+		pos := strings.LastIndexAny(lname, "-_")
+		if pos >= 0 {
+			return lname[pos+1:]
+		}
 	}
 	return "unknown"
 }
