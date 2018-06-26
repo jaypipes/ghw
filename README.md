@@ -380,3 +380,11 @@ request or bug report.
 ### Running tests
 
 You can run unit tests easily using the `make test` command, like so:
+
+
+```
+[jaypipes@uberbox ghw]$ make test
+go test github.com/jaypipes/ghw github.com/jaypipes/ghw/ghwc
+ok      github.com/jaypipes/ghw 0.084s
+?       github.com/jaypipes/ghw/ghwc    [no test files]
+```
