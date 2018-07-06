@@ -114,7 +114,10 @@ func DiskSerialNumber(disk string) string {
 		if dest != disk {
 			continue
 		}
-		pos := strings.LastIndexAny(lname, "-_")
+		pos := strings.LastIndex(lname, "_")
+		if pos < 0 {
+			pos = strings.Index(lname, "-")
+		}
 		if pos >= 0 {
 			return lname[pos+1:]
 		}
