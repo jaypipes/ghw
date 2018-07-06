@@ -31,4 +31,17 @@ func TestPCI(t *testing.T) {
 	if wirelessController.Name != "Wireless controller" {
 		t.Fatalf("Expected wireless controller class name to be 'Wireless controller' but got '%v'", wirelessController.Name)
 	}
+
+	if len(info.Vendors) == 0 {
+		t.Fatalf("Expected >0 PCI vendors, but found 0.")
+	}
+
+	intelInc, exists := info.Vendors["8086"]
+	if !exists {
+		t.Fatalf("Expected to find Intel vendor in hash for identifier '8086'")
+	}
+	if intelInc.Name != "Intel Corporation" {
+		t.Fatalf("Expected Intel vendor name to be 'Intel Corporation' but got '%v'", intelInc.Name)
+	}
+
 }
