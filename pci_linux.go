@@ -44,9 +44,11 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 	info.Classes = make(map[string]*PCIClassInfo, 20)
 	info.Vendors = make(map[string]*PCIVendorInfo, 200)
 	info.Products = make(map[string]*PCIProductInfo, 1000)
-	subclasses := make([]*PCIClassInfo, 0)
+	subclasses := make([]*PCISubclassInfo, 0)
+	progIfaces := make([]*PCIProgrammingInterfaceInfo, 0)
 	var curClass *PCIClassInfo
-	var curSubclass *PCIClassInfo
+	var curSubclass *PCISubclassInfo
+	var curProgIface *PCIProgrammingInterfaceInfo
 	vendorProducts := make([]*PCIProductInfo, 0)
 	var curVendor *PCIVendorInfo
 	var curProduct *PCIProductInfo
@@ -68,7 +70,7 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 			if curClass != nil {
 				// finalize existing class because we found a new class block
 				curClass.Subclasses = subclasses
-				subclasses = make([]*PCIClassInfo, 0)
+				subclasses = make([]*PCISubclassInfo, 0)
 			}
 			inClassBlock = true
 			classId := string(lineBytes[2:4])
@@ -120,16 +122,22 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 		// \t0002  PCI to MCA Bridge
 		if len(lineBytes) > 1 && lineBytes[1] != '\t' {
 			if inClassBlock {
+				if curSubclass != nil {
+					// finalize existing subclass because we found a new subclass block
+					curSubclass.ProgrammingInterfaces = progIfaces
+					progIfaces = make([]*PCIProgrammingInterfaceInfo, 0)
+				}
 				subclassId := string(lineBytes[1:3])
 				subclassName := string(lineBytes[5:])
-				curSubclass = &PCIClassInfo{
+				curSubclass = &PCISubclassInfo{
 					Id:   subclassId,
 					Name: subclassName,
+					ProgrammingInterfaces: progIfaces,
 				}
 				subclasses = append(subclasses, curSubclass)
 			} else {
 				if curProduct != nil {
-					// finalize existing vendor because we found a new vendor block
+					// finalize existing product because we found a new product block
 					curProduct.Subsystems = productSubsystems
 					productSubsystems = make([]*PCIProductInfo, 0)
 				}
@@ -159,7 +167,13 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 			//
 			// \t\t0e11 4091  Smart Array 6i
 			if inClassBlock {
-
+				progIfaceId := string(lineBytes[2:4])
+				progIfaceName := string(lineBytes[6:])
+				curProgIface = &PCIProgrammingInterfaceInfo{
+					Id:   progIfaceId,
+					Name: progIfaceName,
+				}
+				progIfaces = append(progIfaces, curProgIface)
 			} else {
 				vendorId := string(lineBytes[2:6])
 				subsystemId := string(lineBytes[7:11])

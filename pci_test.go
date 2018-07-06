@@ -24,26 +24,43 @@ func TestPCI(t *testing.T) {
 		t.Fatalf("Expected >0 PCI classes, but found 0.")
 	}
 
-	wirelessController, exists := info.Classes["0d"]
+	sbController, exists := info.Classes["0c"]
 	if !exists {
-		t.Fatalf("Expected to find wireless controller class in hash for identifier '0d'")
+		t.Fatalf("Expected to find serial bus controller class in hash for identifier '0c'")
 	}
-	if wirelessController.Name != "Wireless controller" {
-		t.Fatalf("Expected wireless controller class name to be 'Wireless controller' but got '%v'", wirelessController.Name)
-	}
-
-	if len(wirelessController.Subclasses) == 0 {
-		t.Fatalf("Expected >0 Subclasses for wirelessController, but found 0.")
+	if sbController.Name != "Serial bus controller" {
+		t.Fatalf("Expected serial bus controller class name to be 'Serial bus controller' but got '%v'", sbController.Name)
 	}
 
-	foundRFController := false
-	for _, sc := range wirelessController.Subclasses {
-		if sc.Id == "10" {
-			foundRFController = true
+	if len(sbController.Subclasses) == 0 {
+		t.Fatalf("Expected >0 Subclasses for sbController, but found 0.")
+	}
+
+	var firewireSubclass *PCISubclassInfo
+	for _, sc := range sbController.Subclasses {
+		if sc.Id == "00" {
+			firewireSubclass = sc
 		}
 	}
-	if !foundRFController {
-		t.Fatalf("Failed to find RF Controller subclass to wirelessController with ID of '10'.")
+	if firewireSubclass == nil {
+		t.Fatalf("Failed to find Firewire subclass to sbController with ID of '10'.")
+	}
+
+	// Check the firewire programming interfaces were found
+	if len(firewireSubclass.ProgrammingInterfaces) == 0 {
+		t.Fatalf("Expected >0 Firewire programming interfaces, but found 0.")
+	}
+	var ohciIface *PCIProgrammingInterfaceInfo
+	for _, progIface := range firewireSubclass.ProgrammingInterfaces {
+		if progIface.Id == "10" {
+			ohciIface = progIface
+		}
+	}
+	if ohciIface == nil {
+		t.Fatalf("Failed to find OHCI programming interface to firewire subclass with ID of '10'.")
+	}
+	if ohciIface.Name != "OHCI" {
+		t.Fatalf("Expected OHCI programming interface name to be 'OHCI' but got '%v'", ohciIface.Name)
 	}
 
 	if len(info.Vendors) == 0 {

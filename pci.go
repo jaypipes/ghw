@@ -6,10 +6,21 @@
 
 package ghw
 
+type PCIProgrammingInterfaceInfo struct {
+	Id   string // hex-encoded PCI_ID of the programming interface
+	Name string // common string name for the programming interface
+}
+
+type PCISubclassInfo struct {
+	Id                    string                         // hex-encoded PCI_ID for the device subclass
+	Name                  string                         // common string name for the subclass
+	ProgrammingInterfaces []*PCIProgrammingInterfaceInfo // any programming interfaces this subclass might have
+}
+
 type PCIClassInfo struct {
-	Id         string          // hex-encoded PCI_ID for the device class
-	Name       string          // common string name for the class
-	Subclasses []*PCIClassInfo // Any subclasses belonging to this class
+	Id         string             // hex-encoded PCI_ID for the device class
+	Name       string             // common string name for the class
+	Subclasses []*PCISubclassInfo // any subclasses belonging to this class
 }
 
 // NOTE(jaypipes): In the hardware world, the PCI "device_id" is the identifier
