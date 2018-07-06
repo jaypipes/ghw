@@ -15,8 +15,10 @@ type PCIClassInfo struct {
 // NOTE(jaypipes): In the hardware world, the PCI "device_id" is the identifier
 // for the product/model
 type PCIProductInfo struct {
-	Id   string // hex-encoded PCI_ID for the product/model
-	Name string // common string name of the vendor
+	VendorId   string            // vendor ID for the product
+	Id         string            // hex-encoded PCI_ID for the product/model
+	Name       string            // common string name of the vendor
+	Subsystems []*PCIProductInfo // "subdevices" or "subsystems" for the product
 }
 
 type PCIVendorInfo struct {
@@ -43,7 +45,7 @@ type PCIInfo struct {
 	Products map[string]*PCIProductInfo
 }
 
-func (db *PCIInfo) GetDeviceInfo(vendor string, product string) *PCIDeviceInfo {
+func (db *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 	return nil
 }
 
