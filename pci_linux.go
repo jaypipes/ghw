@@ -43,10 +43,13 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 	inClassBlock := false
 	info.Classes = make(map[string]*PCIClassInfo, 20)
 	info.Vendors = make(map[string]*PCIVendorInfo, 200)
+	info.Products = make(map[string]*PCIProductInfo, 1000)
 	subclasses := make([]*PCIClassInfo, 0)
 	var curClass *PCIClassInfo
 	var curSubclass *PCIClassInfo
+	vendorProducts := make([]*PCIProductInfo, 0)
 	var curVendor *PCIVendorInfo
+	var curProduct *PCIProductInfo
 	for scanner.Scan() {
 		line := scanner.Text()
 		// skip comments and blank lines
@@ -84,13 +87,16 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 		if lineBytes[0] != '\t' {
 			if curVendor != nil {
 				// finalize existing vendor because we found a new vendor block
+				curVendor.Products = vendorProducts
+				vendorProducts = make([]*PCIProductInfo, 0)
 			}
 			inClassBlock = false
 			vendorId := string(lineBytes[0:4])
 			vendorName := string(lineBytes[6:])
 			curVendor = &PCIVendorInfo{
-				Id:   vendorId,
-				Name: vendorName,
+				Id:       vendorId,
+				Name:     vendorName,
+				Products: vendorProducts,
 			}
 			info.Vendors[curVendor.Id] = curVendor
 			continue
@@ -118,7 +124,15 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 					}
 					subclasses = append(subclasses, curSubclass)
 				} else {
-
+					productId := string(lineBytes[1:5])
+					productName := string(lineBytes[7:])
+					productKey := curVendor.Id + productId
+					curProduct = &PCIProductInfo{
+						Id:   productId,
+						Name: productName,
+					}
+					vendorProducts = append(vendorProducts, curProduct)
+					info.Products[productKey] = curProduct
 				}
 			}
 		}

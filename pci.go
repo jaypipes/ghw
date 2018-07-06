@@ -12,16 +12,17 @@ type PCIClassInfo struct {
 	Subclasses []*PCIClassInfo // Any subclasses belonging to this class
 }
 
-type PCIVendorInfo struct {
-	Id   string // hex-encoded PCI_ID for the vendor
-	Name string // common string name of the vendor
-}
-
 // NOTE(jaypipes): In the hardware world, the PCI "device_id" is the identifier
 // for the product/model
 type PCIProductInfo struct {
 	Id   string // hex-encoded PCI_ID for the product/model
 	Name string // common string name of the vendor
+}
+
+type PCIVendorInfo struct {
+	Id       string            // hex-encoded PCI_ID for the vendor
+	Name     string            // common string name of the vendor
+	Products []*PCIProductInfo // all top-level devices for the vendor
 }
 
 type PCIDeviceInfo struct {
