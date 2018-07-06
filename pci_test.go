@@ -32,6 +32,20 @@ func TestPCI(t *testing.T) {
 		t.Fatalf("Expected wireless controller class name to be 'Wireless controller' but got '%v'", wirelessController.Name)
 	}
 
+	if len(wirelessController.Subclasses) == 0 {
+		t.Fatalf("Expected >0 Subclasses for wirelessController, but found 0.")
+	}
+
+	foundRFController := false
+	for _, sc := range wirelessController.Subclasses {
+		if sc.Id == "10" {
+			foundRFController = true
+		}
+	}
+	if !foundRFController {
+		t.Fatalf("Failed to find RF Controller subclass to wirelessController with ID of '10'.")
+	}
+
 	if len(info.Vendors) == 0 {
 		t.Fatalf("Expected >0 PCI vendors, but found 0.")
 	}
