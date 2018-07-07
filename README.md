@@ -383,8 +383,11 @@ The `ghw.PCI()` function returns a `ghw.PCIInfo` struct. The `ghw.PCIInfo`
 struct contains a number of fields that may be queried for PCI information:
 
 * `ghw.PCIInfo.Classes` is a map, keyed by the PCI class ID (a hex-encoded
-  string) of pointers to `PCIClassInfo` structs, one for each class of PCI
+  string) of pointers to `ghw.PCIClassInfo` structs, one for each class of PCI
   device known to `ghw`
+* `ghw.PCIInfo.Vendors` is a map, keyed by the PCI vendor ID (a hex-encoded
+  string) of pointers to `ghw.PCIVendorInfo` structs, one for each PCI vendor
+  known to `ghw`
 
 #### PCI device classes
 
@@ -466,6 +469,97 @@ Example output from my personal workstation, snipped for brevity:
     Device subclass: SERCOS interface ('08')
     Device subclass: CANBUS ('09')
 ...
+```
+
+#### PCI vendors
+
+Let's take a look at the PCI vendor information and how to query the PCI
+database for vendor information and the products a vendor supplies.
+
+Each `ghw.PCIVendorInfo` struct contains the following fields:
+
+* `ghw.PCIVendorInfo.Id` is the hex-encoded string identifier for the vendor
+* `ghw.PCIVendorInfo.Name` is the common name/description of the vendor
+* `ghw.PCIVendorInfo.Products` is an array of pointers to `ghw.PCIProductInfo`
+  structs, one for each product supplied by the vendor
+
+**NOTE**: PCI products are often referred to by their "device ID". We use the
+term "product ID" in `ghw` because it more accurately reflects what the
+identifier is for: a specific product line produced by the vendor.
+
+Each `ghw.PCIProductInfo` struct contains the following fields:
+
+* `ghw.PCIProductInfo.VendorId` is the hex-encoded string identifier for the
+  product's vendor
+* `ghw.PCIProductInfo.Id` is the hex-encoded string identifier for the product
+* `ghw.PCIProductInfo.Name` is the common name/description of the subclass
+* `ghw.PCIProductInfo.Subsystems` is an array of pointers to
+  `ghw.PCIProductInfo` structs, one for each "subsystem" (sometimes called
+  "sub-device" in PCI literature) for the product
+
+**NOTE**: A subsystem product may have a different vendor than its "parent" PCI
+product. This is sometimes referred to as the "sub-vendor".
+
+Here's some example code that demonstrates listing the PCI vendors with the
+most known products:
+
+```go
+package main
+
+import (
+	"fmt"
+	"sort"
+
+	"github.com/jaypipes/ghw"
+)
+
+type ByCountProducts []*ghw.PCIVendorInfo
+
+func (v ByCountProducts) Len() int {
+	return len(v)
+}
+
+func (v ByCountProducts) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
+}
+
+func (v ByCountProducts) Less(i, j int) bool {
+	return len(v[i].Products) > len(v[j].Products)
+}
+
+func main() {
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting PCI info: %v", err)
+	}
+
+	vendors := make([]*ghw.PCIVendorInfo, len(pci.Vendors))
+	x := 0
+	for _, vendor := range pci.Vendors {
+		vendors[x] = vendor
+		x++
+	}
+
+	sort.Sort(ByCountProducts(vendors))
+
+	fmt.Println("Top 5 vendors by product")
+	fmt.Println("====================================================")
+	for _, vendor := range vendors[0:5] {
+		fmt.Printf("%v ('%v') has %d products\n", vendor.Name, vendor.Id, len(vendor.Products))
+	}
+}
+```
+
+which yields (on my local workstation as of July 7th, 2018):
+
+```
+Top 5 vendors by product
+====================================================
+Intel Corporation ('8086') has 3389 products
+NVIDIA Corporation ('10de') has 1358 products
+Advanced Micro Devices, Inc. [AMD/ATI] ('1002') has 886 products
+National Instruments ('1093') has 601 products
+Chelsio Communications Inc ('1425') has 525 products
 ```
 
 ## Developers
