@@ -31,6 +31,7 @@ information about the host computer:
 * [Block storage](#block-storage)
 * [Topology](#topology)
 * [Network](#network)
+* [PCI](#pci)
 
 ### Memory
 
@@ -369,6 +370,102 @@ Example output from my personal workstation:
 net (2 NICs)
  enp0s25
  wls1
+```
+
+### PCI
+
+`ghw` contains a PCI database inspection and querying facility that allows
+developers to not only gather information about devices on a local PCI bus but
+also query for information about hardware device classes, vendor and product
+information.
+
+The `ghw.PCI()` function returns a `ghw.PCIInfo` struct. The `ghw.PCIInfo`
+struct contains a number of fields that may be queried for PCI information:
+
+* `ghw.PCIInfo.Classes` is a map, keyed by the PCI class ID (a hex-encoded
+  string) of pointers to `PCIClassInfo` structs, one for each class of PCI
+  device known to `ghw`
+
+#### PCI device classes
+
+Let's take a look at the PCI device class information and how to query the PCI
+database for class, subclass, and programming interface information.
+
+Each `ghw.PCIClassInfo` struct contains the following fields:
+
+* `ghw.PCIClassInfo.Id` is the hex-encoded string identifier for the device
+  class
+* `ghw.PCIClassInfo.Name` is the common name/description of the class
+* `ghw.PCIClassInfo.Subclasses` is an array of pointers to
+  `ghw.PCISubclassInfo` structs, one for each subclass in the device class
+
+Each `ghw.PCISubclassInfo` struct contains the following fields:
+
+* `ghw.PCISubclassInfo.Id` is the hex-encoded string identifier for the device
+  subclass
+* `ghw.PCISubclassInfo.Name` is the common name/description of the subclass
+* `ghw.PCISubclassInfo.ProgrammingInterfaces` is an array of pointers to
+  `ghw.PCIProgrammingInterfaceInfo` structs, one for each programming interface
+   for the device subclass
+
+Each `ghw.PCIProgrammingInterfaceInfo` struct contains the following fields:
+
+* `ghw.PCIProgrammingInterfaceInfo.Id` is the hex-encoded string identifier for
+  the programming interface
+* `ghw.PCIProgrammingInterfaceInfo.Name` is the common name/description for the
+  programming interface
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting PCI info: %v", err)
+	}
+
+	for _, devClass := range pci.Classes {
+		fmt.Printf(" Device class: %v ('%v')\n", devClass.Name, devClass.Id)
+        for _, devSubclass := range devClass.Subclasses {
+            fmt.Printf("    Device subclass: %v ('%v')\n", devSubclass.Name, devSubclass.Id)
+            for _, progIface := range devSubclass.ProgrammingInterfaces {
+                fmt.Printf("        Programming interface: %v ('%v')\n", progIface.Name, progIface.Id)
+            }
+        }
+	}
+}
+```
+
+Example output from my personal workstation, snipped for brevity:
+
+```
+...
+ Device class: Serial bus controller ('0c')
+    Device subclass: FireWire (IEEE 1394) ('00')
+        Programming interface: Generic ('00')
+        Programming interface: OHCI ('10')
+    Device subclass: ACCESS Bus ('01')
+    Device subclass: SSA ('02')
+    Device subclass: USB controller ('03')
+        Programming interface: UHCI ('00')
+        Programming interface: OHCI ('10')
+        Programming interface: EHCI ('20')
+        Programming interface: XHCI ('30')
+        Programming interface: Unspecified ('80')
+        Programming interface: USB Device ('fe')
+    Device subclass: Fibre Channel ('04')
+    Device subclass: SMBus ('05')
+    Device subclass: InfiniBand ('06')
+    Device subclass: IPMI SMIC interface ('07')
+    Device subclass: SERCOS interface ('08')
+    Device subclass: CANBUS ('09')
+...
 ```
 
 ## Developers
