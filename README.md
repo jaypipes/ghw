@@ -392,7 +392,7 @@ struct contains a number of fields that may be queried for PCI information:
   string) of pointers to `ghw.PCIProductInfo` structs, one for each PCI product
   known to `ghw`
 
-**NOTE**: [*] PCI products are often referred to by their "device ID". We use
+**NOTE**: PCI products are often referred to by their "device ID". We use
 the term "product ID" in `ghw` because it more accurately reflects what the
 identifier is for: a specific product line produced by the vendor.
 
