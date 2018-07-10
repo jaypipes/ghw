@@ -732,6 +732,97 @@ Bt878 Video Capture ('036e') from Brooktree Corporation
       - iTuner ('aa0e')
 ```
 
+#### Accessing a particular device's PCI information
+
+In addition to the above information, the `ghw.PCIInfo` struct has the
+following method:
+
+* `ghw.PCIInfo.GetDeviceInfo(address string) *PCIDeviceInfo`
+
+This method returns a pointer to a `ghw.PCIDeviceInfo` struct, which has the
+following fields:
+
+
+* `ghw.PCIDeviceInfo.Vendor` is a pointer to a `ghw.PCIVendorInfo` struct that
+  describes the device's primary vendor. This will always be non-nil.
+* `ghw.PCIDeviceInfo.Product` is a pointer to a `ghw.PCIProductInfo` struct that
+  describes the device's primary product. This will always be non-nil.
+* `ghw.PCIDeviceInfo.Subsystem` is a pointer to a `ghw.PCIProductInfo` struct that
+  describes the device's secondary/sub-product. This will always be non-nil.
+* `ghw.PCIDeviceInfo.Class` is a pointer to a `ghw.PCIClassInfo` struct that
+  describes the device's class. This will always be non-nil.
+* `ghw.PCIDeviceInfo.Subclass` is a pointer to a `ghw.PCISubclassInfo` struct
+  that describes the device's subclass. This will always be non-nil.
+* `ghw.PCIDeviceInfo.ProgrammingInterface` is a pointer to a
+  `ghw.PCIProgrammingInterfaceInfo` struct that describes the device subclass'
+  programming interface. This will always be non-nil.
+
+The following code snippet shows how to call and use the
+`ghw.PCIInfo.GetDeviceInfo()` method and its returned `ghw.PCIDeviceInfo`
+struct pointer:
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting PCI info: %v", err)
+	}
+
+	addr := "0000:00:00.0"
+	if len(os.Args) == 2 {
+		addr = os.Args[1]
+	}
+	fmt.Printf("PCI device information for %s\n", addr)
+	fmt.Println("====================================================")
+	deviceInfo := pci.GetDeviceInfo(addr)
+	if deviceInfo == nil {
+		fmt.Printf("could not retrieve PCI device information for %s\n", addr)
+		return
+	}
+
+	vendor := deviceInfo.Vendor
+	fmt.Printf("Vendor: %s [%s]\n", vendor.Name, vendor.Id)
+	product := deviceInfo.Product
+	fmt.Printf("Product: %s [%s]\n", product.Name, product.Id)
+	subsystem := deviceInfo.Subsystem
+	subvendor := pci.Vendors[subsystem.VendorId]
+	subvendorName := "UNKNOWN"
+	if subvendor != nil {
+		subvendorName = subvendor.Name
+	}
+	fmt.Printf("Subsystem: %s [%s] (Subvendor: %s)\n", subsystem.Name, subsystem.Id, subvendorName)
+	class := deviceInfo.Class
+	fmt.Printf("Class: %s [%s]\n", class.Name, class.Id)
+	subclass := deviceInfo.Subclass
+	fmt.Printf("Subclass: %s [%s]\n", subclass.Name, subclass.Id)
+	progIface := deviceInfo.ProgrammingInterface
+	fmt.Printf("Programming Interface: %s [%s]\n", progIface.Name, progIface.Id)
+}
+```
+
+Here's a sample output from my local workstation:
+
+```
+$ go run examples/pci.go 0000:03:00.0
+PCI device information for 0000:03:00.0
+====================================================
+Vendor: NVIDIA Corporation [10de]
+Product: GP107 [GeForce GTX 1050 Ti] [1c82]
+Subsystem: UNKNOWN [8613] (Subvendor: ASUSTeK Computer Inc.)
+Class: Display controller [03]
+Subclass: VGA compatible controller [00]
+Programming Interface: VGA controller [00]
+```
+
 ## Developers
 
 Contributions to `ghw` are welcomed! Fork the repo on GitHub and submit a pull
