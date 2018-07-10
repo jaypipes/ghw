@@ -6,6 +6,15 @@
 
 package ghw
 
+import (
+	"regexp"
+	"strings"
+)
+
+var (
+	RE_PCI_ADDRESS *regexp.Regexp = regexp.MustCompile("^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\\.([0-9a-f]{1})$")
+)
+
 type PCIProgrammingInterfaceInfo struct {
 	Id   string // hex-encoded PCI_ID of the programming interface
 	Name string // common string name for the programming interface
@@ -56,7 +65,35 @@ type PCIInfo struct {
 	Products map[string]*PCIProductInfo
 }
 
-func (db *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
+type PCIAddress struct {
+	Domain   string
+	Bus      string
+	Slot     string
+	Function string
+}
+
+// Given a string address, returns a complete PCIAddress struct, filled in with
+// domain, bus, slot and function components. The address string may either
+// be in $BUS:$SLOT.$FUNCTION (BSF) format or it can be a full PCI address
+// that includes the 4-digit $DOMAIN information as well:
+// $DOMAIN:$BUS:$SLOT.$FUNCTION.
+//
+// Returns "" if the address string wasn't a valid PCI address.
+func PCIAddressFromString(address string) *PCIAddress {
+	addrLowered := strings.ToLower(address)
+	matches := RE_PCI_ADDRESS.FindStringSubmatch(addrLowered)
+	if len(matches) == 6 {
+		dom := "0000"
+		if matches[1] != "" {
+			dom = matches[2]
+		}
+		return &PCIAddress{
+			Domain:   dom,
+			Bus:      matches[3],
+			Slot:     matches[4],
+			Function: matches[5],
+		}
+	}
 	return nil
 }
 
