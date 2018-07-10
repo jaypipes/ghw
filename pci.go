@@ -48,12 +48,12 @@ type PCIVendorInfo struct {
 }
 
 type PCIDeviceInfo struct {
-	Vendor           PCIVendorInfo
-	SubsystemVendor  PCIVendorInfo // optional subvendor information
-	Product          PCIProductInfo
-	SubsystemProduct PCIProductInfo // optional sub-device information
-	Class            PCIClassInfo
-	Subclass         PCIClassInfo // optional sub-class for the device
+	Vendor               *PCIVendorInfo
+	Product              *PCIProductInfo
+	Subsystem            *PCIProductInfo // optional subvendor/sub-device information
+	Class                *PCIClassInfo
+	Subclass             *PCISubclassInfo             // optional sub-class for the device
+	ProgrammingInterface *PCIProgrammingInterfaceInfo // optional programming interface
 }
 
 type PCIInfo struct {
