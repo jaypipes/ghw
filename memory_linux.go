@@ -29,12 +29,14 @@ func memFillInfo(info *MemoryInfo) error {
 	tpb := memTotalPhysicalBytes()
 	info.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		fmt.Fprintf(os.Stderr, `
-WARNING: Could not determine total physical bytes of memory. This may be due to
-the host being a virtual machine or container with no /var/log/syslog file, or
-the current user may not have necessary privileges to read the syslog. We are
-falling back to setting the total physical amount of memory to the total usable
-amount of memory`,
+		fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
+Could not determine total physical bytes of memory. This may
+be due to the host being a virtual machine or container with no
+/var/log/syslog file, or the current user may not have necessary
+privileges to read the syslog. We are falling back to setting the
+total physical amount of memory to the total usable amount of memory
+********************************************************************
+`,
 		)
 		info.TotalPhysicalBytes = tub
 	}

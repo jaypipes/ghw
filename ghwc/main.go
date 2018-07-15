@@ -139,7 +139,7 @@ func showTopology(cmd *cobra.Command, args []string) error {
 var netCommand = &cobra.Command{
 	Use:   "net",
 	Short: "Show network information for the host system",
-	RunE:  showMemory,
+	RunE:  showNetwork,
 }
 
 func showNetwork(cmd *cobra.Command, args []string) error {
