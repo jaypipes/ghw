@@ -12,6 +12,7 @@ type HostInfo struct {
 	CPU      *CPUInfo
 	Topology *TopologyInfo
 	Network  *NetworkInfo
+	GPU      *GPUInfo
 }
 
 func Host() (*HostInfo, error) {
@@ -41,5 +42,10 @@ func Host() (*HostInfo, error) {
 		return nil, err
 	}
 	info.Network = net
+	gpu, err := GPU()
+	if err != nil {
+		return nil, err
+	}
+	info.GPU = gpu
 	return info, nil
 }

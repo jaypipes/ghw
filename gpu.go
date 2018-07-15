@@ -21,6 +21,14 @@ type GraphicsCard struct {
 	DeviceInfo *PCIDeviceInfo
 }
 
+func (card *GraphicsCard) String() string {
+	return fmt.Sprintf(
+		"card #%d @%s",
+		card.Index,
+		card.Address,
+	)
+}
+
 type GPUInfo struct {
 	GraphicsCards []*GraphicsCard
 }
