@@ -72,7 +72,7 @@ func (di *PCIDeviceInfo) String() string {
 		className = di.Class.Name
 	}
 	return fmt.Sprintf(
-		"%s (class: %s vendor: %s product: %s)",
+		"%s -> class: '%s' vendor: '%s' product: '%s'",
 		di.Address,
 		className,
 		vendorName,
