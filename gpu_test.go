@@ -23,4 +23,13 @@ func TestGPU(t *testing.T) {
 	if len(info.GraphicsCards) == 0 {
 		t.Fatalf("Expected >0 GPU cards, but found 0.")
 	}
+
+	for _, card := range info.GraphicsCards {
+		if card.Address != "" {
+			di := card.DeviceInfo
+			if di == nil {
+				t.Fatalf("Expected card with address %s to have non-nil DeviceInfo.", card.Address)
+			}
+		}
+	}
 }

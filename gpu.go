@@ -22,10 +22,14 @@ type GraphicsCard struct {
 }
 
 func (card *GraphicsCard) String() string {
+	deviceStr := card.Address
+	if card.DeviceInfo != nil {
+		deviceStr = card.DeviceInfo.String()
+	}
 	return fmt.Sprintf(
 		"card #%d @%s",
 		card.Index,
-		card.Address,
+		deviceStr,
 	)
 }
 

@@ -324,6 +324,7 @@ func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 	}
 
 	return &PCIDeviceInfo{
+		Address:              address,
 		Vendor:               vendor,
 		Subsystem:            subsystem,
 		Product:              product,

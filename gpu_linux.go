@@ -82,6 +82,21 @@ func gpuFillInfo(info *GPUInfo) error {
 		}
 		cards = append(cards, card)
 	}
+	gpuFillPCIDeviceInfo(cards)
 	info.GraphicsCards = cards
 	return nil
+}
+
+// Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
+// attribute with PCI device information
+func gpuFillPCIDeviceInfo(cards []*GraphicsCard) {
+	pci, err := PCI()
+	if err != nil {
+		return
+	}
+	for _, card := range cards {
+		if card.DeviceInfo == nil {
+			card.DeviceInfo = pci.GetDeviceInfo(card.Address)
+		}
+	}
 }
