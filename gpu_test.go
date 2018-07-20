@@ -15,6 +15,9 @@ func TestGPU(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_GPU"); ok {
 		t.Skip("Skipping GPU tests.")
 	}
+	if _, err := os.Stat("/sys/class/drm"); os.IsNotExist(err) {
+		t.Skip("Skipping GPU tests. The environment has no /sys/class/drm directory.")
+	}
 	info, err := GPU()
 	if err != nil {
 		t.Fatalf("Expected no error creating GPUInfo, but got %v", err)
