@@ -8,6 +8,7 @@
 package ghw
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -48,7 +49,14 @@ func gpuFillInfo(info *GPUInfo) error {
 	// directory using the `ghw.PCIInfo.GetDeviceInfo()` function.
 	links, err := ioutil.ReadDir(PATH_SYSFS_CLASS_DRM)
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
+/sys/class/drm does not exist on this system (likely the host system is a
+virtual machine or container with no graphics). Therefore,
+GPUInfo.GraphicsCards will be an empty array.
+********************************************************************
+`,
+		)
+		return nil
 	}
 	cards := make([]*GraphicsCard, 0)
 	for _, link := range links {

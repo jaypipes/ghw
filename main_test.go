@@ -68,4 +68,9 @@ func TestHost(t *testing.T) {
 	if len(topology.Nodes) < 1 {
 		t.Fatalf("Expected >0 nodes , but got %d", len(topology.Nodes))
 	}
+
+	gpu := host.GPU
+	if gpu == nil {
+		t.Fatalf("Expected non-nil GPU but got nil.")
+	}
 }
