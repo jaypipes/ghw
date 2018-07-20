@@ -137,6 +137,24 @@ func main() {
 		for _, core := range proc.Cores {
 			fmt.Printf("  %v\n", core)
 		}
+		if len(proc.Capabilities) > 0 {
+			// pretty-print the (large) block of capability strings into rows
+			// of 6 capability strings
+			rows := int(math.Ceil(float64(len(proc.Capabilities)) / float64(6)))
+			for row := 1; row < rows; row = row + 1 {
+				rowStart := (row * 6) - 1
+				rowEnd := int(math.Min(float64(rowStart+6), float64(len(proc.Capabilities))))
+				rowElems := proc.Capabilities[rowStart:rowEnd]
+				capStr := strings.Join(rowElems, " ")
+				if row == 1 {
+					fmt.Printf("  capabilities: [%s\n", capStr)
+				} else if rowEnd < len(proc.Capabilities) {
+					fmt.Printf("                 %s\n", capStr)
+				} else {
+					fmt.Printf("                 %s]\n", capStr)
+				}
+			}
+		}
 	}
 }
 ```
@@ -152,6 +170,17 @@ cpu (1 physical package, 6 cores, 12 hardware threads)
   processor core #3 (2 threads), logical processors [3 9]
   processor core #4 (2 threads), logical processors [4 10]
   processor core #5 (2 threads), logical processors [5 11]
+  capabilities: [msr pae mce cx8 apic sep
+                 mtrr pge mca cmov pat pse36
+                 clflush dts acpi mmx fxsr sse
+                 sse2 ss ht tm pbe syscall
+                 nx pdpe1gb rdtscp lm constant_tsc arch_perfmon
+                 pebs bts rep_good nopl xtopology nonstop_tsc
+                 cpuid aperfmperf pni pclmulqdq dtes64 monitor
+                 ds_cpl vmx est tm2 ssse3 cx16
+                 xtpr pdcm pcid sse4_1 sse4_2 popcnt
+                 aes lahf_lm pti retpoline tpr_shadow vnmi
+                 flexpriority ept vpid dtherm ida arat]
 ```
 
 ### Block storage
