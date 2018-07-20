@@ -120,8 +120,8 @@ package main
 
 import (
 	"fmt"
-    "math"
-    "strings"
+	"math"
+	"strings"
 
 	"github.com/jaypipes/ghw"
 )
