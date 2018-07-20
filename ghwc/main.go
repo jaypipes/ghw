@@ -33,6 +33,7 @@ func init() {
 	rootCommand.AddCommand(blockCommand)
 	rootCommand.AddCommand(topologyCommand)
 	rootCommand.AddCommand(netCommand)
+	rootCommand.AddCommand(gpuCommand)
 	rootCommand.SilenceUsage = true
 }
 
@@ -61,6 +62,10 @@ func showAll(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	err = showNetwork(cmd, args)
+	if err != nil {
+		return err
+	}
+	err = showGPU(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -148,6 +153,22 @@ func showNetwork(cmd *cobra.Command, args []string) error {
 
 	for _, nic := range net.NICs {
 		fmt.Printf(" %v\n", nic)
+	}
+	return nil
+}
+
+var gpuCommand = &cobra.Command{
+	Use:   "gpu",
+	Short: "Show graphics/GPU information for the host system",
+	RunE:  showGPU,
+}
+
+func showGPU(cmd *cobra.Command, args []string) error {
+	gpu := info.GPU
+	fmt.Printf("%v\n", gpu)
+
+	for _, card := range gpu.GraphicsCards {
+		fmt.Printf(" %v\n", card)
 	}
 	return nil
 }

@@ -32,6 +32,7 @@ information about the host computer:
 * [Topology](#topology)
 * [Network](#network)
 * [PCI](#pci)
+* [GPU](#gpu)
 
 ### Memory
 
@@ -225,11 +226,11 @@ Example output from my personal workstation:
 ```
 block storage (1 disk, 2TB physical storage)
  /dev/sda (2TB) [SCSI]  LSI - SN #3600508e000000000f8253aac9a1abd0c
-  /dev/sda1 (100MB) 
-  /dev/sda2 (187GB) 
-  /dev/sda3 (449MB) 
-  /dev/sda4 (1KB) 
-  /dev/sda5 (15GB) 
+  /dev/sda1 (100MB)
+  /dev/sda2 (187GB)
+  /dev/sda3 (449MB)
+  /dev/sda4 (1KB)
+  /dev/sda5 (15GB)
   /dev/sda6 (2TB) [ext4] mounted@/
 ```
 
@@ -822,6 +823,60 @@ Class: Display controller [03]
 Subclass: VGA compatible controller [00]
 Programming Interface: VGA controller [00]
 ```
+
+### GPU
+
+Information about the host computer's graphics hardware is returned from the
+`ghw.GPU()` function. This function returns a pointer to a `ghw.GPUInfo`
+struct.
+
+The `ghw.GPUInfo` struct contains one field:
+
+* `ghw.GPUInfo.GraphicCards` is an array of pointers to `ghw.GraphicsCard`
+  structs, one for each graphics card found for the systen
+
+Each `ghw.GraphicsCard` struct contains the following fields:
+
+* `ghw.GraphicsCard.Index` is the system's numeric zero-based index for the
+  card on the bus
+* `ghw.GraphicsCard.Address` is the PCI address for the graphics card
+* `ghw.GraphicsCard.DeviceInfo` is a pointer to a `ghw.PCIDeviceInfo` struct
+  describing the graphics card. This may be `nil` if no PCI device information
+  could be determined for the card.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	gpu, err := ghw.GPU())
+	if err != nil {
+		fmt.Printf("Error getting GPU info: %v", err)
+	}
+
+	fmt.Printf("%v\n", gpu)
+
+	for _, card := range gpu.GraphicsCards {
+		fmt.Printf(" %v\n", card)
+	}
+}
+```
+
+Example output from my personal workstation:
+
+```
+gpu (1 graphics card)
+ card #0 @0000:03:00.0 -> class: 'Display controller' vendor: 'NVIDIA Corporation' product: 'GP107 [GeForce GTX 1050 Ti]'
+```
+
+**NOTE**: You can [read more](#pci) about the fields of the `ghw.PCIDeviceInfo`
+struct if you'd like to dig deeper into PCI subsystem and programming interface
+information
 
 ## Developers
 

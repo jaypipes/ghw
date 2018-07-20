@@ -2,6 +2,8 @@ language: go
 # Using sudo triggers a real virtual machine as opposed to a container, which
 # allows ghw to actually determine things like host memory or block storage...
 sudo: required
+env:
+  - GHW_TESTING_SKIP_GPU=1
 script:
   - make test
   - go run ghwc/main.go

@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -48,12 +49,35 @@ type PCIVendorInfo struct {
 }
 
 type PCIDeviceInfo struct {
+	Address              string // The PCI address of the device
 	Vendor               *PCIVendorInfo
 	Product              *PCIProductInfo
 	Subsystem            *PCIProductInfo // optional subvendor/sub-device information
 	Class                *PCIClassInfo
 	Subclass             *PCISubclassInfo             // optional sub-class for the device
 	ProgrammingInterface *PCIProgrammingInterfaceInfo // optional programming interface
+}
+
+func (di *PCIDeviceInfo) String() string {
+	vendorName := "<unknown>"
+	if di.Vendor != nil {
+		vendorName = di.Vendor.Name
+	}
+	productName := "<unknown>"
+	if di.Product != nil {
+		productName = di.Product.Name
+	}
+	className := "<unknown>"
+	if di.Class != nil {
+		className = di.Class.Name
+	}
+	return fmt.Sprintf(
+		"%s -> class: '%s' vendor: '%s' product: '%s'",
+		di.Address,
+		className,
+		vendorName,
+		productName,
+	)
 }
 
 type PCIInfo struct {
