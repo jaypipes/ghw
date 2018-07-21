@@ -90,6 +90,7 @@ GPUInfo.GraphicsCards will be an empty array.
 		}
 		cards = append(cards, card)
 	}
+	gpuFillNUMANodes(cards)
 	gpuFillPCIDeviceInfo(cards)
 	info.GraphicsCards = cards
 	return nil
@@ -106,5 +107,60 @@ func gpuFillPCIDeviceInfo(cards []*GraphicsCard) {
 		if card.DeviceInfo == nil {
 			card.DeviceInfo = pci.GetDeviceInfo(card.Address)
 		}
+	}
+}
+
+// Loops through each GraphicsCard struct and find which NUMA nodes the card is
+// affined to, setting the GraphicsCard.Nodes field accordingly. If the host
+// system is not a NUMA system, the Nodes field will be set to an empty array
+// of Node pointers.
+func gpuFillNUMANodes(cards []*GraphicsCard) {
+	topo, err := Topology()
+	if err != nil {
+		for _, card := range cards {
+			if topo.Architecture != NUMA {
+				card.Nodes = make([]*Node, 0)
+			}
+		}
+		return
+	}
+	for _, card := range cards {
+		if topo.Architecture != NUMA {
+			card.Nodes = make([]*Node, 0)
+			continue
+		}
+		// Each graphics card on a NUMA system will have a pseudo-file
+		// called /sys/class/drm/card$CARD_INDEX/device/numa_node which
+		// contains a comma-separated list of NUMA nodes that the card is
+		// affined to
+		cardIndexStr := strconv.Itoa(card.Index)
+		fpath := filepath.Join(
+			PATH_SYSFS_CLASS_DRM,
+			"card"+cardIndexStr,
+			"device",
+			"numa_node",
+		)
+		numaContents, err := ioutil.ReadFile(fpath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
+Unable to read numa_nodes descriptor file on this system.
+Setting graphics card's Nodes attribute to empty array.
+********************************************************************
+`,
+			)
+			card.Nodes = make([]*Node, 0)
+			continue
+		}
+		cardNodes := make([]*Node, 0)
+		nodeIndexes := strings.Split(string(numaContents), ",")
+		for _, nodeIndex := range nodeIndexes {
+			for _, node := range topo.Nodes {
+				nodeIndexInt, _ := strconv.Atoi(nodeIndex)
+				if nodeIndexInt == int(node.Id) {
+					cardNodes = append(cardNodes, node)
+				}
+			}
+		}
+		card.Nodes = cardNodes
 	}
 }

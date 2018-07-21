@@ -8,6 +8,7 @@ package ghw
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type GraphicsCard struct {
@@ -19,6 +20,9 @@ type GraphicsCard struct {
 	// pointer to a PCIDeviceInfo struct that describes the vendor and product
 	// model, etc
 	DeviceInfo *PCIDeviceInfo
+	// Array of NUMA nodes that the graphics card is affined to. Will be empty
+	// if the architecture is not NUMA.
+	Nodes []*Node
 }
 
 func (card *GraphicsCard) String() string {
@@ -26,9 +30,23 @@ func (card *GraphicsCard) String() string {
 	if card.DeviceInfo != nil {
 		deviceStr = card.DeviceInfo.String()
 	}
+	nodeStr := ""
+	if len(card.Nodes) > 0 {
+		x := 0
+		nodeStr = " NUMA nodes ["
+		for _, node := range card.Nodes {
+			if x > 0 {
+				nodeStr += ","
+			}
+			nodeStr += strconv.Itoa(int(node.Id))
+			x++
+		}
+		nodeStr += "] "
+	}
 	return fmt.Sprintf(
-		"card #%d @%s",
+		"card #%d %s@%s",
 		card.Index,
+		nodeStr,
 		deviceStr,
 	)
 }

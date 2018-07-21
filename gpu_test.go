@@ -34,5 +34,10 @@ func TestGPU(t *testing.T) {
 				t.Fatalf("Expected card with address %s to have non-nil DeviceInfo.", card.Address)
 			}
 		}
+		// The Nodes attribute should at least be filled with empty arrays of
+		// Node pointers
+		if card.Nodes == nil {
+			t.Fatalf("Expected card with address %s to have non-nil Nodes.", card.Address)
+		}
 	}
 }
