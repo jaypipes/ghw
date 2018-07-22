@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -132,6 +133,8 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 	cacheVals := make([]*MemoryCache, len(caches))
 	x := 0
 	for _, c := range caches {
+		// ensure the cache's processor set is sorted by logical process ID
+		sort.Sort(SortByLogicalProcessorId(c.LogicalProcessors))
 		cacheVals[x] = c
 		x++
 	}

@@ -33,6 +33,12 @@ func (a SortByMemoryCacheLevel) Less(i, j int) bool {
 	return false
 }
 
+type SortByLogicalProcessorId []uint32
+
+func (a SortByLogicalProcessorId) Len() int           { return len(a) }
+func (a SortByLogicalProcessorId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a SortByLogicalProcessorId) Less(i, j int) bool { return a[i] < a[j] }
+
 type MemoryCache struct {
 	Level     uint8
 	Type      MemoryCacheType
