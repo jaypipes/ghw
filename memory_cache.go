@@ -20,15 +20,21 @@ const (
 	DATA
 )
 
-type SortByMemoryCacheLevel []*MemoryCache
+type SortByMemoryCacheLevelTypeFirstProcessor []*MemoryCache
 
-func (a SortByMemoryCacheLevel) Len() int      { return len(a) }
-func (a SortByMemoryCacheLevel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a SortByMemoryCacheLevel) Less(i, j int) bool {
+func (a SortByMemoryCacheLevelTypeFirstProcessor) Len() int      { return len(a) }
+func (a SortByMemoryCacheLevelTypeFirstProcessor) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a SortByMemoryCacheLevelTypeFirstProcessor) Less(i, j int) bool {
 	if a[i].Level < a[j].Level {
 		return true
 	} else if a[i].Level == a[j].Level {
-		return a[i].Type < a[j].Type
+		if a[i].Type < a[j].Type {
+			return true
+		} else if a[i].Type == a[j].Type {
+			// NOTE(jaypipes): len(LogicalProcessors) is always >0 and is always
+			// sorted lowest LP ID to highest LP ID
+			return a[i].LogicalProcessors[0] < a[j].LogicalProcessors[0]
+		}
 	}
 	return false
 }

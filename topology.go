@@ -48,7 +48,7 @@ func Topology() (*TopologyInfo, error) {
 	info := &TopologyInfo{}
 	err := topologyFillInfo(info)
 	for _, node := range info.Nodes {
-		sort.Sort(SortByMemoryCacheLevel(node.Caches))
+		sort.Sort(SortByMemoryCacheLevelTypeFirstProcessor(node.Caches))
 	}
 	if err != nil {
 		return nil, err
