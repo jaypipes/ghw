@@ -281,7 +281,7 @@ The `ghw.TopologyInfo` struct contains two fields:
 
 Each `ghw.Node` struct contains the following fields:
 
-* `ghw.Node.Id` is the system's identifier for the node
+* `ghw.Node.Id` is the system's `uint32` identifier for the node
 * `ghw.Node.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
   are contained in this node
 * `ghw.Node.Caches` is an array of pointers to `ghw.MemoryCache` structs that

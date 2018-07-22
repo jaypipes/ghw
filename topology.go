@@ -20,10 +20,8 @@ const (
 	NUMA
 )
 
-type NodeId uint32
-
 type Node struct {
-	Id     NodeId
+	Id     uint32
 	Cores  []*ProcessorCore
 	Caches []*MemoryCache
 }

@@ -50,7 +50,7 @@ func Nodes() ([]*Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		node.Id = NodeId(nodeId)
+		node.Id = uint32(nodeId)
 		cores, err := coresForNode(node.Id)
 		if err != nil {
 			return nil, err
@@ -66,7 +66,7 @@ func Nodes() ([]*Node, error) {
 	return nodes, nil
 }
 
-func coresForNode(nodeId NodeId) ([]*ProcessorCore, error) {
+func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a
@@ -137,7 +137,7 @@ func coresForNode(nodeId NodeId) ([]*ProcessorCore, error) {
 	return cores, nil
 }
 
-func cachesForNode(nodeId NodeId) ([]*MemoryCache, error) {
+func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 	// The /sys/devices/node/nodeX directory contains a subdirectory called
 	// 'cpuX' for each logical processor assigned to the node. Each of those
 	// subdirectories containers a 'cache' subdirectory which contains a number
