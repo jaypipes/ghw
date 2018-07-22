@@ -90,7 +90,8 @@ information about the CPUs on the host system.
 
 Each `ghw.Processor` struct contains a number of fields:
 
-* `ghw.Processor.Id` is the physical processor ID according to the system
+* `ghw.Processor.Id` is the physical processor `uint32` ID according to the
+  system
 * `ghw.Processor.NumCores` is the number of physical cores in the processor
   package
 * `ghw.Processor.NumThreads` is the number of hardware threads in the processor
@@ -104,10 +105,10 @@ Each `ghw.Processor` struct contains a number of fields:
 
 A `ghw.ProcessorCore` has the following fields:
 
-* `ghw.ProcessorCore.Id` is the identifier that the host gave this core. Note
-  that this does *not* necessarily equate to a zero-based index of the core
-  within a physical package. For example, the core IDs for an Intel Core i7
-  are 0, 1, 2, 8, 9, and 10
+* `ghw.ProcessorCore.Id` is the `uint32` identifier that the host gave this
+  core. Note that this does *not* necessarily equate to a zero-based index of
+  the core within a physical package. For example, the core IDs for an Intel Core
+  i7 are 0, 1, 2, 8, 9, and 10
 * `ghw.ProcessorCore.Index` is the zero-based index of the core on the physical
   processor package
 * `ghw.ProcessorCore.NumThreads` is the number of hardware threads associated
@@ -275,16 +276,16 @@ The `ghw.TopologyInfo` struct contains two fields:
 
 * `ghw.TopologyInfo.Architecture` contains an enum with the value `ghw.NUMA` or
   `ghw.SMP` depending on what the topology of the system is
-* `ghw.TopologyInfo.Nodes` is an array of pointers to `ghw.Node` structs, one
-  for each topology node (typically physical processor package) found by the
-  system
+* `ghw.TopologyInfo.Nodes` is an array of pointers to `ghw.TopologyNode`
+  structs, one for each topology node (typically physical processor package)
+  found by the system
 
-Each `ghw.Node` struct contains the following fields:
+Each `ghw.TopologyNode` struct contains the following fields:
 
-* `ghw.Node.Id` is the system's identifier for the node
-* `ghw.Node.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
+* `ghw.TopologyNode.Id` is the system's `uint32` identifier for the node
+* `ghw.TopologyNode.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
   are contained in this node
-* `ghw.Node.Caches` is an array of pointers to `ghw.MemoryCache` structs that
+* `ghw.TopologyNode.Caches` is an array of pointers to `ghw.MemoryCache` structs that
   represent the low-level caches associated with processors and cores on the
   system
 
@@ -874,9 +875,9 @@ Each `ghw.GraphicsCard` struct contains the following fields:
 * `ghw.GraphicsCard.DeviceInfo` is a pointer to a `ghw.PCIDevice` struct
   describing the graphics card. This may be `nil` if no PCI device information
   could be determined for the card.
-* `ghw.GraphicsCard.Nodes` is an array of pointers to `ghw.Node` structs, one
-  for each NUMA node that the GPU/graphics card is affined to. On non-NUMA
-  systems, this will always be an empty array.
+* `ghw.GraphicsCard.Nodes` is an array of pointers to `ghw.TopologyNode`
+  structs, one for each NUMA node that the GPU/graphics card is affined to. On
+  non-NUMA systems, this will always be an empty array.
 
 ```go
 package main
@@ -912,8 +913,9 @@ gpu (1 graphics card)
 struct if you'd like to dig deeper into PCI subsystem and programming interface
 information
 
-**NOTE**: You can [read more](#topology) about the fields of the `ghw.Node`
-struct if you'd like to dig deeper into NUMA/topology subsystem
+**NOTE**: You can [read more](#topology) about the fields of the
+`ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
+subsystem
 
 ## Developers
 

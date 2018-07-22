@@ -119,14 +119,14 @@ func gpuFillNUMANodes(cards []*GraphicsCard) {
 	if err != nil {
 		for _, card := range cards {
 			if topo.Architecture != NUMA {
-				card.Nodes = make([]*Node, 0)
+				card.Nodes = make([]*TopologyNode, 0)
 			}
 		}
 		return
 	}
 	for _, card := range cards {
 		if topo.Architecture != NUMA {
-			card.Nodes = make([]*Node, 0)
+			card.Nodes = make([]*TopologyNode, 0)
 			continue
 		}
 		// Each graphics card on a NUMA system will have a pseudo-file
@@ -148,10 +148,10 @@ Setting graphics card's Nodes attribute to empty array.
 ********************************************************************
 `,
 			)
-			card.Nodes = make([]*Node, 0)
+			card.Nodes = make([]*TopologyNode, 0)
 			continue
 		}
-		cardNodes := make([]*Node, 0)
+		cardNodes := make([]*TopologyNode, 0)
 		nodeIndexes := strings.Split(string(numaContents), ",")
 		for _, nodeIndex := range nodeIndexes {
 			for _, node := range topo.Nodes {

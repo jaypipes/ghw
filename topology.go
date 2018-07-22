@@ -9,8 +9,6 @@ package ghw
 import (
 	"fmt"
 	"sort"
-	"strconv"
-	"strings"
 )
 
 type Architecture int
@@ -20,15 +18,20 @@ const (
 	NUMA
 )
 
-type NodeId uint32
-
-type Node struct {
-	Id     NodeId
+// A TopologyNode is an abstract construct representing a collection of
+// processors and various levels of memory cache that those processors share.
+// In a NUMA architecture, there are multiple NUMA nodes, abstracted here as
+// multiple TopologyNode structs. In an SMP architecture, a single TopologyNode
+// will be available in the TopologyInfo struct and this single struct can be
+// used to describe the levels of memory caching available to the single
+// physical processor package's physical processor cores
+type TopologyNode struct {
+	Id     uint32
 	Cores  []*ProcessorCore
 	Caches []*MemoryCache
 }
 
-func (n *Node) String() string {
+func (n *TopologyNode) String() string {
 	return fmt.Sprintf(
 		"node #%d (%d cores)",
 		n.Id,
@@ -36,71 +39,16 @@ func (n *Node) String() string {
 	)
 }
 
-type MemoryCacheType int
-
-const (
-	UNIFIED MemoryCacheType = iota
-	INSTRUCTION
-	DATA
-)
-
-type ByCacheLevel []*MemoryCache
-
-func (a ByCacheLevel) Len() int      { return len(a) }
-func (a ByCacheLevel) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByCacheLevel) Less(i, j int) bool {
-	if a[i].Level < a[j].Level {
-		return true
-	} else if a[i].Level == a[j].Level {
-		return a[i].Type < a[j].Type
-	}
-	return false
-}
-
-type MemoryCache struct {
-	Level     uint8
-	Type      MemoryCacheType
-	SizeBytes uint64
-	// The set of logical processors (hardware threads) that have access to the
-	// cache
-	LogicalProcessors []ProcessorId
-}
-
-func (c *MemoryCache) String() string {
-	sizeKb := c.SizeBytes / uint64(KB)
-	typeStr := ""
-	if c.Type == INSTRUCTION {
-		typeStr = "i"
-	} else if c.Type == DATA {
-		typeStr = "d"
-	}
-	cacheIdStr := fmt.Sprintf("L%d%s", c.Level, typeStr)
-	processorMapStr := ""
-	if c.LogicalProcessors != nil {
-		lpStrings := make([]string, len(c.LogicalProcessors))
-		for x, lpid := range c.LogicalProcessors {
-			lpStrings[x] = strconv.Itoa(int(lpid))
-		}
-		processorMapStr = " shared with logical processors: " + strings.Join(lpStrings, ",")
-	}
-	return fmt.Sprintf(
-		"%s cache (%d KB)%s",
-		cacheIdStr,
-		sizeKb,
-		processorMapStr,
-	)
-}
-
 type TopologyInfo struct {
 	Architecture Architecture
-	Nodes        []*Node
+	Nodes        []*TopologyNode
 }
 
 func Topology() (*TopologyInfo, error) {
 	info := &TopologyInfo{}
 	err := topologyFillInfo(info)
 	for _, node := range info.Nodes {
-		sort.Sort(ByCacheLevel(node.Caches))
+		sort.Sort(SortByMemoryCacheLevelTypeFirstProcessor(node.Caches))
 	}
 	if err != nil {
 		return nil, err
