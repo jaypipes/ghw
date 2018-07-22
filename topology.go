@@ -18,13 +18,20 @@ const (
 	NUMA
 )
 
-type Node struct {
+// A TopologyNode is an abstract construct representing a collection of
+// processors and various levels of memory cache that those processors share.
+// In a NUMA architecture, there are multiple NUMA nodes, abstracted here as
+// multiple TopologyNode structs. In an SMP architecture, a single TopologyNode
+// will be available in the TopologyInfo struct and this single struct can be
+// used to describe the levels of memory caching available to the single
+// physical processor package's physical processor cores
+type TopologyNode struct {
 	Id     uint32
 	Cores  []*ProcessorCore
 	Caches []*MemoryCache
 }
 
-func (n *Node) String() string {
+func (n *TopologyNode) String() string {
 	return fmt.Sprintf(
 		"node #%d (%d cores)",
 		n.Id,
@@ -34,7 +41,7 @@ func (n *Node) String() string {
 
 type TopologyInfo struct {
 	Architecture Architecture
-	Nodes        []*Node
+	Nodes        []*TopologyNode
 }
 
 func Topology() (*TopologyInfo, error) {

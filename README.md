@@ -275,16 +275,16 @@ The `ghw.TopologyInfo` struct contains two fields:
 
 * `ghw.TopologyInfo.Architecture` contains an enum with the value `ghw.NUMA` or
   `ghw.SMP` depending on what the topology of the system is
-* `ghw.TopologyInfo.Nodes` is an array of pointers to `ghw.Node` structs, one
-  for each topology node (typically physical processor package) found by the
-  system
+* `ghw.TopologyInfo.Nodes` is an array of pointers to `ghw.TopologyNode`
+  structs, one for each topology node (typically physical processor package)
+  found by the system
 
-Each `ghw.Node` struct contains the following fields:
+Each `ghw.TopologyNode` struct contains the following fields:
 
-* `ghw.Node.Id` is the system's `uint32` identifier for the node
-* `ghw.Node.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
+* `ghw.TopologyNode.Id` is the system's `uint32` identifier for the node
+* `ghw.TopologyNode.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
   are contained in this node
-* `ghw.Node.Caches` is an array of pointers to `ghw.MemoryCache` structs that
+* `ghw.TopologyNode.Caches` is an array of pointers to `ghw.MemoryCache` structs that
   represent the low-level caches associated with processors and cores on the
   system
 
@@ -874,9 +874,9 @@ Each `ghw.GraphicsCard` struct contains the following fields:
 * `ghw.GraphicsCard.DeviceInfo` is a pointer to a `ghw.PCIDevice` struct
   describing the graphics card. This may be `nil` if no PCI device information
   could be determined for the card.
-* `ghw.GraphicsCard.Nodes` is an array of pointers to `ghw.Node` structs, one
-  for each NUMA node that the GPU/graphics card is affined to. On non-NUMA
-  systems, this will always be an empty array.
+* `ghw.GraphicsCard.Nodes` is an array of pointers to `ghw.TopologyNode`
+  structs, one for each NUMA node that the GPU/graphics card is affined to. On
+  non-NUMA systems, this will always be an empty array.
 
 ```go
 package main
@@ -912,8 +912,9 @@ gpu (1 graphics card)
 struct if you'd like to dig deeper into PCI subsystem and programming interface
 information
 
-**NOTE**: You can [read more](#topology) about the fields of the `ghw.Node`
-struct if you'd like to dig deeper into NUMA/topology subsystem
+**NOTE**: You can [read more](#topology) about the fields of the
+`ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
+subsystem
 
 ## Developers
 

@@ -18,7 +18,7 @@ const (
 )
 
 func topologyFillInfo(info *TopologyInfo) error {
-	nodes, err := Nodes()
+	nodes, err := TopologyNodes()
 	if err != nil {
 		return err
 	}
@@ -31,8 +31,8 @@ func topologyFillInfo(info *TopologyInfo) error {
 	return nil
 }
 
-func Nodes() ([]*Node, error) {
-	nodes := make([]*Node, 0)
+func TopologyNodes() ([]*TopologyNode, error) {
+	nodes := make([]*TopologyNode, 0)
 
 	files, err := ioutil.ReadDir(PATH_DEVICES_SYSTEM_NODE)
 	if err != nil {
@@ -43,7 +43,7 @@ func Nodes() ([]*Node, error) {
 		if !strings.HasPrefix(filename, "node") {
 			continue
 		}
-		node := &Node{}
+		node := &TopologyNode{}
 		nodeId, err := strconv.Atoi(filename[4:])
 		if err != nil {
 			return nil, err
