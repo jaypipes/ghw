@@ -415,13 +415,13 @@ The `ghw.PCI()` function returns a `ghw.PCIInfo` struct. The `ghw.PCIInfo`
 struct contains a number of fields that may be queried for PCI information:
 
 * `ghw.PCIInfo.Classes` is a map, keyed by the PCI class ID (a hex-encoded
-  string) of pointers to `ghw.PCIClassInfo` structs, one for each class of PCI
+  string) of pointers to `ghw.PCIClass` structs, one for each class of PCI
   device known to `ghw`
 * `ghw.PCIInfo.Vendors` is a map, keyed by the PCI vendor ID (a hex-encoded
-  string) of pointers to `ghw.PCIVendorInfo` structs, one for each PCI vendor
+  string) of pointers to `ghw.PCIVendor` structs, one for each PCI vendor
   known to `ghw`
 * `ghw.PCIInfo.Products` is a map, keyed by the PCI product ID* (a hex-encoded
-  string) of pointers to `ghw.PCIProductInfo` structs, one for each PCI product
+  string) of pointers to `ghw.PCIProduct` structs, one for each PCI product
   known to `ghw`
 
 **NOTE**: PCI products are often referred to by their "device ID". We use
@@ -433,28 +433,28 @@ identifier is for: a specific product line produced by the vendor.
 Let's take a look at the PCI device class information and how to query the PCI
 database for class, subclass, and programming interface information.
 
-Each `ghw.PCIClassInfo` struct contains the following fields:
+Each `ghw.PCIClass` struct contains the following fields:
 
-* `ghw.PCIClassInfo.Id` is the hex-encoded string identifier for the device
+* `ghw.PCIClass.Id` is the hex-encoded string identifier for the device
   class
-* `ghw.PCIClassInfo.Name` is the common name/description of the class
-* `ghw.PCIClassInfo.Subclasses` is an array of pointers to
-  `ghw.PCISubclassInfo` structs, one for each subclass in the device class
+* `ghw.PCIClass.Name` is the common name/description of the class
+* `ghw.PCIClass.Subclasses` is an array of pointers to
+  `ghw.PCISubclass` structs, one for each subclass in the device class
 
-Each `ghw.PCISubclassInfo` struct contains the following fields:
+Each `ghw.PCISubclass` struct contains the following fields:
 
-* `ghw.PCISubclassInfo.Id` is the hex-encoded string identifier for the device
+* `ghw.PCISubclass.Id` is the hex-encoded string identifier for the device
   subclass
-* `ghw.PCISubclassInfo.Name` is the common name/description of the subclass
-* `ghw.PCISubclassInfo.ProgrammingInterfaces` is an array of pointers to
-  `ghw.PCIProgrammingInterfaceInfo` structs, one for each programming interface
+* `ghw.PCISubclass.Name` is the common name/description of the subclass
+* `ghw.PCISubclass.ProgrammingInterfaces` is an array of pointers to
+  `ghw.PCIProgrammingInterface` structs, one for each programming interface
    for the device subclass
 
-Each `ghw.PCIProgrammingInterfaceInfo` struct contains the following fields:
+Each `ghw.PCIProgrammingInterface` struct contains the following fields:
 
-* `ghw.PCIProgrammingInterfaceInfo.Id` is the hex-encoded string identifier for
+* `ghw.PCIProgrammingInterface.Id` is the hex-encoded string identifier for
   the programming interface
-* `ghw.PCIProgrammingInterfaceInfo.Name` is the common name/description for the
+* `ghw.PCIProgrammingInterface.Name` is the common name/description for the
   programming interface
 
 ```go
@@ -515,21 +515,21 @@ Example output from my personal workstation, snipped for brevity:
 Let's take a look at the PCI vendor information and how to query the PCI
 database for vendor information and the products a vendor supplies.
 
-Each `ghw.PCIVendorInfo` struct contains the following fields:
+Each `ghw.PCIVendor` struct contains the following fields:
 
-* `ghw.PCIVendorInfo.Id` is the hex-encoded string identifier for the vendor
-* `ghw.PCIVendorInfo.Name` is the common name/description of the vendor
-* `ghw.PCIVendorInfo.Products` is an array of pointers to `ghw.PCIProductInfo`
+* `ghw.PCIVendor.Id` is the hex-encoded string identifier for the vendor
+* `ghw.PCIVendor.Name` is the common name/description of the vendor
+* `ghw.PCIVendor.Products` is an array of pointers to `ghw.PCIProduct`
   structs, one for each product supplied by the vendor
 
-Each `ghw.PCIProductInfo` struct contains the following fields:
+Each `ghw.PCIProduct` struct contains the following fields:
 
-* `ghw.PCIProductInfo.VendorId` is the hex-encoded string identifier for the
+* `ghw.PCIProduct.VendorId` is the hex-encoded string identifier for the
   product's vendor
-* `ghw.PCIProductInfo.Id` is the hex-encoded string identifier for the product
-* `ghw.PCIProductInfo.Name` is the common name/description of the subclass
-* `ghw.PCIProductInfo.Subsystems` is an array of pointers to
-  `ghw.PCIProductInfo` structs, one for each "subsystem" (sometimes called
+* `ghw.PCIProduct.Id` is the hex-encoded string identifier for the product
+* `ghw.PCIProduct.Name` is the common name/description of the subclass
+* `ghw.PCIProduct.Subsystems` is an array of pointers to
+  `ghw.PCIProduct` structs, one for each "subsystem" (sometimes called
   "sub-device" in PCI literature) for the product
 
 **NOTE**: A subsystem product may have a different vendor than its "parent" PCI
@@ -548,7 +548,7 @@ import (
 	"github.com/jaypipes/ghw"
 )
 
-type ByCountProducts []*ghw.PCIVendorInfo
+type ByCountProducts []*ghw.PCIVendor
 
 func (v ByCountProducts) Len() int {
 	return len(v)
@@ -568,7 +568,7 @@ func main() {
 		fmt.Printf("Error getting PCI info: %v", err)
 	}
 
-	vendors := make([]*ghw.PCIVendorInfo, len(pci.Vendors))
+	vendors := make([]*ghw.PCIVendor, len(pci.Vendors))
 	x := 0
 	for _, vendor := range pci.Vendors {
 		vendors[x] = vendor
@@ -613,7 +613,7 @@ import (
 	"github.com/jaypipes/ghw"
 )
 
-type ByCountSeparateSubvendors []*ghw.PCIProductInfo
+type ByCountSeparateSubvendors []*ghw.PCIProduct
 
 func (v ByCountSeparateSubvendors) Len() int {
 	return len(v)
@@ -654,7 +654,7 @@ func main() {
 		fmt.Printf("Error getting PCI info: %v", err)
 	}
 
-	products := make([]*ghw.PCIProductInfo, len(pci.Products))
+	products := make([]*ghw.PCIProduct, len(pci.Products))
 	x := 0
 	for _, product := range pci.Products {
 		products[x] = product
@@ -769,28 +769,28 @@ Bt878 Video Capture ('036e') from Brooktree Corporation
 In addition to the above information, the `ghw.PCIInfo` struct has the
 following method:
 
-* `ghw.PCIInfo.GetDeviceInfo(address string) *PCIDeviceInfo`
+* `ghw.PCIInfo.GetPCIDevice(address string) *PCIDevice`
 
-This method returns a pointer to a `ghw.PCIDeviceInfo` struct, which has the
+This method returns a pointer to a `ghw.PCIDevice` struct, which has the
 following fields:
 
 
-* `ghw.PCIDeviceInfo.Vendor` is a pointer to a `ghw.PCIVendorInfo` struct that
+* `ghw.PCIDevice.Vendor` is a pointer to a `ghw.PCIVendor` struct that
   describes the device's primary vendor. This will always be non-nil.
-* `ghw.PCIDeviceInfo.Product` is a pointer to a `ghw.PCIProductInfo` struct that
+* `ghw.PCIDevice.Product` is a pointer to a `ghw.PCIProduct` struct that
   describes the device's primary product. This will always be non-nil.
-* `ghw.PCIDeviceInfo.Subsystem` is a pointer to a `ghw.PCIProductInfo` struct that
+* `ghw.PCIDevice.Subsystem` is a pointer to a `ghw.PCIProduct` struct that
   describes the device's secondary/sub-product. This will always be non-nil.
-* `ghw.PCIDeviceInfo.Class` is a pointer to a `ghw.PCIClassInfo` struct that
+* `ghw.PCIDevice.Class` is a pointer to a `ghw.PCIClass` struct that
   describes the device's class. This will always be non-nil.
-* `ghw.PCIDeviceInfo.Subclass` is a pointer to a `ghw.PCISubclassInfo` struct
+* `ghw.PCIDevice.Subclass` is a pointer to a `ghw.PCISubclass` struct
   that describes the device's subclass. This will always be non-nil.
-* `ghw.PCIDeviceInfo.ProgrammingInterface` is a pointer to a
-  `ghw.PCIProgrammingInterfaceInfo` struct that describes the device subclass'
+* `ghw.PCIDevice.ProgrammingInterface` is a pointer to a
+  `ghw.PCIProgrammingInterface` struct that describes the device subclass'
   programming interface. This will always be non-nil.
 
 The following code snippet shows how to call and use the
-`ghw.PCIInfo.GetDeviceInfo()` method and its returned `ghw.PCIDeviceInfo`
+`ghw.PCIInfo.GetPCIDevice()` method and its returned `ghw.PCIDevice`
 struct pointer:
 
 ```go
@@ -815,7 +815,7 @@ func main() {
 	}
 	fmt.Printf("PCI device information for %s\n", addr)
 	fmt.Println("====================================================")
-	deviceInfo := pci.GetDeviceInfo(addr)
+	deviceInfo := pci.GetPCIDevice(addr)
 	if deviceInfo == nil {
 		fmt.Printf("could not retrieve PCI device information for %s\n", addr)
 		return
@@ -871,7 +871,7 @@ Each `ghw.GraphicsCard` struct contains the following fields:
 * `ghw.GraphicsCard.Index` is the system's numeric zero-based index for the
   card on the bus
 * `ghw.GraphicsCard.Address` is the PCI address for the graphics card
-* `ghw.GraphicsCard.DeviceInfo` is a pointer to a `ghw.PCIDeviceInfo` struct
+* `ghw.GraphicsCard.DeviceInfo` is a pointer to a `ghw.PCIDevice` struct
   describing the graphics card. This may be `nil` if no PCI device information
   could be determined for the card.
 * `ghw.GraphicsCard.Nodes` is an array of pointers to `ghw.Node` structs, one
@@ -908,7 +908,7 @@ gpu (1 graphics card)
  card #0 @0000:03:00.0 -> class: 'Display controller' vendor: 'NVIDIA Corporation' product: 'GP107 [GeForce GTX 1050 Ti]'
 ```
 
-**NOTE**: You can [read more](#pci) about the fields of the `ghw.PCIDeviceInfo`
+**NOTE**: You can [read more](#pci) about the fields of the `ghw.PCIDevice`
 struct if you'd like to dig deeper into PCI subsystem and programming interface
 information
 

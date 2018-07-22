@@ -17,9 +17,9 @@ type GraphicsCard struct {
 	// The "index" of the card on the bus (generally not useful information,
 	// but might as well include it)
 	Index int
-	// pointer to a PCIDeviceInfo struct that describes the vendor and product
+	// pointer to a PCIDevice struct that describes the vendor and product
 	// model, etc
-	DeviceInfo *PCIDeviceInfo
+	DeviceInfo *PCIDevice
 	// Array of NUMA nodes that the graphics card is affined to. Will be empty
 	// if the architecture is not NUMA.
 	Nodes []*Node

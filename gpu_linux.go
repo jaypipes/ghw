@@ -46,7 +46,7 @@ func gpuFillInfo(info *GPUInfo) error {
 	// In this routine, we are only interested in the first link (card0), which
 	// we follow to gather information about the actual device from the PCI
 	// subsystem (we query the modalias file of the PCI device's sysfs
-	// directory using the `ghw.PCIInfo.GetDeviceInfo()` function.
+	// directory using the `ghw.PCIInfo.GetPCIDevice()` function.
 	links, err := ioutil.ReadDir(PATH_SYSFS_CLASS_DRM)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
@@ -91,21 +91,21 @@ GPUInfo.GraphicsCards will be an empty array.
 		cards = append(cards, card)
 	}
 	gpuFillNUMANodes(cards)
-	gpuFillPCIDeviceInfo(cards)
+	gpuFillPCIDevice(cards)
 	info.GraphicsCards = cards
 	return nil
 }
 
 // Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
 // attribute with PCI device information
-func gpuFillPCIDeviceInfo(cards []*GraphicsCard) {
+func gpuFillPCIDevice(cards []*GraphicsCard) {
 	pci, err := PCI()
 	if err != nil {
 		return
 	}
 	for _, card := range cards {
 		if card.DeviceInfo == nil {
-			card.DeviceInfo = pci.GetDeviceInfo(card.Address)
+			card.DeviceInfo = pci.GetPCIDevice(card.Address)
 		}
 	}
 }

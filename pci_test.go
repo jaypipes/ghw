@@ -88,7 +88,7 @@ func TestPCI(t *testing.T) {
 		t.Fatalf("Expected >0 Subclasses for sbController, but found 0.")
 	}
 
-	var firewireSubclass *PCISubclassInfo
+	var firewireSubclass *PCISubclass
 	for _, sc := range sbController.Subclasses {
 		if sc.Id == "00" {
 			firewireSubclass = sc
@@ -102,7 +102,7 @@ func TestPCI(t *testing.T) {
 	if len(firewireSubclass.ProgrammingInterfaces) == 0 {
 		t.Fatalf("Expected >0 Firewire programming interfaces, but found 0.")
 	}
-	var ohciIface *PCIProgrammingInterfaceInfo
+	var ohciIface *PCIProgrammingInterface
 	for _, progIface := range firewireSubclass.ProgrammingInterfaces {
 		if progIface.Id == "10" {
 			ohciIface = progIface
@@ -143,7 +143,7 @@ func TestPCI(t *testing.T) {
 		t.Fatalf("Expected Intel product '10f8' to have vendor ID of '8086' but got '%v'", intel10GBackplane.VendorId)
 	}
 
-	// Make sure this product is linked in the Intel PCIVendorInfo.Products array
+	// Make sure this product is linked in the Intel PCIVendor.Products array
 	foundBackplane := false
 	for _, prod := range intelInc.Products {
 		if prod.Id == "10f8" {

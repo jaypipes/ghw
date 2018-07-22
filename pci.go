@@ -13,52 +13,54 @@ import (
 )
 
 var (
-	RE_PCI_ADDRESS *regexp.Regexp = regexp.MustCompile("^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\\.([0-9a-f]{1})$")
+	RE_PCI_ADDRESS *regexp.Regexp = regexp.MustCompile(
+		"^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\\.([0-9a-f]{1})$",
+	)
 )
 
-type PCIProgrammingInterfaceInfo struct {
+type PCIProgrammingInterface struct {
 	Id   string // hex-encoded PCI_ID of the programming interface
 	Name string // common string name for the programming interface
 }
 
-type PCISubclassInfo struct {
-	Id                    string                         // hex-encoded PCI_ID for the device subclass
-	Name                  string                         // common string name for the subclass
-	ProgrammingInterfaces []*PCIProgrammingInterfaceInfo // any programming interfaces this subclass might have
+type PCISubclass struct {
+	Id                    string                     // hex-encoded PCI_ID for the device subclass
+	Name                  string                     // common string name for the subclass
+	ProgrammingInterfaces []*PCIProgrammingInterface // any programming interfaces this subclass might have
 }
 
-type PCIClassInfo struct {
-	Id         string             // hex-encoded PCI_ID for the device class
-	Name       string             // common string name for the class
-	Subclasses []*PCISubclassInfo // any subclasses belonging to this class
+type PCIClass struct {
+	Id         string         // hex-encoded PCI_ID for the device class
+	Name       string         // common string name for the class
+	Subclasses []*PCISubclass // any subclasses belonging to this class
 }
 
 // NOTE(jaypipes): In the hardware world, the PCI "device_id" is the identifier
 // for the product/model
-type PCIProductInfo struct {
-	VendorId   string            // vendor ID for the product
-	Id         string            // hex-encoded PCI_ID for the product/model
-	Name       string            // common string name of the vendor
-	Subsystems []*PCIProductInfo // "subdevices" or "subsystems" for the product
+type PCIProduct struct {
+	VendorId   string        // vendor ID for the product
+	Id         string        // hex-encoded PCI_ID for the product/model
+	Name       string        // common string name of the vendor
+	Subsystems []*PCIProduct // "subdevices" or "subsystems" for the product
 }
 
-type PCIVendorInfo struct {
-	Id       string            // hex-encoded PCI_ID for the vendor
-	Name     string            // common string name of the vendor
-	Products []*PCIProductInfo // all top-level devices for the vendor
+type PCIVendor struct {
+	Id       string        // hex-encoded PCI_ID for the vendor
+	Name     string        // common string name of the vendor
+	Products []*PCIProduct // all top-level devices for the vendor
 }
 
-type PCIDeviceInfo struct {
+type PCIDevice struct {
 	Address              string // The PCI address of the device
-	Vendor               *PCIVendorInfo
-	Product              *PCIProductInfo
-	Subsystem            *PCIProductInfo // optional subvendor/sub-device information
-	Class                *PCIClassInfo
-	Subclass             *PCISubclassInfo             // optional sub-class for the device
-	ProgrammingInterface *PCIProgrammingInterfaceInfo // optional programming interface
+	Vendor               *PCIVendor
+	Product              *PCIProduct
+	Subsystem            *PCIProduct // optional subvendor/sub-device information
+	Class                *PCIClass
+	Subclass             *PCISubclass             // optional sub-class for the device
+	ProgrammingInterface *PCIProgrammingInterface // optional programming interface
 }
 
-func (di *PCIDeviceInfo) String() string {
+func (di *PCIDevice) String() string {
 	vendorName := "<unknown>"
 	if di.Vendor != nil {
 		vendorName = di.Vendor.Name
@@ -82,11 +84,11 @@ func (di *PCIDeviceInfo) String() string {
 
 type PCIInfo struct {
 	// hash of class ID -> class information
-	Classes map[string]*PCIClassInfo
+	Classes map[string]*PCIClass
 	// hash of vendor ID -> vendor information
-	Vendors map[string]*PCIVendorInfo
+	Vendors map[string]*PCIVendor
 	// hash of vendor ID + product/device ID -> product information
-	Products map[string]*PCIProductInfo
+	Products map[string]*PCIProduct
 }
 
 type PCIAddress struct {
