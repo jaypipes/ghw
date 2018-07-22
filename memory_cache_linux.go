@@ -117,14 +117,14 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 					Level:             uint8(level),
 					Type:              cacheType,
 					SizeBytes:         uint64(size) * uint64(KB),
-					LogicalProcessors: make([]ProcessorId, 0),
+					LogicalProcessors: make([]uint32, 0),
 				}
 				caches[cacheKey] = cache
 			}
 			cache := caches[cacheKey]
 			cache.LogicalProcessors = append(
 				cache.LogicalProcessors,
-				ProcessorId(lpId),
+				uint32(lpId),
 			)
 		}
 	}

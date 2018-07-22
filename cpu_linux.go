@@ -67,13 +67,13 @@ func Processors() []*Processor {
 
 	// Build a set of physical processor IDs which represent the physical
 	// package of the CPU
-	setPhysicalIds := make(map[ProcessorId]bool, 0)
+	setPhysicalIds := make(map[uint32]bool, 0)
 	for _, attrs := range procAttrs {
 		pid, err := strconv.Atoi(attrs["physical id"])
 		if err != nil {
 			continue
 		}
-		setPhysicalIds[ProcessorId(pid)] = true
+		setPhysicalIds[uint32(pid)] = true
 	}
 
 	for pid, _ := range setPhysicalIds {
@@ -88,7 +88,7 @@ func Processors() []*Processor {
 			if err != nil {
 				continue
 			}
-			if pid == ProcessorId(lppid) {
+			if pid == uint32(lppid) {
 				lps = append(lps, x)
 			}
 		}
@@ -121,20 +121,20 @@ func Processors() []*Processor {
 			}
 			var core *ProcessorCore
 			for _, c := range cores {
-				if c.Id == ProcessorId(coreId) {
+				if c.Id == uint32(coreId) {
 					c.LogicalProcessors = append(
 						c.LogicalProcessors,
-						ProcessorId(lpid),
+						uint32(lpid),
 					)
 					c.NumThreads = uint32(len(c.LogicalProcessors))
 					core = c
 				}
 			}
 			if core == nil {
-				coreLps := make([]ProcessorId, 1)
-				coreLps[0] = ProcessorId(lpid)
+				coreLps := make([]uint32, 1)
+				coreLps[0] = uint32(lpid)
 				core = &ProcessorCore{
-					Id:                ProcessorId(coreId),
+					Id:                uint32(coreId),
 					Index:             len(cores),
 					NumThreads:        1,
 					LogicalProcessors: coreLps,
@@ -160,7 +160,7 @@ func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 	)
 	cores := make([]*ProcessorCore, 0)
 
-	findCoreById := func(cid ProcessorId) *ProcessorCore {
+	findCoreById := func(cid uint32) *ProcessorCore {
 		for _, c := range cores {
 			if c.Id == cid {
 				return c
@@ -170,7 +170,7 @@ func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 		c := &ProcessorCore{
 			Id:                cid,
 			Index:             len(cores),
-			LogicalProcessors: make([]ProcessorId, 0),
+			LogicalProcessors: make([]uint32, 0),
 		}
 		cores = append(cores, c)
 		return c
@@ -203,12 +203,12 @@ func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 		// coreIdContents is a []byte with the last byte being a newline rune
 		coreIdStr := string(coreIdContents[:len(coreIdContents)-1])
 		coreIdInt, _ := strconv.Atoi(coreIdStr)
-		coreId := ProcessorId(coreIdInt)
+		coreId := uint32(coreIdInt)
 
 		core := findCoreById(coreId)
 		core.LogicalProcessors = append(
 			core.LogicalProcessors,
-			ProcessorId(lpId),
+			uint32(lpId),
 		)
 	}
 

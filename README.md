@@ -90,7 +90,8 @@ information about the CPUs on the host system.
 
 Each `ghw.Processor` struct contains a number of fields:
 
-* `ghw.Processor.Id` is the physical processor ID according to the system
+* `ghw.Processor.Id` is the physical processor `uint32` ID according to the
+  system
 * `ghw.Processor.NumCores` is the number of physical cores in the processor
   package
 * `ghw.Processor.NumThreads` is the number of hardware threads in the processor
@@ -104,10 +105,10 @@ Each `ghw.Processor` struct contains a number of fields:
 
 A `ghw.ProcessorCore` has the following fields:
 
-* `ghw.ProcessorCore.Id` is the identifier that the host gave this core. Note
-  that this does *not* necessarily equate to a zero-based index of the core
-  within a physical package. For example, the core IDs for an Intel Core i7
-  are 0, 1, 2, 8, 9, and 10
+* `ghw.ProcessorCore.Id` is the `uint32` identifier that the host gave this
+  core. Note that this does *not* necessarily equate to a zero-based index of
+  the core within a physical package. For example, the core IDs for an Intel Core
+  i7 are 0, 1, 2, 8, 9, and 10
 * `ghw.ProcessorCore.Index` is the zero-based index of the core on the physical
   processor package
 * `ghw.ProcessorCore.NumThreads` is the number of hardware threads associated

@@ -39,7 +39,7 @@ type MemoryCache struct {
 	SizeBytes uint64
 	// The set of logical processors (hardware threads) that have access to the
 	// cache
-	LogicalProcessors []ProcessorId
+	LogicalProcessors []uint32
 }
 
 func (c *MemoryCache) String() string {
