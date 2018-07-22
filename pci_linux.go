@@ -47,19 +47,19 @@ func pciFillInfo(info *PCIInfo) error {
 
 func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 	inClassBlock := false
-	info.Classes = make(map[string]*PCIClassInfo, 20)
-	info.Vendors = make(map[string]*PCIVendorInfo, 200)
-	info.Products = make(map[string]*PCIProductInfo, 1000)
-	subclasses := make([]*PCISubclassInfo, 0)
-	progIfaces := make([]*PCIProgrammingInterfaceInfo, 0)
-	var curClass *PCIClassInfo
-	var curSubclass *PCISubclassInfo
-	var curProgIface *PCIProgrammingInterfaceInfo
-	vendorProducts := make([]*PCIProductInfo, 0)
-	var curVendor *PCIVendorInfo
-	var curProduct *PCIProductInfo
-	var curSubsystem *PCIProductInfo
-	productSubsystems := make([]*PCIProductInfo, 0)
+	info.Classes = make(map[string]*PCIClass, 20)
+	info.Vendors = make(map[string]*PCIVendor, 200)
+	info.Products = make(map[string]*PCIProduct, 1000)
+	subclasses := make([]*PCISubclass, 0)
+	progIfaces := make([]*PCIProgrammingInterface, 0)
+	var curClass *PCIClass
+	var curSubclass *PCISubclass
+	var curProgIface *PCIProgrammingInterface
+	vendorProducts := make([]*PCIProduct, 0)
+	var curVendor *PCIVendor
+	var curProduct *PCIProduct
+	var curSubsystem *PCIProduct
+	productSubsystems := make([]*PCIProduct, 0)
 	for scanner.Scan() {
 		line := scanner.Text()
 		// skip comments and blank lines
@@ -76,12 +76,12 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 			if curClass != nil {
 				// finalize existing class because we found a new class block
 				curClass.Subclasses = subclasses
-				subclasses = make([]*PCISubclassInfo, 0)
+				subclasses = make([]*PCISubclass, 0)
 			}
 			inClassBlock = true
 			classId := string(lineBytes[2:4])
 			className := string(lineBytes[6:])
-			curClass = &PCIClassInfo{
+			curClass = &PCIClass{
 				Id:         classId,
 				Name:       className,
 				Subclasses: subclasses,
@@ -99,12 +99,12 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 			if curVendor != nil {
 				// finalize existing vendor because we found a new vendor block
 				curVendor.Products = vendorProducts
-				vendorProducts = make([]*PCIProductInfo, 0)
+				vendorProducts = make([]*PCIProduct, 0)
 			}
 			inClassBlock = false
 			vendorId := string(lineBytes[0:4])
 			vendorName := string(lineBytes[6:])
-			curVendor = &PCIVendorInfo{
+			curVendor = &PCIVendor{
 				Id:       vendorId,
 				Name:     vendorName,
 				Products: vendorProducts,
@@ -131,11 +131,11 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 				if curSubclass != nil {
 					// finalize existing subclass because we found a new subclass block
 					curSubclass.ProgrammingInterfaces = progIfaces
-					progIfaces = make([]*PCIProgrammingInterfaceInfo, 0)
+					progIfaces = make([]*PCIProgrammingInterface, 0)
 				}
 				subclassId := string(lineBytes[1:3])
 				subclassName := string(lineBytes[5:])
-				curSubclass = &PCISubclassInfo{
+				curSubclass = &PCISubclass{
 					Id:   subclassId,
 					Name: subclassName,
 					ProgrammingInterfaces: progIfaces,
@@ -145,12 +145,12 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 				if curProduct != nil {
 					// finalize existing product because we found a new product block
 					curProduct.Subsystems = productSubsystems
-					productSubsystems = make([]*PCIProductInfo, 0)
+					productSubsystems = make([]*PCIProduct, 0)
 				}
 				productId := string(lineBytes[1:5])
 				productName := string(lineBytes[7:])
 				productKey := curVendor.Id + productId
-				curProduct = &PCIProductInfo{
+				curProduct = &PCIProduct{
 					VendorId: curVendor.Id,
 					Id:       productId,
 					Name:     productName,
@@ -175,7 +175,7 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 			if inClassBlock {
 				progIfaceId := string(lineBytes[2:4])
 				progIfaceName := string(lineBytes[6:])
-				curProgIface = &PCIProgrammingInterfaceInfo{
+				curProgIface = &PCIProgrammingInterface{
 					Id:   progIfaceId,
 					Name: progIfaceName,
 				}
@@ -184,7 +184,7 @@ func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
 				vendorId := string(lineBytes[2:6])
 				subsystemId := string(lineBytes[7:11])
 				subsystemName := string(lineBytes[13:])
-				curSubsystem = &PCIProductInfo{
+				curSubsystem = &PCIProduct{
 					VendorId: vendorId,
 					Id:       subsystemId,
 					Name:     subsystemName,
@@ -208,9 +208,9 @@ func getPCIDeviceModaliasPath(address string) string {
 	)
 }
 
-// Returns a pointer to a PCIDeviceInfo struct that describes the PCI device at
+// Returns a pointer to a PCIDevice struct that describes the PCI device at
 // the requested address. If no such device could be found, returns nil
-func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
+func (info *PCIInfo) GetPCIDevice(address string) *PCIDevice {
 	fp := getPCIDeviceModaliasPath(address)
 	if fp == "" {
 		return nil
@@ -248,26 +248,26 @@ func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 	// Find the vendor
 	vendor := info.Vendors[vendorId]
 	if vendor == nil {
-		vendor = &PCIVendorInfo{
+		vendor = &PCIVendor{
 			Id:       vendorId,
 			Name:     "UNKNOWN",
-			Products: []*PCIProductInfo{},
+			Products: []*PCIProduct{},
 		}
 	}
 
 	// Find the product
 	product := info.Products[vendorId+productId]
 	if product == nil {
-		product = &PCIProductInfo{
+		product = &PCIProduct{
 			Id:         productId,
 			Name:       "UNKNOWN",
-			Subsystems: []*PCIProductInfo{},
+			Subsystems: []*PCIProduct{},
 		}
 	}
 
 	// Find the subsystem information
 	subvendor := info.Vendors[subvendorId]
-	var subsystem *PCIProductInfo
+	var subsystem *PCIProduct
 	if subvendor != nil && product != nil {
 		for _, p := range product.Subsystems {
 			if p.Id == subproductId {
@@ -276,7 +276,7 @@ func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 		}
 	}
 	if subsystem == nil {
-		subsystem = &PCIProductInfo{
+		subsystem = &PCIProduct{
 			VendorId: subvendorId,
 			Id:       subproductId,
 			Name:     "UNKNOWN",
@@ -285,7 +285,7 @@ func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 
 	// Find the class and subclass
 	class := info.Classes[classId]
-	var subclass *PCISubclassInfo
+	var subclass *PCISubclass
 	if class != nil {
 		for _, sc := range class.Subclasses {
 			if sc.Id == subclassId {
@@ -293,15 +293,15 @@ func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 			}
 		}
 	} else {
-		class = &PCIClassInfo{
+		class = &PCIClass{
 			Id:         classId,
 			Name:       "UNKNOWN",
-			Subclasses: []*PCISubclassInfo{},
+			Subclasses: []*PCISubclass{},
 		}
 	}
 
 	// Find the programming interface
-	var progIface *PCIProgrammingInterfaceInfo
+	var progIface *PCIProgrammingInterface
 	if subclass != nil {
 		for _, pi := range subclass.ProgrammingInterfaces {
 			if pi.Id == progIfaceId {
@@ -309,21 +309,21 @@ func (info *PCIInfo) GetDeviceInfo(address string) *PCIDeviceInfo {
 			}
 		}
 	} else {
-		subclass = &PCISubclassInfo{
+		subclass = &PCISubclass{
 			Id:   subclassId,
 			Name: "UNKNOWN",
-			ProgrammingInterfaces: []*PCIProgrammingInterfaceInfo{},
+			ProgrammingInterfaces: []*PCIProgrammingInterface{},
 		}
 	}
 
 	if progIface == nil {
-		progIface = &PCIProgrammingInterfaceInfo{
+		progIface = &PCIProgrammingInterface{
 			Id:   progIfaceId,
 			Name: "UNKNOWN",
 		}
 	}
 
-	return &PCIDeviceInfo{
+	return &PCIDevice{
 		Address:              address,
 		Vendor:               vendor,
 		Subsystem:            subsystem,
