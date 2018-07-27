@@ -210,7 +210,7 @@ func getPCIDeviceModaliasPath(address string) string {
 
 // Returns a pointer to a PCIDevice struct that describes the PCI device at
 // the requested address. If no such device could be found, returns nil
-func (info *PCIInfo) GetPCIDevice(address string) *PCIDevice {
+func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 	fp := getPCIDeviceModaliasPath(address)
 	if fp == "" {
 		return nil

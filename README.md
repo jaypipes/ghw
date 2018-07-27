@@ -770,7 +770,7 @@ Bt878 Video Capture ('036e') from Brooktree Corporation
 In addition to the above information, the `ghw.PCIInfo` struct has the
 following method:
 
-* `ghw.PCIInfo.GetPCIDevice(address string) *PCIDevice`
+* `ghw.PCIInfo.GetDevice(address string) *PCIDevice`
 
 This method returns a pointer to a `ghw.PCIDevice` struct, which has the
 following fields:
@@ -791,7 +791,7 @@ following fields:
   programming interface. This will always be non-nil.
 
 The following code snippet shows how to call and use the
-`ghw.PCIInfo.GetPCIDevice()` method and its returned `ghw.PCIDevice`
+`ghw.PCIInfo.GetDevice()` method and its returned `ghw.PCIDevice`
 struct pointer:
 
 ```go
@@ -816,7 +816,7 @@ func main() {
 	}
 	fmt.Printf("PCI device information for %s\n", addr)
 	fmt.Println("====================================================")
-	deviceInfo := pci.GetPCIDevice(addr)
+	deviceInfo := pci.GetDevice(addr)
 	if deviceInfo == nil {
 		fmt.Printf("could not retrieve PCI device information for %s\n", addr)
 		return
@@ -845,7 +845,6 @@ func main() {
 Here's a sample output from my local workstation:
 
 ```
-$ go run examples/pci.go 0000:03:00.0
 PCI device information for 0000:03:00.0
 ====================================================
 Vendor: NVIDIA Corporation [10de]
