@@ -179,4 +179,13 @@ func TestPCI(t *testing.T) {
 	if !foundNetRaid {
 		t.Fatalf("Failed to find NetRAID subsystem in MegaRAID product subsystems array.")
 	}
+
+	// Since we can't count on a specific device being present on the machine
+	// being tested (and we haven't built in fixtures/mocks for things yet)
+	// about all we can do is verify that the returned list of pointers to
+	// PCIDevice structs is non-empty
+	devs := info.ListDevices()
+	if len(devs) == 0 {
+		t.Fatalf("Expected to find >0 PCI devices from PCIInfo.ListDevices() but got 0.")
+	}
 }

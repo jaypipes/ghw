@@ -9,6 +9,7 @@ package ghw
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -210,7 +211,7 @@ func getPCIDeviceModaliasPath(address string) string {
 
 // Returns a pointer to a PCIDevice struct that describes the PCI device at
 // the requested address. If no such device could be found, returns nil
-func (info *PCIInfo) GetPCIDevice(address string) *PCIDevice {
+func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 	fp := getPCIDeviceModaliasPath(address)
 	if fp == "" {
 		return nil
@@ -332,4 +333,29 @@ func (info *PCIInfo) GetPCIDevice(address string) *PCIDevice {
 		Subclass:             subclass,
 		ProgrammingInterface: progIface,
 	}
+}
+
+// Returns a list of pointers to PCIDevice structs present on the host system
+func (info *PCIInfo) ListDevices() []*PCIDevice {
+	devs := make([]*PCIDevice, 0)
+	// We scan the /sys/bus/pci/devices directory which contains a collection
+	// of symlinks. The names of the symlinks are all the known PCI addresses
+	// for the host. For each address, we grab a *PCIDevice matching the
+	// address and append to the returned array.
+	links, err := ioutil.ReadDir(PATH_SYSFS_PCI_DEVICES)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
+		return nil
+	}
+	var dev *PCIDevice
+	for _, link := range links {
+		addr := link.Name()
+		dev = info.GetDevice(addr)
+		if dev == nil {
+			fmt.Fprintf(os.Stderr, "error: failed to get device information for PCI address %s\n", addr)
+		} else {
+			devs = append(devs, dev)
+		}
+	}
+	return devs
 }

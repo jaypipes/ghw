@@ -765,15 +765,16 @@ Bt878 Video Capture ('036e') from Brooktree Corporation
       - iTuner ('aa0e')
 ```
 
-#### Accessing a particular device's PCI information
+#### Listing and accessing host PCI device information
 
 In addition to the above information, the `ghw.PCIInfo` struct has the
-following method:
+following methods:
 
-* `ghw.PCIInfo.GetPCIDevice(address string) *PCIDevice`
+* `ghw.PCIInfo.ListDevices() []*PCIDevice`
+* `ghw.PCIInfo.GetDevice(address string) *PCIDevice`
 
-This method returns a pointer to a `ghw.PCIDevice` struct, which has the
-following fields:
+This methods return either an array of or a single pointer to a `ghw.PCIDevice`
+struct, which has the following fields:
 
 
 * `ghw.PCIDevice.Vendor` is a pointer to a `ghw.PCIVendor` struct that
@@ -790,9 +791,113 @@ following fields:
   `ghw.PCIProgrammingInterface` struct that describes the device subclass'
   programming interface. This will always be non-nil.
 
-The following code snippet shows how to call and use the
-`ghw.PCIInfo.GetPCIDevice()` method and its returned `ghw.PCIDevice`
-struct pointer:
+The following code snippet shows how to call the `ghw.PCIInfo.ListDevices()`
+method and output a simple list of PCI address and vendor/product information:
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting PCI info: %v", err)
+	}
+	fmt.Printf("host PCI devices:\n")
+	fmt.Println("====================================================")
+	devices := pci.ListDevices()
+	if len(devices) == 0 {
+		fmt.Printf("error: could not retrieve PCI devices\n")
+		return
+	}
+
+	for _, device := range devices {
+		vendor := device.Vendor
+		vendorName := vendor.Name
+		if len(vendor.Name) > 20 {
+			vendorName = string([]byte(vendorName)[0:17]) + "..."
+		}
+		product := device.Product
+		productName := product.Name
+		if len(product.Name) > 40 {
+			productName = string([]byte(productName)[0:37]) + "..."
+		}
+		fmt.Printf("%-12s\t%-20s\t%-40s\n", device.Address, vendorName, productName)
+	}
+}
+```
+
+on my local workstation the output of the above looks like the following:
+
+```
+host PCI devices:
+====================================================
+0000:00:00.0	Intel Corporation   	5520/5500/X58 I/O Hub to ESI Port
+0000:00:01.0	Intel Corporation   	5520/5500/X58 I/O Hub PCI Express Roo...
+0000:00:02.0	Intel Corporation   	5520/5500/X58 I/O Hub PCI Express Roo...
+0000:00:03.0	Intel Corporation   	5520/5500/X58 I/O Hub PCI Express Roo...
+0000:00:07.0	Intel Corporation   	5520/5500/X58 I/O Hub PCI Express Roo...
+0000:00:10.0	Intel Corporation   	7500/5520/5500/X58 Physical and Link ...
+0000:00:10.1	Intel Corporation   	7500/5520/5500/X58 Routing and Protoc...
+0000:00:14.0	Intel Corporation   	7500/5520/5500/X58 I/O Hub System Man...
+0000:00:14.1	Intel Corporation   	7500/5520/5500/X58 I/O Hub GPIO and S...
+0000:00:14.2	Intel Corporation   	7500/5520/5500/X58 I/O Hub Control St...
+0000:00:14.3	Intel Corporation   	7500/5520/5500/X58 I/O Hub Throttle R...
+0000:00:19.0	Intel Corporation   	82567LF-2 Gigabit Network Connection
+0000:00:1a.0	Intel Corporation   	82801JI (ICH10 Family) USB UHCI Contr...
+0000:00:1a.1	Intel Corporation   	82801JI (ICH10 Family) USB UHCI Contr...
+0000:00:1a.2	Intel Corporation   	82801JI (ICH10 Family) USB UHCI Contr...
+0000:00:1a.7	Intel Corporation   	82801JI (ICH10 Family) USB2 EHCI Cont...
+0000:00:1b.0	Intel Corporation   	82801JI (ICH10 Family) HD Audio Contr...
+0000:00:1c.0	Intel Corporation   	82801JI (ICH10 Family) PCI Express Ro...
+0000:00:1c.1	Intel Corporation   	82801JI (ICH10 Family) PCI Express Po...
+0000:00:1c.4	Intel Corporation   	82801JI (ICH10 Family) PCI Express Ro...
+0000:00:1d.0	Intel Corporation   	82801JI (ICH10 Family) USB UHCI Contr...
+0000:00:1d.1	Intel Corporation   	82801JI (ICH10 Family) USB UHCI Contr...
+0000:00:1d.2	Intel Corporation   	82801JI (ICH10 Family) USB UHCI Contr...
+0000:00:1d.7	Intel Corporation   	82801JI (ICH10 Family) USB2 EHCI Cont...
+0000:00:1e.0	Intel Corporation   	82801 PCI Bridge
+0000:00:1f.0	Intel Corporation   	82801JIR (ICH10R) LPC Interface Contr...
+0000:00:1f.2	Intel Corporation   	82801JI (ICH10 Family) SATA AHCI Cont...
+0000:00:1f.3	Intel Corporation   	82801JI (ICH10 Family) SMBus Controller
+0000:01:00.0	NEC Corporation     	uPD720200 USB 3.0 Host Controller
+0000:02:00.0	Marvell Technolog...	88SE9123 PCIe SATA 6.0 Gb/s controller
+0000:02:00.1	Marvell Technolog...	88SE912x IDE Controller
+0000:03:00.0	NVIDIA Corporation  	GP107 [GeForce GTX 1050 Ti]
+0000:03:00.1	NVIDIA Corporation  	UNKNOWN
+0000:04:00.0	LSI Logic / Symbi...	SAS2004 PCI-Express Fusion-MPT SAS-2 ...
+0000:06:00.0	Qualcomm Atheros    	AR5418 Wireless Network Adapter [AR50...
+0000:08:03.0	LSI Corporation     	FW322/323 [TrueFire] 1394a Controller
+0000:3f:00.0	Intel Corporation   	UNKNOWN
+0000:3f:00.1	Intel Corporation   	Xeon 5600 Series QuickPath Architectu...
+0000:3f:02.0	Intel Corporation   	Xeon 5600 Series QPI Link 0
+0000:3f:02.1	Intel Corporation   	Xeon 5600 Series QPI Physical 0
+0000:3f:02.2	Intel Corporation   	Xeon 5600 Series Mirror Port Link 0
+0000:3f:02.3	Intel Corporation   	Xeon 5600 Series Mirror Port Link 1
+0000:3f:03.0	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:03.1	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:03.4	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:04.0	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:04.1	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:04.2	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:04.3	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:05.0	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:05.1	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:05.2	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:05.3	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:06.0	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:06.1	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:06.2	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+0000:3f:06.3	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
+```
+
+The following code snippet shows how to call the `ghw.PCIInfo.GetDevice()`
+method and use its returned `ghw.PCIDevice` struct pointer:
 
 ```go
 package main
@@ -816,7 +921,7 @@ func main() {
 	}
 	fmt.Printf("PCI device information for %s\n", addr)
 	fmt.Println("====================================================")
-	deviceInfo := pci.GetPCIDevice(addr)
+	deviceInfo := pci.GetDevice(addr)
 	if deviceInfo == nil {
 		fmt.Printf("could not retrieve PCI device information for %s\n", addr)
 		return
@@ -845,7 +950,6 @@ func main() {
 Here's a sample output from my local workstation:
 
 ```
-$ go run examples/pci.go 0000:03:00.0
 PCI device information for 0000:03:00.0
 ====================================================
 Vendor: NVIDIA Corporation [10de]
