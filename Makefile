@@ -20,3 +20,12 @@ $(GOMETALINTER):
 .PHONY: lint
 lint: $(GOMETALINTER)
 	gometalinter ./... --vendor
+
+.PHONY: cover
+cover:
+	$(shell [ -e coverage.out ] && rm coverage.out)
+	@echo "mode: count" > coverage-all.out
+	$(foreach pkg,$(PKGS),\
+		go test -coverprofile=coverage.out -covermode=count $(pkg);\
+		tail -n +2 coverage.out >> coverage-all.out;)
+	@go tool cover -html=coverage-all.out -o=coverage-all.html
