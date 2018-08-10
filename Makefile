@@ -11,7 +11,7 @@ $(GOVENDOR):
 	go get -u github.com/kardianos/govendor
 
 ghwc/vendor/vendor.json: $(GOVENDOR)
-	govendor sync
+	cd ghwc; govendor sync
 
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
