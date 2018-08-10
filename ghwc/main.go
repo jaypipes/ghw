@@ -7,7 +7,7 @@
 package main
 
 import (
-	"github.com/jaypipes/ghw/cmd"
+	"github.com/jaypipes/ghw/ghwc/cmd"
 )
 
 var (
