@@ -250,25 +250,45 @@ func PartitionInfo(part string) (string, string, bool) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line[0] != '/' {
+		entry := parseMtabEntry(line)
+		if entry == nil || entry.Partition != part {
 			continue
 		}
-		fields := strings.Fields(line)
-		if fields[0] != part {
-			continue
-		}
-		opts := strings.Split(fields[3], ",")
 		ro := true
-		for _, opt := range opts {
+		for _, opt := range entry.Options {
 			if opt == "rw" {
 				ro = false
 				break
 			}
 		}
 
-		return fields[1], fields[2], ro
+		return entry.Mountpoint, entry.FilesystemType, ro
 	}
 	return "", "", true
+}
+
+type mtabEntry struct {
+	Partition      string
+	Mountpoint     string
+	FilesystemType string
+	Options        []string
+}
+
+func parseMtabEntry(line string) *mtabEntry {
+	// /etc/mtab entries for mounted partitions look like this:
+	// /dev/sda6 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
+	if line[0] != '/' {
+		return nil
+	}
+	fields := strings.Fields(line)
+	res := &mtabEntry{
+		Partition:      fields[0],
+		Mountpoint:     fields[1],
+		FilesystemType: fields[2],
+	}
+	opts := strings.Split(fields[3], ",")
+	res.Options = opts
+	return res
 }
 
 func PartitionMountPoint(part string) string {
