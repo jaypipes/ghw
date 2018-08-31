@@ -4,11 +4,14 @@ GOVENDOR := $(BIN_DIR)/govendor
 GOMETALINTER := $(BIN_DIR)/gometalinter
 
 .PHONY: test
-test: ghwc/vendor/vendor.json
+test: vendor/vendor.json ghwc/vendor/vendor.json
 	go test $(PKGS)
 
 $(GOVENDOR):
 	go get -u github.com/kardianos/govendor
+
+vendor/vendor.json: $(GOVENDOR)
+	govendor sync
 
 ghwc/vendor/vendor.json: $(GOVENDOR)
 	cd ghwc; govendor sync

@@ -1,2 +1,3 @@
 ghwc/vendor/
+vendor/
 coverage*.*

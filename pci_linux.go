@@ -6,192 +6,27 @@
 package ghw
 
 import (
-	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jaypipes/pcidb"
 )
 
 const (
 	PATH_SYSFS_PCI_DEVICES = "/sys/bus/pci/devices"
 )
 
-var (
-	pciIdsFilePaths = []string{
-		"/usr/share/hwdata/pci.ids",
-		"/usr/share/misc/pci.ids",
-	}
-)
-
 func pciFillInfo(info *PCIInfo) error {
-	for _, fp := range pciIdsFilePaths {
-		if _, err := os.Stat(fp); err != nil {
-			continue
-		}
-		f, err := os.Open(fp)
-		if err != nil {
-			continue
-		}
-		defer f.Close()
-		scanner := bufio.NewScanner(f)
-		err = parsePCIIdsFile(info, scanner)
-		if err == nil {
-			break
-		}
+	db, err := pcidb.New()
+	if err != nil {
+		return err
 	}
-	return nil
-}
-
-func parsePCIIdsFile(info *PCIInfo, scanner *bufio.Scanner) error {
-	inClassBlock := false
-	info.Classes = make(map[string]*PCIClass, 20)
-	info.Vendors = make(map[string]*PCIVendor, 200)
-	info.Products = make(map[string]*PCIProduct, 1000)
-	subclasses := make([]*PCISubclass, 0)
-	progIfaces := make([]*PCIProgrammingInterface, 0)
-	var curClass *PCIClass
-	var curSubclass *PCISubclass
-	var curProgIface *PCIProgrammingInterface
-	vendorProducts := make([]*PCIProduct, 0)
-	var curVendor *PCIVendor
-	var curProduct *PCIProduct
-	var curSubsystem *PCIProduct
-	productSubsystems := make([]*PCIProduct, 0)
-	for scanner.Scan() {
-		line := scanner.Text()
-		// skip comments and blank lines
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		lineBytes := []rune(line)
-
-		// Lines starting with an uppercase "C" indicate a PCI top-level class
-		// information block. These lines look like this:
-		//
-		// C 02  Network controller
-		if lineBytes[0] == 'C' {
-			if curClass != nil {
-				// finalize existing class because we found a new class block
-				curClass.Subclasses = subclasses
-				subclasses = make([]*PCISubclass, 0)
-			}
-			inClassBlock = true
-			classId := string(lineBytes[2:4])
-			className := string(lineBytes[6:])
-			curClass = &PCIClass{
-				Id:         classId,
-				Name:       className,
-				Subclasses: subclasses,
-			}
-			info.Classes[curClass.Id] = curClass
-			continue
-		}
-
-		// Lines not beginning with an uppercase "C" or a TAB character
-		// indicate a top-level vendor information block. These lines look like
-		// this:
-		//
-		// 0a89  BREA Technologies Inc
-		if lineBytes[0] != '\t' {
-			if curVendor != nil {
-				// finalize existing vendor because we found a new vendor block
-				curVendor.Products = vendorProducts
-				vendorProducts = make([]*PCIProduct, 0)
-			}
-			inClassBlock = false
-			vendorId := string(lineBytes[0:4])
-			vendorName := string(lineBytes[6:])
-			curVendor = &PCIVendor{
-				Id:       vendorId,
-				Name:     vendorName,
-				Products: vendorProducts,
-			}
-			info.Vendors[curVendor.Id] = curVendor
-			continue
-		}
-
-		// Lines beginning with only a single TAB character are *either* a
-		// subclass OR are a device information block. If we're in a class
-		// block (i.e. the last parsed block header was for a PCI class), then
-		// we parse a subclass block. Otherwise, we parse a device information
-		// block.
-		//
-		// A subclass information block looks like this:
-		//
-		// \t00  Non-VGA unclassified device
-		//
-		// A device information block looks like this:
-		//
-		// \t0002  PCI to MCA Bridge
-		if len(lineBytes) > 1 && lineBytes[1] != '\t' {
-			if inClassBlock {
-				if curSubclass != nil {
-					// finalize existing subclass because we found a new subclass block
-					curSubclass.ProgrammingInterfaces = progIfaces
-					progIfaces = make([]*PCIProgrammingInterface, 0)
-				}
-				subclassId := string(lineBytes[1:3])
-				subclassName := string(lineBytes[5:])
-				curSubclass = &PCISubclass{
-					Id:   subclassId,
-					Name: subclassName,
-					ProgrammingInterfaces: progIfaces,
-				}
-				subclasses = append(subclasses, curSubclass)
-			} else {
-				if curProduct != nil {
-					// finalize existing product because we found a new product block
-					curProduct.Subsystems = productSubsystems
-					productSubsystems = make([]*PCIProduct, 0)
-				}
-				productId := string(lineBytes[1:5])
-				productName := string(lineBytes[7:])
-				productKey := curVendor.Id + productId
-				curProduct = &PCIProduct{
-					VendorId: curVendor.Id,
-					Id:       productId,
-					Name:     productName,
-				}
-				vendorProducts = append(vendorProducts, curProduct)
-				info.Products[productKey] = curProduct
-			}
-		} else {
-			// Lines beginning with two TAB characters are *either* a subsystem
-			// (subdevice) OR are a programming interface for a PCI device
-			// subclass. If we're in a class block (i.e. the last parsed block
-			// header was for a PCI class), then we parse a programming
-			// interface block, otherwise we parse a subsystem block.
-			//
-			// A programming interface block looks like this:
-			//
-			// \t\t00  UHCI
-			//
-			// A subsystem block looks like this:
-			//
-			// \t\t0e11 4091  Smart Array 6i
-			if inClassBlock {
-				progIfaceId := string(lineBytes[2:4])
-				progIfaceName := string(lineBytes[6:])
-				curProgIface = &PCIProgrammingInterface{
-					Id:   progIfaceId,
-					Name: progIfaceName,
-				}
-				progIfaces = append(progIfaces, curProgIface)
-			} else {
-				vendorId := string(lineBytes[2:6])
-				subsystemId := string(lineBytes[7:11])
-				subsystemName := string(lineBytes[13:])
-				curSubsystem = &PCIProduct{
-					VendorId: vendorId,
-					Id:       subsystemId,
-					Name:     subsystemName,
-				}
-				productSubsystems = append(productSubsystems, curSubsystem)
-			}
-		}
-	}
+	info.Classes = db.Classes
+	info.Vendors = db.Vendors
+	info.Products = db.Products
 	return nil
 }
 
@@ -247,26 +82,26 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 	// Find the vendor
 	vendor := info.Vendors[vendorId]
 	if vendor == nil {
-		vendor = &PCIVendor{
+		vendor = &pcidb.PCIVendor{
 			Id:       vendorId,
 			Name:     "UNKNOWN",
-			Products: []*PCIProduct{},
+			Products: []*pcidb.PCIProduct{},
 		}
 	}
 
 	// Find the product
 	product := info.Products[vendorId+productId]
 	if product == nil {
-		product = &PCIProduct{
+		product = &pcidb.PCIProduct{
 			Id:         productId,
 			Name:       "UNKNOWN",
-			Subsystems: []*PCIProduct{},
+			Subsystems: []*pcidb.PCIProduct{},
 		}
 	}
 
 	// Find the subsystem information
 	subvendor := info.Vendors[subvendorId]
-	var subsystem *PCIProduct
+	var subsystem *pcidb.PCIProduct
 	if subvendor != nil && product != nil {
 		for _, p := range product.Subsystems {
 			if p.Id == subproductId {
@@ -275,7 +110,7 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 		}
 	}
 	if subsystem == nil {
-		subsystem = &PCIProduct{
+		subsystem = &pcidb.PCIProduct{
 			VendorId: subvendorId,
 			Id:       subproductId,
 			Name:     "UNKNOWN",
@@ -284,7 +119,7 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 
 	// Find the class and subclass
 	class := info.Classes[classId]
-	var subclass *PCISubclass
+	var subclass *pcidb.PCISubclass
 	if class != nil {
 		for _, sc := range class.Subclasses {
 			if sc.Id == subclassId {
@@ -292,15 +127,15 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 			}
 		}
 	} else {
-		class = &PCIClass{
+		class = &pcidb.PCIClass{
 			Id:         classId,
 			Name:       "UNKNOWN",
-			Subclasses: []*PCISubclass{},
+			Subclasses: []*pcidb.PCISubclass{},
 		}
 	}
 
 	// Find the programming interface
-	var progIface *PCIProgrammingInterface
+	var progIface *pcidb.PCIProgrammingInterface
 	if subclass != nil {
 		for _, pi := range subclass.ProgrammingInterfaces {
 			if pi.Id == progIfaceId {
@@ -308,15 +143,15 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 			}
 		}
 	} else {
-		subclass = &PCISubclass{
+		subclass = &pcidb.PCISubclass{
 			Id:   subclassId,
 			Name: "UNKNOWN",
-			ProgrammingInterfaces: []*PCIProgrammingInterface{},
+			ProgrammingInterfaces: []*pcidb.PCIProgrammingInterface{},
 		}
 	}
 
 	if progIface == nil {
-		progIface = &PCIProgrammingInterface{
+		progIface = &pcidb.PCIProgrammingInterface{
 			Id:   progIfaceId,
 			Name: "UNKNOWN",
 		}
