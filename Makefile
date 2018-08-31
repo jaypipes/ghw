@@ -4,7 +4,7 @@ GOVENDOR := $(BIN_DIR)/govendor
 GOMETALINTER := $(BIN_DIR)/gometalinter
 
 .PHONY: test
-test: ghwc/vendor/vendor.json
+test: vendor/vendor.json ghwc/vendor/vendor.json
 	go test $(PKGS)
 
 $(GOVENDOR):
