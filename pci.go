@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/jaypipes/pcidb"
 )
 
 var (
@@ -18,46 +20,14 @@ var (
 	)
 )
 
-type PCIProgrammingInterface struct {
-	Id   string // hex-encoded PCI_ID of the programming interface
-	Name string // common string name for the programming interface
-}
-
-type PCISubclass struct {
-	Id                    string                     // hex-encoded PCI_ID for the device subclass
-	Name                  string                     // common string name for the subclass
-	ProgrammingInterfaces []*PCIProgrammingInterface // any programming interfaces this subclass might have
-}
-
-type PCIClass struct {
-	Id         string         // hex-encoded PCI_ID for the device class
-	Name       string         // common string name for the class
-	Subclasses []*PCISubclass // any subclasses belonging to this class
-}
-
-// NOTE(jaypipes): In the hardware world, the PCI "device_id" is the identifier
-// for the product/model
-type PCIProduct struct {
-	VendorId   string        // vendor ID for the product
-	Id         string        // hex-encoded PCI_ID for the product/model
-	Name       string        // common string name of the vendor
-	Subsystems []*PCIProduct // "subdevices" or "subsystems" for the product
-}
-
-type PCIVendor struct {
-	Id       string        // hex-encoded PCI_ID for the vendor
-	Name     string        // common string name of the vendor
-	Products []*PCIProduct // all top-level devices for the vendor
-}
-
 type PCIDevice struct {
 	Address              string // The PCI address of the device
-	Vendor               *PCIVendor
-	Product              *PCIProduct
-	Subsystem            *PCIProduct // optional subvendor/sub-device information
-	Class                *PCIClass
-	Subclass             *PCISubclass             // optional sub-class for the device
-	ProgrammingInterface *PCIProgrammingInterface // optional programming interface
+	Vendor               *pcidb.PCIVendor
+	Product              *pcidb.PCIProduct
+	Subsystem            *pcidb.PCIProduct // optional subvendor/sub-device information
+	Class                *pcidb.PCIClass
+	Subclass             *pcidb.PCISubclass             // optional sub-class for the device
+	ProgrammingInterface *pcidb.PCIProgrammingInterface // optional programming interface
 }
 
 func (di *PCIDevice) String() string {
@@ -84,11 +54,11 @@ func (di *PCIDevice) String() string {
 
 type PCIInfo struct {
 	// hash of class ID -> class information
-	Classes map[string]*PCIClass
+	Classes map[string]*pcidb.PCIClass
 	// hash of vendor ID -> vendor information
-	Vendors map[string]*PCIVendor
+	Vendors map[string]*pcidb.PCIVendor
 	// hash of vendor ID + product/device ID -> product information
-	Products map[string]*PCIProduct
+	Products map[string]*pcidb.PCIProduct
 }
 
 type PCIAddress struct {
