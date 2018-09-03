@@ -38,10 +38,23 @@ func TestParseMtabEntry(t *testing.T) {
 			},
 		},
 		{
-			line: "/dev/sda8 /home/Name\040with\040spaces ext4 ro 0 0",
+			line: "/dev/sda8 /home/Name\\040with\\040spaces ext4 ro 0 0",
 			expected: &mtabEntry{
-				Partition:      "/dev/sda6",
-				Mountpoint:     "/Name with spaces",
+				Partition:      "/dev/sda8",
+				Mountpoint:     "/home/Name with spaces",
+				FilesystemType: "ext4",
+				Options: []string{
+					"ro",
+				},
+			},
+		},
+		{
+			// Whoever might do this in real life should be quarantined and
+			// placed in administrative segregation
+			line: "/dev/sda8 /home/Name\\011with\\012tab&newline ext4 ro 0 0",
+			expected: &mtabEntry{
+				Partition:      "/dev/sda8",
+				Mountpoint:     "/home/Name\twith\ntab&newline",
 				FilesystemType: "ext4",
 				Options: []string{
 					"ro",
