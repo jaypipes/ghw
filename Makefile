@@ -1,28 +1,27 @@
 PKGS := $(shell go list ./... | grep -v /vendor)
 BIN_DIR := $(GOPATH)/bin
-GOVENDOR := $(BIN_DIR)/govendor
+DEP := $(BIN_DIR)/dep
 GOMETALINTER := $(BIN_DIR)/gometalinter
 
 .PHONY: test
-test: vendor/vendor.json ghwc/vendor/vendor.json
+test: dep
 	go test $(PKGS)
 
-$(GOVENDOR):
-	go get -u github.com/kardianos/govendor
+$(DEP):
+	go get -u github.com/golang/dep/cmd/dep
 
-vendor/vendor.json: $(GOVENDOR)
-	govendor sync
-
-ghwc/vendor/vendor.json: $(GOVENDOR)
-	cd ghwc; govendor sync
+.PHONY: dep
+dep: $(DEP)
+	$(DEP) ensure
+	(cd ghwc/ && $(DEP) ensure)
 
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install &> /dev/null
+	$(GOMETALINTER) --install &> /dev/null
 
 .PHONY: lint
 lint: $(GOMETALINTER)
-	gometalinter ./... --vendor
+	$(GOMETALINTER) ./... --vendor
 
 .PHONY: cover
 cover:
