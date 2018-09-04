@@ -1,10 +1,12 @@
-PKGS := $(shell go list ./... | grep -v /vendor)
+VENDOR := vendor
+PKGS := $(shell go list ./... | grep -v /$(VENDOR)/)
+SRC = $(shell find . -type f -name '*.go' -not -path "./$(VENDOR)/*")
 BIN_DIR := $(GOPATH)/bin
 GOVENDOR := $(BIN_DIR)/govendor
 GOMETALINTER := $(BIN_DIR)/gometalinter
 
 .PHONY: test
-test: vendor/vendor.json ghwc/vendor/vendor.json
+test: vendor/vendor.json ghwc/vendor/vendor.json fmtcheck vet
 	go test $(PKGS)
 
 $(GOVENDOR):
@@ -23,6 +25,18 @@ $(GOMETALINTER):
 .PHONY: lint
 lint: $(GOMETALINTER)
 	gometalinter ./... --vendor
+
+.PHONY: fmt
+fmt:
+	gofmt -s -l -w $(SRC)
+
+.PHONY: fmtcheck
+fmtcheck:
+	bash -c "diff -u <(echo -n) <(gofmt -d $(SRC))"
+
+.PHONY: vet
+vet:
+	go vet $(PKGS)
 
 .PHONY: cover
 cover:
