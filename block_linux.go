@@ -250,25 +250,60 @@ func PartitionInfo(part string) (string, string, bool) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line[0] != '/' {
+		entry := parseMtabEntry(line)
+		if entry == nil || entry.Partition != part {
 			continue
 		}
-		fields := strings.Fields(line)
-		if fields[0] != part {
-			continue
-		}
-		opts := strings.Split(fields[3], ",")
 		ro := true
-		for _, opt := range opts {
+		for _, opt := range entry.Options {
 			if opt == "rw" {
 				ro = false
 				break
 			}
 		}
 
-		return fields[1], fields[2], ro
+		return entry.Mountpoint, entry.FilesystemType, ro
 	}
 	return "", "", true
+}
+
+type mtabEntry struct {
+	Partition      string
+	Mountpoint     string
+	FilesystemType string
+	Options        []string
+}
+
+func parseMtabEntry(line string) *mtabEntry {
+	// /etc/mtab entries for mounted partitions look like this:
+	// /dev/sda6 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
+	if line[0] != '/' {
+		return nil
+	}
+	fields := strings.Fields(line)
+
+	// We do some special parsing of the mountpoint, which may contain space,
+	// tab and newline characters, encoded into the mtab entry line using their
+	// octal-to-string representations. From the GNU mtab man pages:
+	//
+	//   "Therefore these characters are encoded in the files and the getmntent
+	//   function takes care of the decoding while reading the entries back in.
+	//   '\040' is used to encode a space character, '\011' to encode a tab
+	//   character, '\012' to encode a newline character, and '\\' to encode a
+	//   backslash."
+	mp := fields[1]
+	mp = strings.Replace(mp, "\\011", "\t", -1)
+	mp = strings.Replace(mp, "\\012", "\n", -1)
+	mp = strings.Replace(mp, "\\040", " ", -1)
+
+	res := &mtabEntry{
+		Partition:      fields[0],
+		Mountpoint:     mp,
+		FilesystemType: fields[2],
+	}
+	opts := strings.Split(fields[3], ",")
+	res.Options = opts
+	return res
 }
 
 func PartitionMountPoint(part string) string {
