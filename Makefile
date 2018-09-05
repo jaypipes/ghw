@@ -14,8 +14,8 @@ $(DEP):
 
 .PHONY: dep
 dep: $(DEP)
-	@$(DEP) ensure
-	@(cd ghwc/ && $(DEP) ensure)
+	$(DEP) ensure
+	(cd ghwc/ && $(DEP) ensure)
 
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
@@ -23,10 +23,11 @@ $(GOMETALINTER):
 
 .PHONY: lint
 lint: $(GOMETALINTER)
-	@$(GOMETALINTER) ./... --vendor
+	$(GOMETALINTER) ./... --vendor
 
 .PHONY: fmt
 fmt:
+	@echo "Running gofmt on all sources..."
 	@gofmt -s -l -w $(SRC)
 
 .PHONY: fmtcheck
@@ -35,13 +36,13 @@ fmtcheck:
 
 .PHONY: vet
 vet:
-	@go vet $(PKGS)
+	go vet $(PKGS)
 
 .PHONY: cover
 cover:
 	$(shell [ -e coverage.out ] && rm coverage.out)
 	@echo "mode: count" > coverage-all.out
-	@$(foreach pkg,$(PKGS),\
+	$(foreach pkg,$(PKGS),\
 		go test -coverprofile=coverage.out -covermode=count $(pkg);\
 		tail -n +2 coverage.out >> coverage-all.out;)
-	@go tool cover -html=coverage-all.out -o=coverage-all.html
+	go tool cover -html=coverage-all.out -o=coverage-all.html
