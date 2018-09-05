@@ -282,6 +282,10 @@ func parseMtabEntry(line string) *mtabEntry {
 	}
 	fields := strings.Fields(line)
 
+	if len(fields) < 4 {
+		return nil
+	}
+
 	// We do some special parsing of the mountpoint, which may contain space,
 	// tab and newline characters, encoded into the mtab entry line using their
 	// octal-to-string representations. From the GNU mtab man pages:
@@ -292,9 +296,10 @@ func parseMtabEntry(line string) *mtabEntry {
 	//   character, '\012' to encode a newline character, and '\\' to encode a
 	//   backslash."
 	mp := fields[1]
-	mp = strings.Replace(mp, "\\011", "\t", -1)
-	mp = strings.Replace(mp, "\\012", "\n", -1)
-	mp = strings.Replace(mp, "\\040", " ", -1)
+	r := strings.NewReplacer(
+		"\\011", "\t", "\\012", "\n", "\\040", " ", "\\\\", "\\",
+	)
+	mp = r.Replace(mp)
 
 	res := &mtabEntry{
 		Partition:      fields[0],

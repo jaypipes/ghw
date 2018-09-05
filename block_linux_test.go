@@ -61,11 +61,30 @@ func TestParseMtabEntry(t *testing.T) {
 				},
 			},
 		},
+		{
+			line: "/dev/sda1 /home/Name\\\\withslash ext4 ro 0 0",
+			expected: &mtabEntry{
+				Partition:      "/dev/sda1",
+				Mountpoint:     "/home/Name\\withslash",
+				FilesystemType: "ext4",
+				Options: []string{
+					"ro",
+				},
+			},
+		},
+		{
+			line:     "Indy, bad dates",
+			expected: nil,
+		},
 	}
 
 	for x, test := range tests {
 		actual := parseMtabEntry(test.line)
-		if !reflect.DeepEqual(test.expected, actual) {
+		if test.expected == nil {
+			if actual != nil {
+				t.Fatalf("Expected nil, but got %v", actual)
+			}
+		} else if !reflect.DeepEqual(test.expected, actual) {
 			t.Fatalf("In test %d, expected %v == %v", x, test.expected, actual)
 		}
 	}
