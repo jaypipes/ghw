@@ -15,7 +15,6 @@ $(DEP):
 .PHONY: dep
 dep: $(DEP)
 	$(DEP) ensure
-	(cd ghwc/ && $(DEP) ensure)
 
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter

@@ -1,8 +1,10 @@
 # Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
 # for detailed Gopkg.toml documentation.
 
-ignored = ["github.com/jaypipes/ghw/ghwc*"]
-
 [[constraint]]
   name = "github.com/jaypipes/pcidb"
-  version = "0.1.0"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.3"

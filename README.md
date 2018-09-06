@@ -698,9 +698,7 @@ request or bug report.
 
 This project uses [dep](https://github.com/golang/dep) to manage dependencies.
 Dependencies must be set to a specific tag (no open-ended dependencies) in the
-`Gopkg.toml` file.  To manually execute `dep` run `make dep`.  The `ghwc` package
-maintains a different set of dependencies, make sure to edit the appropriate
-Gopkg file.
+`Gopkg.toml` file.  To manually execute `dep` run `make dep`.
 
 ### Running tests
 
