@@ -18,9 +18,6 @@ import (
 
 const (
 	LINUX_SECTOR_SIZE = 512
-	PathMtab          = "/etc/mtab"
-	PathSysBlock      = "/sys/block"
-	PathDevDiskById   = "/dev/disk/by-id"
 )
 
 var RegexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
@@ -39,7 +36,7 @@ func blockFillInfo(info *BlockInfo) error {
 func DiskPhysicalBlockSizeBytes(disk string) uint64 {
 	// We can find the sector size in Linux by looking at the
 	// /sys/block/$DEVICE/queue/physical_block_size file in sysfs
-	path := filepath.Join(PathSysBlock, disk, "queue", "physical_block_size")
+	path := filepath.Join(pathSysBlock(), disk, "queue", "physical_block_size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -54,7 +51,7 @@ func DiskPhysicalBlockSizeBytes(disk string) uint64 {
 func DiskSizeBytes(disk string) uint64 {
 	// We can find the number of 512-byte sectors by examining the contents of
 	// /sys/block/$DEVICE/size and calculate the physical bytes accordingly.
-	path := filepath.Join(PathSysBlock, disk, "size")
+	path := filepath.Join(pathSysBlock(), disk, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -69,7 +66,7 @@ func DiskSizeBytes(disk string) uint64 {
 func DiskVendor(disk string) string {
 	// In Linux, the vendor for a disk device is found in the
 	// /sys/block/$DEVICE/device/vendor file in sysfs
-	path := filepath.Join(PathSysBlock, disk, "device", "vendor")
+	path := filepath.Join(pathSysBlock(), disk, "device", "vendor")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "unknown"
@@ -101,14 +98,14 @@ func DiskSerialNumber(disk string) string {
 	//
 	// in the above identifier, the serial number of the disk is actually
 	// WD-WX31A76R3KFS, not WX31A76R3KFS. Go figure...
-	path := filepath.Join(PathDevDiskById)
+	path := filepath.Join(pathDevDiskById())
 	links, err := ioutil.ReadDir(path)
 	if err != nil {
 		return "unknown"
 	}
 	for _, link := range links {
 		lname := link.Name()
-		lpath := filepath.Join(PathDevDiskById, lname)
+		lpath := filepath.Join(path, lname)
 		dest, err := os.Readlink(lpath)
 		if err != nil {
 			continue
@@ -130,7 +127,7 @@ func DiskSerialNumber(disk string) string {
 
 func DiskPartitions(disk string) []*Partition {
 	out := make([]*Partition, 0)
-	path := filepath.Join(PathSysBlock, disk)
+	path := filepath.Join(pathSysBlock(), disk)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil
@@ -160,7 +157,7 @@ func Disks() []*Disk {
 	// run. We can get all of this information by examining the /sys/block
 	// and /sys/class/block files
 	disks := make([]*Disk, 0)
-	files, err := ioutil.ReadDir(PathSysBlock)
+	files, err := ioutil.ReadDir(pathSysBlock())
 	if err != nil {
 		return nil
 	}
@@ -216,7 +213,7 @@ func PartitionSizeBytes(part string) uint64 {
 	if m := RegexNVMePart.FindStringSubmatch(part); len(m) > 0 {
 		disk = m[1]
 	}
-	path := filepath.Join(PathSysBlock, disk, part, "size")
+	path := filepath.Join(pathSysBlock(), disk, part, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -240,7 +237,7 @@ func PartitionInfo(part string) (string, string, bool) {
 	// /etc/mtab entries for mounted partitions look like this:
 	// /dev/sda6 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
 	var r io.ReadCloser
-	r, err := os.Open(PathMtab)
+	r, err := os.Open(pathEtcMtab())
 	if err != nil {
 		return "", "", true
 	}

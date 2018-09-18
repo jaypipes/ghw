@@ -15,10 +15,6 @@ import (
 	"strings"
 )
 
-const (
-	PathProcCpuinfo = "/proc/cpuinfo"
-)
-
 func cpuFillInfo(info *CPUInfo) error {
 	info.Processors = Processors()
 	var totCores uint32
@@ -35,7 +31,7 @@ func cpuFillInfo(info *CPUInfo) error {
 func Processors() []*Processor {
 	procs := make([]*Processor, 0)
 
-	r, err := os.Open(PathProcCpuinfo)
+	r, err := os.Open(pathProcCpuinfo())
 	if err != nil {
 		return nil
 	}
@@ -153,7 +149,7 @@ func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 	// core_id file that indicates the 0-based identifier of the physical core
 	// the logical processor (hardware thread) is on.
 	path := filepath.Join(
-		PATH_DEVICES_SYSTEM_NODE,
+		pathSysDevicesSystemNode(),
 		fmt.Sprintf("node%d", nodeId),
 	)
 	cores := make([]*ProcessorCore, 0)
