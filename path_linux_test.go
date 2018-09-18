@@ -20,6 +20,8 @@ func TestPathRoot(t *testing.T) {
 		// of the test, reset to the original
 		defer os.Setenv("GHW_CHROOT", orig)
 		os.Unsetenv("GHW_CHROOT")
+	} else {
+		defer os.Unsetenv("GHW_CHROOT")
 	}
 
 	// No environment variable is set for GHW_CHROOT, so pathRoot() should
