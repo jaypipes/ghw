@@ -69,7 +69,7 @@ func DiskVendor(disk string) string {
 	path := filepath.Join(pathSysBlock(), disk, "device", "vendor")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		return "unknown"
+		return UNKNOWN
 	}
 	return strings.TrimSpace(string(contents))
 }
@@ -101,7 +101,7 @@ func DiskSerialNumber(disk string) string {
 	path := filepath.Join(pathDevDiskById())
 	links, err := ioutil.ReadDir(path)
 	if err != nil {
-		return "unknown"
+		return UNKNOWN
 	}
 	for _, link := range links {
 		lname := link.Name()
@@ -122,7 +122,7 @@ func DiskSerialNumber(disk string) string {
 			return lname[pos+1:]
 		}
 	}
-	return "unknown"
+	return UNKNOWN
 }
 
 func DiskPartitions(disk string) []*Partition {

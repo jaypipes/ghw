@@ -31,15 +31,15 @@ type PCIDevice struct {
 }
 
 func (di *PCIDevice) String() string {
-	vendorName := "<unknown>"
+	vendorName := UNKNOWN
 	if di.Vendor != nil {
 		vendorName = di.Vendor.Name
 	}
-	productName := "<unknown>"
+	productName := UNKNOWN
 	if di.Product != nil {
 		productName = di.Product.Name
 	}
-	className := "<unknown>"
+	className := UNKNOWN
 	if di.Class != nil {
 		className = di.Class.Name
 	}
