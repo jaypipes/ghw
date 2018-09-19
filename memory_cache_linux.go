@@ -71,7 +71,7 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 			if err != nil {
 				continue
 			}
-			cacheType := UNIFIED
+			var cacheType MemoryCacheType
 			switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
 			case "Data":
 				cacheType = DATA
@@ -111,7 +111,8 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
 			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap[:len(sharedCpuMap)-1])
-			if cache, ok := caches[cacheKey]; !ok {
+			cache, exists := caches[cacheKey]
+			if !exists {
 				cache = &MemoryCache{
 					Level:             uint8(level),
 					Type:              cacheType,
@@ -120,7 +121,6 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 				}
 				caches[cacheKey] = cache
 			}
-			cache := caches[cacheKey]
 			cache.LogicalProcessors = append(
 				cache.LogicalProcessors,
 				uint32(lpId),
