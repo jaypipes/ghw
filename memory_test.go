@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// nolint: gocyclo
 func TestMemory(t *testing.T) {
 	mem, err := Memory()
 	if err != nil {
