@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	PathMtab        = "/etc/mtab"
-	PathSysBlock    = "/sys/block"
-	PathDevDiskById = "/dev/disk/by-id"
+	LINUX_SECTOR_SIZE = 512
+	PathMtab          = "/etc/mtab"
+	PathSysBlock      = "/sys/block"
+	PathDevDiskById   = "/dev/disk/by-id"
 )
 
 var RegexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
@@ -35,7 +36,7 @@ func blockFillInfo(info *BlockInfo) error {
 	return nil
 }
 
-func DiskSectorSizeBytes(disk string) uint64 {
+func DiskPhysicalBlockSizeBytes(disk string) uint64 {
 	// We can find the sector size in Linux by looking at the
 	// /sys/block/$DEVICE/queue/physical_block_size file in sysfs
 	path := filepath.Join(PathSysBlock, disk, "queue", "physical_block_size")
@@ -58,12 +59,11 @@ func DiskSizeBytes(disk string) uint64 {
 	if err != nil {
 		return 0
 	}
-	ss := DiskSectorSizeBytes(disk)
 	i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * ss
+	return uint64(i) * LINUX_SECTOR_SIZE
 }
 
 func DiskVendor(disk string) string {
@@ -180,17 +180,17 @@ func Disks() []*Disk {
 		}
 
 		size := DiskSizeBytes(dname)
-		ss := DiskSectorSizeBytes(dname)
+		pbs := DiskPhysicalBlockSizeBytes(dname)
 		vendor := DiskVendor(dname)
 		serialNo := DiskSerialNumber(dname)
 
 		d := &Disk{
-			Name:            dname,
-			SizeBytes:       size,
-			SectorSizeBytes: ss,
-			BusType:         busType,
-			Vendor:          vendor,
-			SerialNumber:    serialNo,
+			Name:                   dname,
+			SizeBytes:              size,
+			PhysicalBlockSizeBytes: pbs,
+			BusType:                busType,
+			Vendor:                 vendor,
+			SerialNumber:           serialNo,
 		}
 
 		parts := DiskPartitions(dname)
@@ -221,12 +221,11 @@ func PartitionSizeBytes(part string) uint64 {
 	if err != nil {
 		return 0
 	}
-	ss := DiskSectorSizeBytes(disk)
 	i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * ss
+	return uint64(i) * LINUX_SECTOR_SIZE
 }
 
 // Given a full or short partition name, returns the mount point, the type of
