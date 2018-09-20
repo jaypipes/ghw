@@ -12,13 +12,13 @@ import (
 )
 
 type Disk struct {
-	Name            string
-	SizeBytes       uint64
-	SectorSizeBytes uint64
-	BusType         string
-	Vendor          string
-	SerialNumber    string
-	Partitions      []*Partition
+	Name                   string
+	SizeBytes              uint64
+	PhysicalBlockSizeBytes uint64
+	BusType                string
+	Vendor                 string
+	SerialNumber           string
+	Partitions             []*Partition
 }
 
 type Partition struct {
