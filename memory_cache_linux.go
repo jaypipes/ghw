@@ -69,21 +69,12 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 
 			cacheType := memoryCacheType(nodeID, lpID)
 			level := memoryCacheLevel(nodeID, lpID)
+			sharedCpuMap := memoryCacheSharedCPUMap(nodeID, lpID)
 			size := memoryCacheSize(nodeID, lpID, level)
-
-			scpuPath := filepath.Join(
-				cachePath,
-				cacheDirFileName,
-				"shared_cpu_map",
-			)
-			sharedCpuMap, err := ioutil.ReadFile(scpuPath)
-			if err != nil {
-				continue
-			}
 			// The cache information is repeated for each node, so here, we
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
-			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap[:len(sharedCpuMap)-1])
+			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
 			cache, exists := caches[cacheKey]
 			if !exists {
 				cache = &MemoryCache{
@@ -192,4 +183,17 @@ func memoryCacheType(nodeID int, lpID int) MemoryCacheType {
 	default:
 		return UNIFIED
 	}
+}
+
+func memoryCacheSharedCPUMap(nodeID int, lpID int) string {
+	scpuPath := filepath.Join(
+		pathNodeCPUCache(nodeID, lpID),
+		"shared_cpu_map",
+	)
+	sharedCpuMap, err := ioutil.ReadFile(scpuPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", scpuPath, err)
+		return ""
+	}
+	return string(sharedCpuMap[:len(sharedCpuMap)-1])
 }
