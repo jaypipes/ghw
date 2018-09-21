@@ -81,16 +81,7 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 			default:
 				cacheType = UNIFIED
 			}
-
-			levelPath := filepath.Join(cachePath, cacheDirFileName, "level")
-			levelContents, err := ioutil.ReadFile(levelPath)
-			if err != nil {
-				continue
-			}
-			// levelContents is now a []byte with the last byte being a newline
-			// character. Trim that off and convert the contents to an integer.
-			level, _ := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
-
+			level := memoryCacheLevel(nodeID, lpID)
 			size := memoryCacheSize(nodeID, lpID, level)
 
 			scpuPath := filepath.Join(
@@ -165,13 +156,33 @@ func memoryCacheSize(nodeID int, lpID int, cacheLevel int) int {
 	sizeContents, err := ioutil.ReadFile(sizePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", sizePath, err)
-		return 0
+		return -1
 	}
 	// size comes as XK\n, so we trim off the K and the newline.
 	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to parse int from %s", sizeContents)
-		return 0
+		return -1
 	}
 	return size
+}
+
+func memoryCacheLevel(nodeID int, lpID int) int {
+	levelPath := filepath.Join(
+		pathNodeCPUCache(nodeID, lpID),
+		"level",
+	)
+	levelContents, err := ioutil.ReadFile(levelPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", levelPath, err)
+		return -1
+	}
+	// levelContents is now a []byte with the last byte being a newline
+	// character. Trim that off and convert the contents to an integer.
+	level, err := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to parse int from %s", levelContents)
+		return -1
+	}
+	return level
 }
