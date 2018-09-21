@@ -48,7 +48,7 @@ func TopologyNodes() ([]*TopologyNode, error) {
 			return nil, err
 		}
 		node.Cores = cores
-		caches, err := cachesForNode(node.Id)
+		caches, err := cachesForNode(int(node.Id))
 		if err != nil {
 			return nil, err
 		}

@@ -8,13 +8,14 @@ package ghw
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
+func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 	// The /sys/devices/node/nodeX directory contains a subdirectory called
 	// 'cpuX' for each logical processor assigned to the node. Each of those
 	// subdirectories containers a 'cache' subdirectory which contains a number
@@ -24,7 +25,7 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 	// determine cache characteristics.
 	path := filepath.Join(
 		pathSysDevicesSystemNode(),
-		fmt.Sprintf("node%d", nodeId),
+		fmt.Sprintf("node%d", nodeID),
 	)
 	caches := make(map[string]*MemoryCache, 0)
 
@@ -46,7 +47,7 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 		// Grab the logical processor ID by cutting the integer from the
 		// /sys/devices/system/node/nodeX/cpuX filename
 		cpuPath := filepath.Join(path, filename)
-		lpId, _ := strconv.Atoi(filename[3:])
+		lpID, _ := strconv.Atoi(filename[3:])
 
 		// Inspect the caches for each logical processor. There will be a
 		// /sys/devices/system/node/nodeX/cpuX/cache directory containing a
@@ -90,13 +91,7 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 			// character. Trim that off and convert the contents to an integer.
 			level, _ := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
 
-			sizePath := filepath.Join(cachePath, cacheDirFileName, "size")
-			sizeContents, err := ioutil.ReadFile(sizePath)
-			if err != nil {
-				continue
-			}
-			// size comes as XK\n, so we trim off the K and the newline.
-			size, _ := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
+			size := memoryCacheSize(nodeID, lpID, level)
 
 			scpuPath := filepath.Join(
 				cachePath,
@@ -123,7 +118,7 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 			}
 			cache.LogicalProcessors = append(
 				cache.LogicalProcessors,
-				uint32(lpId),
+				uint32(lpID),
 			)
 		}
 	}
@@ -138,4 +133,45 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 	}
 
 	return cacheVals, nil
+}
+
+func pathNodeCPU(nodeID int, lpID int) string {
+	return filepath.Join(
+		pathSysDevicesSystemNode(),
+		fmt.Sprintf("node%d", nodeID),
+		fmt.Sprintf("cpu%d", lpID),
+	)
+}
+
+func pathNodeCPUCache(nodeID int, lpID int) string {
+	return filepath.Join(
+		pathNodeCPU(nodeID, lpID),
+		"cache",
+	)
+}
+
+func pathNodeCPUCacheLevel(nodeID int, lpID int, cacheLevel int) string {
+	return filepath.Join(
+		pathNodeCPUCache(nodeID, lpID),
+		fmt.Sprintf("index%d", cacheLevel),
+	)
+}
+
+func memoryCacheSize(nodeID int, lpID int, cacheLevel int) int {
+	sizePath := filepath.Join(
+		pathNodeCPUCacheLevel(nodeID, lpID, cacheLevel),
+		"size",
+	)
+	sizeContents, err := ioutil.ReadFile(sizePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", sizePath, err)
+		return 0
+	}
+	// size comes as XK\n, so we trim off the K and the newline.
+	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to parse int from %s", sizeContents)
+		return 0
+	}
+	return size
 }
