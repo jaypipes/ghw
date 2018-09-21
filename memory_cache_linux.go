@@ -67,20 +67,7 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 				continue
 			}
 
-			typePath := filepath.Join(cachePath, cacheDirFileName, "type")
-			cacheTypeContents, err := ioutil.ReadFile(typePath)
-			if err != nil {
-				continue
-			}
-			var cacheType MemoryCacheType
-			switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
-			case "Data":
-				cacheType = DATA
-			case "Instruction":
-				cacheType = INSTRUCTION
-			default:
-				cacheType = UNIFIED
-			}
+			cacheType := memoryCacheType(nodeID, lpID)
 			level := memoryCacheLevel(nodeID, lpID)
 			size := memoryCacheSize(nodeID, lpID, level)
 
@@ -185,4 +172,24 @@ func memoryCacheLevel(nodeID int, lpID int) int {
 		return -1
 	}
 	return level
+}
+
+func memoryCacheType(nodeID int, lpID int) MemoryCacheType {
+	typePath := filepath.Join(
+		pathNodeCPUCache(nodeID, lpID),
+		"type",
+	)
+	cacheTypeContents, err := ioutil.ReadFile(typePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", typePath, err)
+		return UNIFIED
+	}
+	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
+	case "Data":
+		return DATA
+	case "Instruction":
+		return INSTRUCTION
+	default:
+		return UNIFIED
+	}
 }
