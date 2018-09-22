@@ -67,16 +67,17 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 				continue
 			}
 
-			cacheType := memoryCacheType(nodeID, lpID)
-			level := memoryCacheLevel(nodeID, lpID)
-			sharedCpuMap := memoryCacheSharedCPUMap(nodeID, lpID)
-			size := memoryCacheSize(nodeID, lpID, level)
 			// The cache information is repeated for each node, so here, we
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
+			level := memoryCacheLevel(nodeID, lpID)
+			cacheType := memoryCacheType(nodeID, lpID)
+			sharedCpuMap := memoryCacheSharedCPUMap(nodeID, lpID)
 			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
+
 			cache, exists := caches[cacheKey]
 			if !exists {
+				size := memoryCacheSize(nodeID, lpID, level)
 				cache = &MemoryCache{
 					Level:             uint8(level),
 					Type:              cacheType,
