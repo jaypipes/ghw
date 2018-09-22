@@ -23,7 +23,7 @@ func cachesForNode(nodeId uint32) ([]*MemoryCache, error) {
 	// files, including 'shared_cpu_list', 'size', and 'type' which we use to
 	// determine cache characteristics.
 	path := filepath.Join(
-		PATH_DEVICES_SYSTEM_NODE,
+		pathSysDevicesSystemNode(),
 		fmt.Sprintf("node%d", nodeId),
 	)
 	caches := make(map[string]*MemoryCache, 0)

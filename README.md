@@ -34,6 +34,16 @@ information about the host computer:
 * [PCI](#pci)
 * [GPU](#gpu)
 
+**NOTE**: The default root mountpoint that `ghw` uses when looking for
+information about the host system is `/`. So, for example, when looking up CPU
+information on Linux, `ghw` will attempt to parse the `/proc/cpuinfo` file. If
+you are calling `ghw` from a system that has an alternate root mountpoint, you
+can set the `GHW_CHROOT` environment variable to that alternate path. for
+example, if you are executing from within an application container that has
+bind-mounted the root host filesystem to the mount point `/host`, you would set
+`GHW_CHROOT` to `/host` so that `ghw` can find files like `/proc/cpuinfo` at
+`/host/proc/cpuinfo`.
+
 ### Memory
 
 Information about the host computer's memory can be retrieved using the
