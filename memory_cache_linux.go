@@ -74,6 +74,9 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
 			level := memoryCacheLevel(nodeID, lpID)
+			if level == -1 {
+				continue
+			}
 			cacheType := memoryCacheType(nodeID, lpID)
 			sharedCpuMap := memoryCacheSharedCPUMap(nodeID, lpID)
 			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
@@ -137,13 +140,13 @@ func memoryCacheSize(nodeID int, lpID int, cacheLevel int) int {
 	)
 	sizeContents, err := ioutil.ReadFile(sizePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", sizePath, err)
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s\n", sizePath, err)
 		return -1
 	}
 	// size comes as XK\n, so we trim off the K and the newline.
 	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse int from %s", sizeContents)
+		fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", sizeContents)
 		return -1
 	}
 	return size
@@ -156,14 +159,14 @@ func memoryCacheLevel(nodeID int, lpID int) int {
 	)
 	levelContents, err := ioutil.ReadFile(levelPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", levelPath, err)
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s\n", levelPath, err)
 		return -1
 	}
 	// levelContents is now a []byte with the last byte being a newline
 	// character. Trim that off and convert the contents to an integer.
 	level, err := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse int from %s", levelContents)
+		fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", levelContents)
 		return -1
 	}
 	return level
@@ -176,7 +179,7 @@ func memoryCacheType(nodeID int, lpID int) MemoryCacheType {
 	)
 	cacheTypeContents, err := ioutil.ReadFile(typePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", typePath, err)
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s\n", typePath, err)
 		return UNIFIED
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
@@ -196,7 +199,7 @@ func memoryCacheSharedCPUMap(nodeID int, lpID int) string {
 	)
 	sharedCpuMap, err := ioutil.ReadFile(scpuPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to read %s: %s", scpuPath, err)
+		fmt.Fprintf(os.Stderr, "Unable to read %s: %s\n", scpuPath, err)
 		return ""
 	}
 	return string(sharedCpuMap[:len(sharedCpuMap)-1])
