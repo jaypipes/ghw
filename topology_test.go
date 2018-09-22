@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// nolint: gocyclo
 func TestTopology(t *testing.T) {
 	info, err := Topology()
 

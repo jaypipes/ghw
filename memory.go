@@ -28,14 +28,14 @@ func Memory() (*MemoryInfo, error) {
 }
 
 func (i *MemoryInfo) String() string {
-	tpbs := "unknown"
+	tpbs := UNKNOWN
 	if i.TotalPhysicalBytes > 0 {
 		tpb := i.TotalPhysicalBytes
 		unit, unitStr := unitWithString(tpb)
 		tpb = int64(math.Ceil(float64(i.TotalPhysicalBytes) / float64(unit)))
 		tpbs = fmt.Sprintf("%d%s", tpb, unitStr)
 	}
-	tubs := "unknown"
+	tubs := UNKNOWN
 	if i.TotalUsableBytes > 0 {
 		tub := i.TotalUsableBytes
 		unit, unitStr := unitWithString(tub)

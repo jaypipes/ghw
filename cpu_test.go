@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// nolint: gocyclo
 func TestCPU(t *testing.T) {
 	info, err := CPU()
 

@@ -12,6 +12,7 @@ import (
 	"testing"
 )
 
+// nolint: gocyclo
 func TestBlock(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")

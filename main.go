@@ -6,6 +6,10 @@
 
 package ghw
 
+const (
+	UNKNOWN = "unknown"
+)
+
 type HostInfo struct {
 	Memory   *MemoryInfo
 	Block    *BlockInfo

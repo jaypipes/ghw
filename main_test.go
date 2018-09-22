@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// nolint: gocyclo
 func TestHost(t *testing.T) {
 	host, err := Host()
 
