@@ -69,13 +69,14 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 			if !strings.HasPrefix(cacheDirFileName, "index") {
 				continue
 			}
+			cacheIndex, _ := strconv.Atoi(cacheDirFileName[5:])
 
 			// The cache information is repeated for each node, so here, we
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
-			level := memoryCacheLevel(nodeID, lpID)
-			cacheType := memoryCacheType(nodeID, lpID)
-			sharedCpuMap := memoryCacheSharedCPUMap(nodeID, lpID)
+			level := memoryCacheLevel(nodeID, lpID, cacheIndex)
+			cacheType := memoryCacheType(nodeID, lpID, cacheIndex)
+			sharedCpuMap := memoryCacheSharedCPUMap(nodeID, lpID, cacheIndex)
 			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
 
 			cache, exists := caches[cacheKey]
@@ -123,35 +124,16 @@ func pathNodeCPUCache(nodeID int, lpID int) string {
 	)
 }
 
-func pathNodeCPUCacheLevel(nodeID int, lpID int, cacheLevel int) string {
+func pathNodeCPUCacheIndex(nodeID int, lpID int, cacheIndex int) string {
 	return filepath.Join(
 		pathNodeCPUCache(nodeID, lpID),
-		fmt.Sprintf("index%d", cacheLevel),
+		fmt.Sprintf("index%d", cacheIndex),
 	)
 }
 
-func memoryCacheSize(nodeID int, lpID int, cacheLevel int) int {
-	sizePath := filepath.Join(
-		pathNodeCPUCacheLevel(nodeID, lpID, cacheLevel),
-		"size",
-	)
-	sizeContents, err := ioutil.ReadFile(sizePath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		return -1
-	}
-	// size comes as XK\n, so we trim off the K and the newline.
-	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", sizeContents)
-		return -1
-	}
-	return size
-}
-
-func memoryCacheLevel(nodeID int, lpID int) int {
+func memoryCacheLevel(nodeID int, lpID int, cacheIndex int) int {
 	levelPath := filepath.Join(
-		pathNodeCPUCache(nodeID, lpID),
+		pathNodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"level",
 	)
 	levelContents, err := ioutil.ReadFile(levelPath)
@@ -169,9 +151,28 @@ func memoryCacheLevel(nodeID int, lpID int) int {
 	return level
 }
 
-func memoryCacheType(nodeID int, lpID int) MemoryCacheType {
+func memoryCacheSize(nodeID int, lpID int, cacheIndex int) int {
+	sizePath := filepath.Join(
+		pathNodeCPUCacheIndex(nodeID, lpID, cacheIndex),
+		"size",
+	)
+	sizeContents, err := ioutil.ReadFile(sizePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		return -1
+	}
+	// size comes as XK\n, so we trim off the K and the newline.
+	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", sizeContents)
+		return -1
+	}
+	return size
+}
+
+func memoryCacheType(nodeID int, lpID int, cacheIndex int) MemoryCacheType {
 	typePath := filepath.Join(
-		pathNodeCPUCache(nodeID, lpID),
+		pathNodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"type",
 	)
 	cacheTypeContents, err := ioutil.ReadFile(typePath)
@@ -189,9 +190,9 @@ func memoryCacheType(nodeID int, lpID int) MemoryCacheType {
 	}
 }
 
-func memoryCacheSharedCPUMap(nodeID int, lpID int) string {
+func memoryCacheSharedCPUMap(nodeID int, lpID int, cacheIndex int) string {
 	scpuPath := filepath.Join(
-		pathNodeCPUCache(nodeID, lpID),
+		pathNodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"shared_cpu_map",
 	)
 	sharedCpuMap, err := ioutil.ReadFile(scpuPath)
