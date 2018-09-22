@@ -4,9 +4,6 @@ language: go
 sudo: required
 env:
   - GHW_TESTING_SKIP_GPU=1
-before_install:
-    - sudo apt-get install -y tree
 script:
   - make test
   - go run ghwc/main.go
-  - tree /sys/devices/system/node/node0/cpu0
