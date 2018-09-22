@@ -57,6 +57,9 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 		// directories contains information about the size of that level of
 		// cache and the processors mapped to it.
 		cachePath := filepath.Join(cpuPath, "cache")
+		if _, err = os.Stat(cachePath); os.IsNotExist(err) {
+			continue
+		}
 		cacheDirFiles, err := ioutil.ReadDir(cachePath)
 		if err != nil {
 			return nil, err
