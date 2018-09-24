@@ -15,10 +15,6 @@ import (
 	"github.com/jaypipes/pcidb"
 )
 
-const (
-	PATH_SYSFS_PCI_DEVICES = "/sys/bus/pci/devices"
-)
-
 func pciFillInfo(info *PCIInfo) error {
 	db, err := pcidb.New()
 	if err != nil {
@@ -36,7 +32,7 @@ func getPCIDeviceModaliasPath(address string) string {
 		return ""
 	}
 	return filepath.Join(
-		PATH_SYSFS_PCI_DEVICES,
+		pathSysBusPciDevices(),
 		pciAddr.Domain+":"+pciAddr.Bus+":"+pciAddr.Slot+"."+pciAddr.Function,
 		"modalias",
 	)
@@ -275,7 +271,7 @@ func (info *PCIInfo) ListDevices() []*PCIDevice {
 	// of symlinks. The names of the symlinks are all the known PCI addresses
 	// for the host. For each address, we grab a *PCIDevice matching the
 	// address and append to the returned array.
-	links, err := ioutil.ReadDir(PATH_SYSFS_PCI_DEVICES)
+	links, err := ioutil.ReadDir(pathSysBusPciDevices())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
 		return nil
