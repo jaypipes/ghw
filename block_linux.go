@@ -114,6 +114,18 @@ func udevInfo(disk string) (map[string]string, error) {
 	return udevInfo, nil
 }
 
+func DiskModel(disk string) string {
+	info, err := udevInfo(disk)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	if model, ok := info["ID_MODEL"]; ok {
+		return model
+	}
+	return UNKNOWN
+}
+
 func DiskSerialNumber(disk string) string {
 	info, err := udevInfo(disk)
 	if err != nil {
@@ -122,8 +134,8 @@ func DiskSerialNumber(disk string) string {
 
 	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT
 	// The non-_SHORT version often duplicates vendor information collected elsewhere, so use _SHORT.
-	if path, ok := info["ID_SERIAL_SHORT"]; ok {
-		return path
+	if serial, ok := info["ID_SERIAL_SHORT"]; ok {
+		return serial
 	}
 	return UNKNOWN
 }
@@ -138,6 +150,22 @@ func DiskBusPath(disk string) string {
 	// The difference seems to be _TAG has funky characters converted to underscores.
 	if path, ok := info["ID_PATH"]; ok {
 		return path
+	}
+	return UNKNOWN
+}
+
+func DiskWorldWideName(disk string) string {
+	info, err := udevInfo(disk)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	// Trying ID_WWN_WITH_EXTENSION and falling back to ID_WWN is the same logic lsblk uses
+	if wwn, ok := info["ID_WWN_WITH_EXTENSION"]; ok {
+		return wwn
+	}
+	if wwn, ok := info["ID_WWN"]; ok {
+		return wwn
 	}
 	return UNKNOWN
 }
@@ -196,9 +224,11 @@ func Disks() []*Disk {
 		size := DiskSizeBytes(dname)
 		pbs := DiskPhysicalBlockSizeBytes(dname)
 		busPath := DiskBusPath(dname)
-		vendor := DiskVendor(dname)
-		serialNo := DiskSerialNumber(dname)
 		node := DiskNumaNodeId(dname)
+		vendor := DiskVendor(dname)
+		model := DiskModel(dname)
+		serialNo := DiskSerialNumber(dname)
+		wwn := DiskWorldWideName(dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -206,9 +236,11 @@ func Disks() []*Disk {
 			PhysicalBlockSizeBytes: pbs,
 			BusType:                busType,
 			BusPath:                busPath,
-			Vendor:                 vendor,
-			SerialNumber:           serialNo,
 			NumaNodeId:             node,
+			Vendor:                 vendor,
+			Model:                  model,
+			SerialNumber:           serialNo,
+			WorldWideName:          wwn,
 		}
 
 		parts := DiskPartitions(dname)

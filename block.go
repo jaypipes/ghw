@@ -17,10 +17,12 @@ type Disk struct {
 	PhysicalBlockSizeBytes uint64
 	BusType                string
 	BusPath                string
-	Vendor                 string
-	SerialNumber           string
-	Partitions             []*Partition
 	NumaNodeId             int
+	Vendor                 string
+	Model                  string
+	SerialNumber           string
+	WorldWideName          string
+	Partitions             []*Partition
 }
 
 type Partition struct {
@@ -65,14 +67,6 @@ func (i *BlockInfo) String() string {
 }
 
 func (d *Disk) String() string {
-	vendor := ""
-	if d.Vendor != "" {
-		vendor = "  " + d.Vendor
-	}
-	serial := ""
-	if d.SerialNumber != "" {
-		serial = " - SN #" + d.SerialNumber
-	}
 	sizeStr := UNKNOWN
 	if d.SizeBytes > 0 {
 		size := d.SizeBytes
@@ -84,15 +78,33 @@ func (d *Disk) String() string {
 	if d.NumaNodeId >= 0 {
 		atNode = fmt.Sprintf(" (node #%d)", d.NumaNodeId)
 	}
+	vendor := ""
+	if d.Vendor != "" {
+		vendor = " vendor=" + d.Vendor
+	}
+	model := ""
+	if d.Model != UNKNOWN {
+		model = " model=" + d.Model
+	}
+	serial := ""
+	if d.SerialNumber != UNKNOWN {
+		serial = " serial=" + d.SerialNumber
+	}
+	wwn := ""
+	if d.WorldWideName != UNKNOWN {
+		wwn = " WWN=" + d.WorldWideName
+	}
 	return fmt.Sprintf(
-		"/dev/%s (%s) [%s @ %s%s]%s%s",
+		"/dev/%s (%s) [%s @ %s%s]%s%s%s%s",
 		d.Name,
 		sizeStr,
 		d.BusType,
 		d.BusPath,
 		atNode,
 		vendor,
+		model,
 		serial,
+		wwn,
 	)
 }
 
