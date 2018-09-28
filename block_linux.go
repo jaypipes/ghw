@@ -63,6 +63,21 @@ func DiskSizeBytes(disk string) uint64 {
 	return uint64(i) * LINUX_SECTOR_SIZE
 }
 
+func DiskNumaNodeId(disk string) int {
+	link, err := os.Readlink(filepath.Join(pathSysBlock(), disk))
+	if err != nil {
+		return -1
+	}
+	for partial := link; strings.HasPrefix(partial, "../devices/"); partial = filepath.Base(partial) {
+		if nodeContents, err := ioutil.ReadFile(filepath.Join(pathSysBlock(), partial, "numa_node")); err != nil {
+			if nodeInt, err := strconv.Atoi(string(nodeContents)); err != nil {
+				return nodeInt
+			}
+		}
+	}
+	return -1
+}
+
 func DiskVendor(disk string) string {
 	// In Linux, the vendor for a disk device is found in the
 	// /sys/block/$DEVICE/device/vendor file in sysfs
@@ -183,6 +198,7 @@ func Disks() []*Disk {
 		busPath := DiskBusPath(dname)
 		vendor := DiskVendor(dname)
 		serialNo := DiskSerialNumber(dname)
+		node := DiskNumaNodeId(dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -192,6 +208,7 @@ func Disks() []*Disk {
 			BusPath:                busPath,
 			Vendor:                 vendor,
 			SerialNumber:           serialNo,
+			NumaNodeId:             node,
 		}
 
 		parts := DiskPartitions(dname)

@@ -20,6 +20,7 @@ type Disk struct {
 	Vendor                 string
 	SerialNumber           string
 	Partitions             []*Partition
+	NumaNodeId             int
 }
 
 type Partition struct {
@@ -79,12 +80,17 @@ func (d *Disk) String() string {
 		size = uint64(math.Ceil(float64(size) / float64(unit)))
 		sizeStr = fmt.Sprintf("%d%s", size, unitStr)
 	}
+	atNode := ""
+	if d.NumaNodeId >= 0 {
+		atNode = fmt.Sprintf(" (node #%d)", d.NumaNodeId)
+	}
 	return fmt.Sprintf(
-		"/dev/%s (%s) [%s @ %s]%s%s",
+		"/dev/%s (%s) [%s @ %s%s]%s%s",
 		d.Name,
 		sizeStr,
 		d.BusType,
 		d.BusPath,
+		atNode,
 		vendor,
 		serial,
 	)
