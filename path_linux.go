@@ -52,3 +52,7 @@ func pathDevDiskById() string {
 func pathSysBusPciDevices() string {
 	return filepath.Join(pathRoot(), "sys", "bus", "pci", "devices")
 }
+
+func pathRunUdevData() string {
+	return filepath.Join(pathRoot(), "run", "udev", "data")
+}

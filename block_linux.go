@@ -74,53 +74,41 @@ func DiskVendor(disk string) string {
 	return strings.TrimSpace(string(contents))
 }
 
+func udevInfo(disk string) (map[string]string, error) {
+	// Get device major:minor numbers
+	devNo, err := ioutil.ReadFile(filepath.Join(pathSysBlock(), disk, "dev"))
+	if err != nil {
+		return nil, err
+	}
+
+	// Look up block device in udev runtime database
+	udevId := "b" + strings.TrimSpace(string(devNo))
+	udevBytes, err := ioutil.ReadFile(filepath.Join(pathRunUdevData(), udevId))
+	if err != nil {
+		return nil, err
+	}
+
+	udevInfo := make(map[string]string)
+	for _, udevLine := range strings.Split(string(udevBytes), "\n") {
+		if strings.HasPrefix(udevLine, "E:") {
+			if s := strings.SplitN(udevLine[2:], "=", 2); len(s) == 2 {
+				udevInfo[s[0]] = s[1]
+			}
+		}
+	}
+	return udevInfo, nil
+}
+
 func DiskSerialNumber(disk string) string {
-	// Finding the serial number of a disk without root privileges in Linux is
-	// a little tricky. The /dev/disk/by-id directory contains a bunch of
-	// symbolic links to disk devices and partitions. The serial number is
-	// embedded as part of the symbolic link. For example, on my system, the
-	// primary SCSI disk (/dev/sda) is represented as a symbolic link named
-	// /dev/disk/by-id/scsi-3600508e000000000f8253aac9a1abd0c. The serial
-	// number is 3600508e000000000f8253aac9a1abd0c.
-	//
-	// Some SATA drives (or rather, disk drive vendors) use inconsistent ways
-	// of putting the serial numbers of the disks in this symbolic link name.
-	// For example, here are two SATA drive identifiers (examples come from
-	// @antylama on GH Issue #19):
-	//
-	// /dev/disk/by-id/ata-AXIOMTEK_Corp.-FSA032G300MW5T-H_BCA11704240020001
-	//
-	// in the above identifier, "BCA11704240020001" is the drive serial number.
-	// The vendor name along with what appears to be a vendor model name
-	// (FSA032G300MW5T-H) are also included in the symbolic link name.
-	//
-	// /dev/disk/by-id/ata-WDC_WD10JFCX-68N6GN0_WD-WX31A76R3KFS
-	//
-	// in the above identifier, the serial number of the disk is actually
-	// WD-WX31A76R3KFS, not WX31A76R3KFS. Go figure...
-	path := filepath.Join(pathDevDiskById())
-	links, err := ioutil.ReadDir(path)
+	info, err := udevInfo(disk)
 	if err != nil {
 		return UNKNOWN
 	}
-	for _, link := range links {
-		lname := link.Name()
-		lpath := filepath.Join(path, lname)
-		dest, err := os.Readlink(lpath)
-		if err != nil {
-			continue
-		}
-		dest = filepath.Base(dest)
-		if dest != disk {
-			continue
-		}
-		pos := strings.LastIndex(lname, "_")
-		if pos < 0 {
-			pos = strings.Index(lname, "-")
-		}
-		if pos >= 0 {
-			return lname[pos+1:]
-		}
+
+	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT
+	// The non-_SHORT version often duplicates vendor information collected elsewhere, so use _SHORT.
+	if path, ok := info["ID_SERIAL_SHORT"]; ok {
+		return path
 	}
 	return UNKNOWN
 }
