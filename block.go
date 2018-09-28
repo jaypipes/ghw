@@ -16,6 +16,7 @@ type Disk struct {
 	SizeBytes              uint64
 	PhysicalBlockSizeBytes uint64
 	BusType                string
+	BusPath                string
 	Vendor                 string
 	SerialNumber           string
 	Partitions             []*Partition
@@ -79,10 +80,11 @@ func (d *Disk) String() string {
 		sizeStr = fmt.Sprintf("%d%s", size, unitStr)
 	}
 	return fmt.Sprintf(
-		"/dev/%s (%s) [%s]%s%s",
+		"/dev/%s (%s) [%s @ %s]%s%s",
 		d.Name,
 		sizeStr,
 		d.BusType,
+		d.BusPath,
 		vendor,
 		serial,
 	)

@@ -113,6 +113,20 @@ func DiskSerialNumber(disk string) string {
 	return UNKNOWN
 }
 
+func DiskBusPath(disk string) string {
+	info, err := udevInfo(disk)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	// There are two path keys, ID_PATH and ID_PATH_TAG.
+	// The difference seems to be _TAG has funky characters converted to underscores.
+	if path, ok := info["ID_PATH"]; ok {
+		return path
+	}
+	return UNKNOWN
+}
+
 func DiskPartitions(disk string) []*Partition {
 	out := make([]*Partition, 0)
 	path := filepath.Join(pathSysBlock(), disk)
@@ -166,6 +180,7 @@ func Disks() []*Disk {
 
 		size := DiskSizeBytes(dname)
 		pbs := DiskPhysicalBlockSizeBytes(dname)
+		busPath := DiskBusPath(dname)
 		vendor := DiskVendor(dname)
 		serialNo := DiskSerialNumber(dname)
 
@@ -174,6 +189,7 @@ func Disks() []*Disk {
 			SizeBytes:              size,
 			PhysicalBlockSizeBytes: pbs,
 			BusType:                busType,
+			BusPath:                busPath,
 			Vendor:                 vendor,
 			SerialNumber:           serialNo,
 		}
