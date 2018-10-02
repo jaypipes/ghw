@@ -63,7 +63,7 @@ func DiskSizeBytes(disk string) uint64 {
 	return uint64(i) * LINUX_SECTOR_SIZE
 }
 
-func DiskNumaNodeId(disk string) int {
+func DiskNUMANodeID(disk string) int {
 	link, err := os.Readlink(filepath.Join(pathSysBlock(), disk))
 	if err != nil {
 		return -1
@@ -154,7 +154,7 @@ func DiskBusPath(disk string) string {
 	return UNKNOWN
 }
 
-func DiskWorldWideName(disk string) string {
+func DiskWWN(disk string) string {
 	info, err := udevInfo(disk)
 	if err != nil {
 		return UNKNOWN
@@ -224,11 +224,11 @@ func Disks() []*Disk {
 		size := DiskSizeBytes(dname)
 		pbs := DiskPhysicalBlockSizeBytes(dname)
 		busPath := DiskBusPath(dname)
-		node := DiskNumaNodeId(dname)
+		node := DiskNUMANodeID(dname)
 		vendor := DiskVendor(dname)
 		model := DiskModel(dname)
 		serialNo := DiskSerialNumber(dname)
-		wwn := DiskWorldWideName(dname)
+		wwn := DiskWWN(dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -236,11 +236,11 @@ func Disks() []*Disk {
 			PhysicalBlockSizeBytes: pbs,
 			BusType:                busType,
 			BusPath:                busPath,
-			NumaNodeId:             node,
+			NUMANodeID:             node,
 			Vendor:                 vendor,
 			Model:                  model,
 			SerialNumber:           serialNo,
-			WorldWideName:          wwn,
+			WWN:                    wwn,
 		}
 
 		parts := DiskPartitions(dname)
