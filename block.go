@@ -16,8 +16,12 @@ type Disk struct {
 	SizeBytes              uint64
 	PhysicalBlockSizeBytes uint64
 	BusType                string
+	BusPath                string
+	NUMANodeID             int
 	Vendor                 string
+	Model                  string
 	SerialNumber           string
+	WWN                    string
 	Partitions             []*Partition
 }
 
@@ -63,14 +67,6 @@ func (i *BlockInfo) String() string {
 }
 
 func (d *Disk) String() string {
-	vendor := ""
-	if d.Vendor != "" {
-		vendor = "  " + d.Vendor
-	}
-	serial := ""
-	if d.SerialNumber != "" {
-		serial = " - SN #" + d.SerialNumber
-	}
 	sizeStr := UNKNOWN
 	if d.SizeBytes > 0 {
 		size := d.SizeBytes
@@ -78,13 +74,37 @@ func (d *Disk) String() string {
 		size = uint64(math.Ceil(float64(size) / float64(unit)))
 		sizeStr = fmt.Sprintf("%d%s", size, unitStr)
 	}
+	atNode := ""
+	if d.NUMANodeID >= 0 {
+		atNode = fmt.Sprintf(" (node #%d)", d.NUMANodeID)
+	}
+	vendor := ""
+	if d.Vendor != "" {
+		vendor = " vendor=" + d.Vendor
+	}
+	model := ""
+	if d.Model != UNKNOWN {
+		model = " model=" + d.Model
+	}
+	serial := ""
+	if d.SerialNumber != UNKNOWN {
+		serial = " serial=" + d.SerialNumber
+	}
+	wwn := ""
+	if d.WWN != UNKNOWN {
+		wwn = " WWN=" + d.WWN
+	}
 	return fmt.Sprintf(
-		"/dev/%s (%s) [%s]%s%s",
+		"/dev/%s (%s) [%s @ %s%s]%s%s%s%s",
 		d.Name,
 		sizeStr,
 		d.BusType,
+		d.BusPath,
+		atNode,
 		vendor,
+		model,
 		serial,
+		wwn,
 	)
 }
 

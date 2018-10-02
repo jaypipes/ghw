@@ -63,6 +63,21 @@ func DiskSizeBytes(disk string) uint64 {
 	return uint64(i) * LINUX_SECTOR_SIZE
 }
 
+func DiskNUMANodeID(disk string) int {
+	link, err := os.Readlink(filepath.Join(pathSysBlock(), disk))
+	if err != nil {
+		return -1
+	}
+	for partial := link; strings.HasPrefix(partial, "../devices/"); partial = filepath.Base(partial) {
+		if nodeContents, err := ioutil.ReadFile(filepath.Join(pathSysBlock(), partial, "numa_node")); err != nil {
+			if nodeInt, err := strconv.Atoi(string(nodeContents)); err != nil {
+				return nodeInt
+			}
+		}
+	}
+	return -1
+}
+
 func DiskVendor(disk string) string {
 	// In Linux, the vendor for a disk device is found in the
 	// /sys/block/$DEVICE/device/vendor file in sysfs
@@ -99,6 +114,18 @@ func udevInfo(disk string) (map[string]string, error) {
 	return udevInfo, nil
 }
 
+func DiskModel(disk string) string {
+	info, err := udevInfo(disk)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	if model, ok := info["ID_MODEL"]; ok {
+		return model
+	}
+	return UNKNOWN
+}
+
 func DiskSerialNumber(disk string) string {
 	info, err := udevInfo(disk)
 	if err != nil {
@@ -107,8 +134,38 @@ func DiskSerialNumber(disk string) string {
 
 	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT
 	// The non-_SHORT version often duplicates vendor information collected elsewhere, so use _SHORT.
-	if path, ok := info["ID_SERIAL_SHORT"]; ok {
+	if serial, ok := info["ID_SERIAL_SHORT"]; ok {
+		return serial
+	}
+	return UNKNOWN
+}
+
+func DiskBusPath(disk string) string {
+	info, err := udevInfo(disk)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	// There are two path keys, ID_PATH and ID_PATH_TAG.
+	// The difference seems to be _TAG has funky characters converted to underscores.
+	if path, ok := info["ID_PATH"]; ok {
 		return path
+	}
+	return UNKNOWN
+}
+
+func DiskWWN(disk string) string {
+	info, err := udevInfo(disk)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	// Trying ID_WWN_WITH_EXTENSION and falling back to ID_WWN is the same logic lsblk uses
+	if wwn, ok := info["ID_WWN_WITH_EXTENSION"]; ok {
+		return wwn
+	}
+	if wwn, ok := info["ID_WWN"]; ok {
+		return wwn
 	}
 	return UNKNOWN
 }
@@ -166,16 +223,24 @@ func Disks() []*Disk {
 
 		size := DiskSizeBytes(dname)
 		pbs := DiskPhysicalBlockSizeBytes(dname)
+		busPath := DiskBusPath(dname)
+		node := DiskNUMANodeID(dname)
 		vendor := DiskVendor(dname)
+		model := DiskModel(dname)
 		serialNo := DiskSerialNumber(dname)
+		wwn := DiskWWN(dname)
 
 		d := &Disk{
 			Name:                   dname,
 			SizeBytes:              size,
 			PhysicalBlockSizeBytes: pbs,
 			BusType:                busType,
+			BusPath:                busPath,
+			NUMANodeID:             node,
 			Vendor:                 vendor,
+			Model:                  model,
 			SerialNumber:           serialNo,
+			WWN:                    wwn,
 		}
 
 		parts := DiskPartitions(dname)

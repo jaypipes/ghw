@@ -216,9 +216,14 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.PhysicalBlockSizeBytes` contains the size of the physical blocks
   used on the disk, in bytes
 * `ghw.Disk.BusType` will be either "scsi" or "ide"
+* `ghw.Disk.NUMANodeID` is the numeric index of the NUMA node this disk is
+  local to, or -1
 * `ghw.Disk.Vendor` contains a string with the name of the hardware vendor for
   the disk drive
+* `ghw.Disk.Model` contains a string with the vendor-assigned disk model name
 * `ghw.Disk.SerialNumber` contains a string with the disk's serial number
+* `ghw.Disk.WWN` contains a string with the disk's
+  [World Wide Name](https://en.wikipedia.org/wiki/World_Wide_Name)
 * `ghw.Disk.Partitions` contains an array of pointers to `ghw.Partition`
   structs, one for each partition on the disk
 
