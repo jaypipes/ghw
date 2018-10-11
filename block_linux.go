@@ -17,11 +17,11 @@ import (
 )
 
 const (
-	LINUX_SECTOR_SIZE = 512
+	linuxSectorSize = 512
 )
 
-var RegexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
-var RegexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
+var regexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
+var regexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
 
 func blockFillInfo(info *BlockInfo) error {
 	info.Disks = Disks()
@@ -60,7 +60,7 @@ func DiskSizeBytes(disk string) uint64 {
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * LINUX_SECTOR_SIZE
+	return uint64(i) * linuxSectorSize
 }
 
 func DiskNUMANodeID(disk string) int {
@@ -214,7 +214,7 @@ func Disks() []*Disk {
 			busType = "SCSI"
 		} else if strings.HasPrefix(dname, "hd") {
 			busType = "IDE"
-		} else if RegexNVMeDev.MatchString(dname) {
+		} else if regexNVMeDev.MatchString(dname) {
 			busType = "NVMe"
 		}
 		if busType == "" {
@@ -263,7 +263,7 @@ func PartitionSizeBytes(part string) uint64 {
 		part = part[4:len(part)]
 	}
 	disk := part[0:3]
-	if m := RegexNVMePart.FindStringSubmatch(part); len(m) > 0 {
+	if m := regexNVMePart.FindStringSubmatch(part); len(m) > 0 {
 		disk = m[1]
 	}
 	path := filepath.Join(pathSysBlock(), disk, part, "size")
@@ -275,7 +275,7 @@ func PartitionSizeBytes(part string) uint64 {
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * LINUX_SECTOR_SIZE
+	return uint64(i) * linuxSectorSize
 }
 
 // Given a full or short partition name, returns the mount point, the type of
