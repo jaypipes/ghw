@@ -12,10 +12,6 @@ import (
 	"strings"
 )
 
-const (
-	PathSysClassNet = "/sys/class/net"
-)
-
 func netFillInfo(info *NetworkInfo) error {
 	info.NICs = NICs()
 	return nil
@@ -24,7 +20,7 @@ func netFillInfo(info *NetworkInfo) error {
 func NICs() []*NIC {
 	nics := make([]*NIC, 0)
 
-	files, err := ioutil.ReadDir(PathSysClassNet)
+	files, err := ioutil.ReadDir(pathSysClassNet())
 	if err != nil {
 		return nics
 	}
@@ -36,7 +32,7 @@ func NICs() []*NIC {
 			continue
 		}
 
-		netPath := filepath.Join(PathSysClassNet, filename)
+		netPath := filepath.Join(pathSysClassNet(), filename)
 		dest, _ := os.Readlink(netPath)
 		isVirtual := false
 		if strings.Contains(dest, "virtio") {
@@ -61,7 +57,7 @@ func netDeviceMacAddress(dev string) string {
 	// the /sys/class/net/$DEVICE/address file in sysfs. However, for devices
 	// that have addr_assign_type != 0, return None since the MAC address is
 	// random.
-	aatPath := filepath.Join(PathSysClassNet, dev, "addr_assign_type")
+	aatPath := filepath.Join(pathSysClassNet(), dev, "addr_assign_type")
 	contents, err := ioutil.ReadFile(aatPath)
 	if err != nil {
 		return ""
@@ -69,7 +65,7 @@ func netDeviceMacAddress(dev string) string {
 	if strings.TrimSpace(string(contents)) != "0" {
 		return ""
 	}
-	addrPath := filepath.Join(PathSysClassNet, dev, "address")
+	addrPath := filepath.Join(pathSysClassNet(), dev, "address")
 	contents, err = ioutil.ReadFile(addrPath)
 	if err != nil {
 		return ""

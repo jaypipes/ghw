@@ -53,6 +53,14 @@ func pathSysBusPciDevices() string {
 	return filepath.Join(pathRoot(), "sys", "bus", "pci", "devices")
 }
 
+func pathSysClassDrm() string {
+	return filepath.Join(pathRoot(), "sys", "class", "drm")
+}
+
+func pathSysClassNet() string {
+	return filepath.Join(pathRoot(), "sys", "class", "net")
+}
+
 func pathRunUdevData() string {
 	return filepath.Join(pathRoot(), "run", "udev", "data")
 }
