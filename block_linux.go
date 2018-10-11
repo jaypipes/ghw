@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	LINUX_SECTOR_SIZE = 512
+	linuxSectorSize = 512
 )
 
 var RegexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
@@ -60,7 +60,7 @@ func DiskSizeBytes(disk string) uint64 {
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * LINUX_SECTOR_SIZE
+	return uint64(i) * linuxSectorSize
 }
 
 func DiskNUMANodeID(disk string) int {
@@ -275,7 +275,7 @@ func PartitionSizeBytes(part string) uint64 {
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * LINUX_SECTOR_SIZE
+	return uint64(i) * linuxSectorSize
 }
 
 // Given a full or short partition name, returns the mount point, the type of
