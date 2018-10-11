@@ -13,5 +13,5 @@ import (
 )
 
 func memFillInfo(info *MemoryInfo) error {
-	return errors.New("memFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("memFillInfo not implemented on " + runtime.GOOS)
 }

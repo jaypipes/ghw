@@ -13,7 +13,7 @@ import (
 )
 
 func cpuFillInfo(info *CPUInfo) error {
-	return errors.New("cpuFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("cpuFillInfo not implemented on " + runtime.GOOS)
 }
 
 func Processors() []*Processor {

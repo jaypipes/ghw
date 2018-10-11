@@ -13,5 +13,5 @@ import (
 )
 
 func gpuFillInfo(info *GPUInfo) error {
-	return errors.New("gpuFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("gpuFillInfo not implemented on " + runtime.GOOS)
 }

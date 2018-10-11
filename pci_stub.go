@@ -13,7 +13,7 @@ import (
 )
 
 func pciFillInfo(info *PCIInfo) error {
-	return errors.New("pciFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("pciFillInfo not implemented on " + runtime.GOOS)
 }
 
 func (info *PCIInfo) GetDevice(address string) *PCIDevice {

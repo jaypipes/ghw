@@ -13,7 +13,7 @@ import (
 )
 
 func blockFillInfo(info *BlockInfo) error {
-	return errors.New("blockFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("blockFillInfo not implemented on " + runtime.GOOS)
 }
 
 func DiskPhysicalBlockSizeBytes(disk string) uint64 {

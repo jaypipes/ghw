@@ -13,7 +13,7 @@ import (
 )
 
 func netFillInfo(info *NetworkInfo) error {
-	return errors.New("netFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("netFillInfo not implemented on " + runtime.GOOS)
 }
 
 func NICs() []*NIC {

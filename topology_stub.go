@@ -13,9 +13,9 @@ import (
 )
 
 func topologyFillInfo(info *TopologyInfo) error {
-	return errors.New("topologyFillInfo not implemented on "+runtime.GOOS)
+	return errors.New("topologyFillInfo not implemented on " + runtime.GOOS)
 }
 
 func TopologyNodes() ([]*TopologyNode, error) {
-	return nil, errors.New("Don't know how to get topology on "+runtime.GOOS)
+	return nil, errors.New("Don't know how to get topology on " + runtime.GOOS)
 }
