@@ -14,10 +14,6 @@ import (
 	"strings"
 )
 
-const (
-	PATH_SYSFS_CLASS_DRM = "/sys/class/drm"
-)
-
 func gpuFillInfo(info *GPUInfo) error {
 	// In Linux, each graphics card is listed under the /sys/class/drm
 	// directory as a symbolic link named "cardN", where N is a zero-based
@@ -45,7 +41,7 @@ func gpuFillInfo(info *GPUInfo) error {
 	// we follow to gather information about the actual device from the PCI
 	// subsystem (we query the modalias file of the PCI device's sysfs
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
-	links, err := ioutil.ReadDir(PATH_SYSFS_CLASS_DRM)
+	links, err := ioutil.ReadDir(pathSysClassDrm())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
 /sys/class/drm does not exist on this system (likely the host system is a
@@ -74,7 +70,7 @@ GPUInfo.GraphicsCards will be an empty array.
 
 		// Calculate the card's PCI address by looking at the symbolic link's
 		// target
-		lpath := filepath.Join(PATH_SYSFS_CLASS_DRM, lname)
+		lpath := filepath.Join(pathSysClassDrm(), lname)
 		dest, err := os.Readlink(lpath)
 		if err != nil {
 			continue
@@ -133,7 +129,7 @@ func gpuFillNUMANodes(cards []*GraphicsCard) {
 		// affined to
 		cardIndexStr := strconv.Itoa(card.Index)
 		fpath := filepath.Join(
-			PATH_SYSFS_CLASS_DRM,
+			pathSysClassDrm(),
 			"card"+cardIndexStr,
 			"device",
 			"numa_node",
