@@ -93,7 +93,7 @@ information about the CPUs on the host system.
 
 * `ghw.CPUInfo.TotalCores` has the total number of physical cores the host
   system contains
-* `ghw.CPUInfo.TotalCores` has the total number of hardware threads the
+* `ghw.CPUInfo.TotalThreads` has the total number of hardware threads the
   host system contains
 * `ghw.CPUInfo.Processors` is an array of `ghw.Processor` structs, one for each
   physical processor package contained in the host
