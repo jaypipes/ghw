@@ -6,8 +6,12 @@
 package ghw
 
 import (
+	"bufio"
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -46,9 +50,9 @@ func NICs() []*NIC {
 
 		mac := netDeviceMacAddress(filename)
 		nic.MacAddress = mac
+		nic.Capabilities = netDeviceCapabilities(filename)
 		nics = append(nics, nic)
 	}
-
 	return nics
 }
 
@@ -71,4 +75,60 @@ func netDeviceMacAddress(dev string) string {
 		return ""
 	}
 	return strings.TrimSpace(string(contents))
+}
+
+func netDeviceCapabilities(dev string) []*NICCapability {
+	caps := make([]*NICCapability, 0)
+	path, err := exec.LookPath("ethtool")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: ethtool not installed. Cannot grab NIC capabilities for %s\n", dev)
+		return caps
+	}
+	cmd := exec.Command(path, "-k", dev)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err = cmd.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: ethtool not installed. Cannot grab NIC capabilities for %s\n", dev)
+		return caps
+	}
+
+	// The out variable will now contain something that looks like the
+	// following. Note that [fixed] indicates that the capability may not be
+	// turned on/off. It makes no difference whether a privileged user runs
+	// `ethtool -k` when determining whether [fixed] appears for a capability.
+	//
+	// Features for enp58s0f1:
+	// rx-checksumming: on
+	// tx-checksumming: off
+	//     tx-checksum-ipv4: off
+	//     tx-checksum-ip-generic: off [fixed]
+	//     tx-checksum-ipv6: off
+	//     tx-checksum-fcoe-crc: off [fixed]
+	//     tx-checksum-sctp: off [fixed]
+	// scatter-gather: off
+	//     tx-scatter-gather: off
+	//     tx-scatter-gather-fraglist: off [fixed]
+	// tcp-segmentation-offload: off
+	//     tx-tcp-segmentation: off
+	//     tx-tcp-ecn-segmentation: off [fixed]
+	//     tx-tcp-mangleid-segmentation: off
+	//     tx-tcp6-segmentation: off
+	// < snipped >
+	scanner := bufio.NewScanner(&out)
+	// Skip the first line...
+	scanner.Scan()
+	for scanner.Scan() {
+		line := strings.TrimPrefix(scanner.Text(), "\t")
+		parts := strings.Fields(line)
+		cap := strings.TrimSuffix(parts[0], ":")
+		enabled := parts[1] == "on"
+		fixed := len(parts) < 3 || parts[2] == "fixed"
+		caps = append(caps, &NICCapability{
+			Name:      cap,
+			IsEnabled: enabled,
+			CanChange: !fixed,
+		})
+	}
+	return caps
 }
