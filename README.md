@@ -74,7 +74,7 @@ func main() {
 		fmt.Printf("Error getting memory info: %v", err)
 	}
 
-	fmt.Println(mem.String())
+	fmt.Println(memory.String())
 }
 ```
 
