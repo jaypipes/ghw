@@ -388,36 +388,105 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.MacAddress` is the MAC address for the NIC, if any
 * `ghw.NIC.IsVirtual` is a boolean indicating if the NIC is a virtualized
   device
+* `ghw.NIC.Capabilities` is an array of pointers to `ghw.NICCapability` structs
+  that can describe the things the NIC supports. These capabilities match the
+  returned values from the `ethtool -k <DEVICE>` call on Linux
+
+The `ghw.NICCapability` struct contains the following fields:
+
+* `ghw.NICCapability.Name` is the string name of the capability (e.g.
+  "tcp-segmentation-offload")
+* `ghw.NICCapability.IsEnabled` is a boolean indicating whether the capability
+  is currently enabled/active on the NIC
+* `ghw.NICCapability.CanChange` is a boolean indicating whether the capability
+  may be turned on or off
 
 ```go
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/jaypipes/ghw"
+    "github.com/jaypipes/ghw"
 )
 
 func main() {
-	net, err := ghw.Network()
-	if err != nil {
-		fmt.Printf("Error getting network info: %v", err)
-	}
+    net, err := ghw.Network()
+    if err != nil {
+        fmt.Printf("Error getting network info: %v", err)
+    }
 
-	fmt.Printf("%v\n", net)
+    fmt.Printf("%v\n", net)
 
-	for _, nic := range net.NICs {
-		fmt.Printf(" %v\n", nic)
-	}
+    for _, nic := range net.NICs {
+        fmt.Printf(" %v\n", nic)
+
+        enabledCaps := make([]int, 0)
+        for x, cap := range nic.Capabilities {
+            if cap.IsEnabled {
+                enabledCaps = append(enabledCaps, x)
+            }
+        }
+        if len(enabledCaps) > 0 {
+            fmt.Printf("  enabled capabilities:\n")
+            for _, x := range enabledCaps {
+                fmt.Printf("   - %s\n", nic.Capabilities[x].Name)
+            }
+        }
+    }
 }
 ```
 
-Example output from my personal workstation:
+Example output from my personal laptop:
 
 ```
-net (2 NICs)
- enp0s25
- wls1
+net (3 NICs)
+ docker0
+  enabled capabilities:
+   - tx-checksumming
+   - tx-checksum-ip-generic
+   - scatter-gather
+   - tx-scatter-gather
+   - tx-scatter-gather-fraglist
+   - tcp-segmentation-offload
+   - tx-tcp-segmentation
+   - tx-tcp-ecn-segmentation
+   - tx-tcp-mangleid-segmentation
+   - tx-tcp6-segmentation
+   - udp-fragmentation-offload
+   - generic-segmentation-offload
+   - generic-receive-offload
+   - tx-vlan-offload
+   - highdma
+   - tx-lockless
+   - netns-local
+   - tx-gso-robust
+   - tx-fcoe-segmentation
+   - tx-gre-segmentation
+   - tx-gre-csum-segmentation
+   - tx-ipxip4-segmentation
+   - tx-ipxip6-segmentation
+   - tx-udp_tnl-segmentation
+   - tx-udp_tnl-csum-segmentation
+   - tx-gso-partial
+   - tx-sctp-segmentation
+   - tx-esp-segmentation
+   - tx-vlan-stag-hw-insert
+ enp58s0f1
+  enabled capabilities:
+   - rx-checksumming
+   - generic-receive-offload
+   - rx-vlan-offload
+   - tx-vlan-offload
+   - highdma
+ wlp59s0
+  enabled capabilities:
+   - scatter-gather
+   - tx-scatter-gather
+   - generic-segmentation-offload
+   - generic-receive-offload
+   - highdma
+   - netns-local
 ```
 
 ### PCI

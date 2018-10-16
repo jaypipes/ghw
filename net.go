@@ -8,38 +8,29 @@ package ghw
 
 import (
 	"fmt"
-	"strings"
 )
 
+type NICCapability struct {
+	Name      string
+	IsEnabled bool
+	CanChange bool
+}
+
 type NIC struct {
-	Name            string
-	BusType         string
-	Driver          string
-	MacAddress      string
-	Model           string
-	Vendor          string
-	IsVirtual       bool
-	EnabledFeatures []string
+	Name         string
+	MacAddress   string
+	IsVirtual    bool
+	Capabilities []*NICCapability
 }
 
 func (n *NIC) String() string {
-	vendorStr := ""
-	if n.Vendor != "" {
-		vendorStr = " [" + strings.TrimSpace(n.Vendor) + "]"
-	}
-	modelStr := ""
-	if n.Model != "" {
-		modelStr = " - " + strings.TrimSpace(n.Model)
-	}
 	isVirtualStr := ""
 	if n.IsVirtual {
 		isVirtualStr = " (virtual)"
 	}
 	return fmt.Sprintf(
-		"%s%s%s%s",
+		"%s%s",
 		n.Name,
-		vendorStr,
-		modelStr,
 		isVirtualStr,
 	)
 }
