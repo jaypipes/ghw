@@ -6,12 +6,23 @@
 package ghw
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+)
+
+const (
+	_WARN_CANNOT_READ_NUMA_NODES = `
+Unable to read numa_nodes descriptor file on this system.
+Setting graphics card's Nodes attribute to empty array.
+`
+	_WARN_NO_SYS_CLASS_DRM = `
+/sys/class/drm does not exist on this system (likely the host system is a
+virtual machine or container with no graphics). Therefore,
+GPUInfo.GraphicsCards will be an empty array.
+`
 )
 
 func gpuFillInfo(info *GPUInfo) error {
@@ -43,13 +54,7 @@ func gpuFillInfo(info *GPUInfo) error {
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
 	links, err := ioutil.ReadDir(pathSysClassDrm())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
-/sys/class/drm does not exist on this system (likely the host system is a
-virtual machine or container with no graphics). Therefore,
-GPUInfo.GraphicsCards will be an empty array.
-********************************************************************
-`,
-		)
+		warn(_WARN_NO_SYS_CLASS_DRM)
 		return nil
 	}
 	cards := make([]*GraphicsCard, 0)
@@ -136,12 +141,7 @@ func gpuFillNUMANodes(cards []*GraphicsCard) {
 		)
 		numaContents, err := ioutil.ReadFile(fpath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
-Unable to read numa_nodes descriptor file on this system.
-Setting graphics card's Nodes attribute to empty array.
-********************************************************************
-`,
-			)
+			warn(_WARN_CANNOT_READ_NUMA_NODES)
 			card.Nodes = make([]*TopologyNode, 0)
 			continue
 		}

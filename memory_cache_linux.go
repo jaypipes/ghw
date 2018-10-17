@@ -138,14 +138,14 @@ func memoryCacheLevel(nodeID int, lpID int, cacheIndex int) int {
 	)
 	levelContents, err := ioutil.ReadFile(levelPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		return -1
 	}
 	// levelContents is now a []byte with the last byte being a newline
 	// character. Trim that off and convert the contents to an integer.
 	level, err := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", levelContents)
+		_, _ = fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", levelContents)
 		return -1
 	}
 	return level
@@ -158,13 +158,13 @@ func memoryCacheSize(nodeID int, lpID int, cacheIndex int) int {
 	)
 	sizeContents, err := ioutil.ReadFile(sizePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		return -1
 	}
 	// size comes as XK\n, so we trim off the K and the newline.
 	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", sizeContents)
+		_, _ = fmt.Fprintf(os.Stderr, "Unable to parse int from %s\n", sizeContents)
 		return -1
 	}
 	return size
@@ -177,7 +177,7 @@ func memoryCacheType(nodeID int, lpID int, cacheIndex int) MemoryCacheType {
 	)
 	cacheTypeContents, err := ioutil.ReadFile(typePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		return UNIFIED
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
@@ -197,7 +197,7 @@ func memoryCacheSharedCPUMap(nodeID int, lpID int, cacheIndex int) string {
 	)
 	sharedCpuMap, err := ioutil.ReadFile(scpuPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		return ""
 	}
 	return string(sharedCpuMap[:len(sharedCpuMap)-1])

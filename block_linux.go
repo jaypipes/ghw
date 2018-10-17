@@ -294,7 +294,7 @@ func PartitionInfo(part string) (string, string, bool) {
 	if err != nil {
 		return "", "", true
 	}
-	defer r.Close()
+	defer safeClose(r)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {

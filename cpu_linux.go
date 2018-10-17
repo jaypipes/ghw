@@ -35,7 +35,7 @@ func Processors() []*Processor {
 	if err != nil {
 		return nil
 	}
-	defer r.Close()
+	defer safeClose(r)
 
 	// An array of maps of attributes describing the logical processor
 	procAttrs := make([]map[string]string, 0)
