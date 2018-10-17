@@ -273,7 +273,7 @@ func (info *PCIInfo) ListDevices() []*PCIDevice {
 	// address and append to the returned array.
 	links, err := ioutil.ReadDir(pathSysBusPciDevices())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
+		_, _ = fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
 		return nil
 	}
 	var dev *PCIDevice
@@ -281,7 +281,7 @@ func (info *PCIInfo) ListDevices() []*PCIDevice {
 		addr := link.Name()
 		dev = info.GetDevice(addr)
 		if dev == nil {
-			fmt.Fprintf(os.Stderr, "error: failed to get device information for PCI address %s\n", addr)
+			_, _ = fmt.Fprintf(os.Stderr, "error: failed to get device information for PCI address %s\n", addr)
 		} else {
 			devs = append(devs, dev)
 		}

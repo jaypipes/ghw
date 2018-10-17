@@ -18,6 +18,16 @@ import (
 	"strings"
 )
 
+const (
+	_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY = `
+Could not determine total physical bytes of memory. This may
+be due to the host being a virtual machine or container with no
+/var/log/syslog file, or the current user may not have necessary
+privileges to read the syslog. We are falling back to setting the
+total physical amount of memory to the total usable amount of memory
+`
+)
+
 func memFillInfo(info *MemoryInfo) error {
 	tub := memTotalUsableBytes()
 	if tub < 1 {
@@ -27,15 +37,7 @@ func memFillInfo(info *MemoryInfo) error {
 	tpb := memTotalPhysicalBytes()
 	info.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		fmt.Fprintf(os.Stderr, `************************ WARNING ***********************************
-Could not determine total physical bytes of memory. This may
-be due to the host being a virtual machine or container with no
-/var/log/syslog file, or the current user may not have necessary
-privileges to read the syslog. We are falling back to setting the
-total physical amount of memory to the total usable amount of memory
-********************************************************************
-`,
-		)
+		warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
 		info.TotalPhysicalBytes = tub
 	}
 	info.SupportedPageSizes = memSupportedPageSizes()
@@ -83,7 +85,7 @@ func memTotalPhysicalBytes() int64 {
 			if err != nil {
 				return -1
 			}
-			defer r.Close()
+			defer safeClose(r)
 			if unzip {
 				r, err = gzip.NewReader(r)
 				if err != nil {
@@ -132,7 +134,7 @@ func memTotalUsableBytes() int64 {
 	if err != nil {
 		return -1
 	}
-	defer r.Close()
+	defer safeClose(r)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {

@@ -16,6 +16,10 @@ import (
 	"strings"
 )
 
+const (
+	_WARN_ETHTOOL_NOT_INSTALLED = `ethtool not installed. Cannot grab NIC capabilities`
+)
+
 func netFillInfo(info *NetworkInfo) error {
 	info.NICs = NICs()
 	return nil
@@ -29,6 +33,7 @@ func NICs() []*NIC {
 		return nics
 	}
 
+	etInstalled := ethtoolInstalled()
 	for _, file := range files {
 		filename := file.Name()
 		// Ignore loopback...
@@ -50,7 +55,11 @@ func NICs() []*NIC {
 
 		mac := netDeviceMacAddress(filename)
 		nic.MacAddress = mac
-		nic.Capabilities = netDeviceCapabilities(filename)
+		if etInstalled {
+			nic.Capabilities = netDeviceCapabilities(filename)
+		} else {
+			nic.Capabilities = []*NICCapability{}
+		}
 		nics = append(nics, nic)
 	}
 	return nics
@@ -77,19 +86,21 @@ func netDeviceMacAddress(dev string) string {
 	return strings.TrimSpace(string(contents))
 }
 
+func ethtoolInstalled() bool {
+	_, err := exec.LookPath("ethtool")
+	return err == nil
+}
+
 func netDeviceCapabilities(dev string) []*NICCapability {
 	caps := make([]*NICCapability, 0)
-	path, err := exec.LookPath("ethtool")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: ethtool not installed. Cannot grab NIC capabilities for %s\n", dev)
-		return caps
-	}
+	path, _ := exec.LookPath("ethtool")
 	cmd := exec.Command(path, "-k", dev)
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: ethtool not installed. Cannot grab NIC capabilities for %s\n", dev)
+		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
+		warn(msg)
 		return caps
 	}
 
