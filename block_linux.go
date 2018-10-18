@@ -21,7 +21,7 @@ const (
 )
 
 var regexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
-var regexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
+var _REGEX_NVME_PART = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
 
 func blockFillInfo(info *BlockInfo) error {
 	info.Disks = Disks()
@@ -259,11 +259,9 @@ func Disks() []*Disk {
 func PartitionSizeBytes(part string) uint64 {
 	// Allow calling PartitionSize with either the full partition name
 	// "/dev/sda1" or just "sda1"
-	if strings.HasPrefix(part, "/dev") {
-		part = part[4:len(part)]
-	}
+	part = strings.TrimPrefix(part, "/dev")
 	disk := part[0:3]
-	if m := regexNVMePart.FindStringSubmatch(part); len(m) > 0 {
+	if m := _REGEX_NVME_PART.FindStringSubmatch(part); len(m) > 0 {
 		disk = m[1]
 	}
 	path := filepath.Join(pathSysBlock(), disk, part, "size")

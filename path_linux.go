@@ -45,10 +45,6 @@ func pathSysDevicesSystemNode() string {
 	return filepath.Join(pathRoot(), "sys", "devices", "system", "node")
 }
 
-func pathDevDiskById() string {
-	return filepath.Join(pathRoot(), "dev", "disk", "by-id")
-}
-
 func pathSysBusPciDevices() string {
 	return filepath.Join(pathRoot(), "sys", "bus", "pci", "devices")
 }
