@@ -28,6 +28,12 @@ total physical amount of memory to the total usable amount of memory
 `
 )
 
+var (
+	// System log lines will look similar to the following:
+	// ... kernel: [0.000000] Memory: 24633272K/25155024K ...
+	_REGEX_SYSLOG_MEMLINE = regexp.MustCompile(`Memory:\s+\d+K\/(\d+)K`)
+)
+
 func memFillInfo(info *MemoryInfo) error {
 	tub := memTotalUsableBytes()
 	if tub < 1 {
@@ -44,19 +50,13 @@ func memFillInfo(info *MemoryInfo) error {
 	return nil
 }
 
-// System log lines will look similar to the following:
-// ... kernel: [0.000000] Memory: 24633272K/25155024K ...
-var (
-	syslogMemLineRe = regexp.MustCompile("Memory:\\s+\\d+K\\/(\\d+)K")
-)
-
 func memTotalPhysicalBytes() int64 {
 	// In Linux, the total physical memory can be determined by looking at the
 	// output of dmidecode, however dmidecode requires root privileges to run,
 	// so instead we examine the system logs for startup information containing
 	// total physical memory and cache the results of this.
 	findPhysicalKb := func(line string) int64 {
-		matches := syslogMemLineRe.FindStringSubmatch(line)
+		matches := _REGEX_SYSLOG_MEMLINE.FindStringSubmatch(line)
 		if len(matches) == 2 {
 			i, err := strconv.Atoi(matches[1])
 			if err != nil {

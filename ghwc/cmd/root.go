@@ -62,10 +62,7 @@ func showAll(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	err = showGPU(cmd, args)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

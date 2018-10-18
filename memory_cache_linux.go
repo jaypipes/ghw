@@ -27,7 +27,7 @@ func cachesForNode(nodeID int) ([]*MemoryCache, error) {
 		pathSysDevicesSystemNode(),
 		fmt.Sprintf("node%d", nodeID),
 	)
-	caches := make(map[string]*MemoryCache, 0)
+	caches := make(map[string]*MemoryCache)
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {

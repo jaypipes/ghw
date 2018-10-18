@@ -39,7 +39,7 @@ func Processors() []*Processor {
 
 	// An array of maps of attributes describing the logical processor
 	procAttrs := make([]map[string]string, 0)
-	curProcAttrs := make(map[string]string, 0)
+	curProcAttrs := make(map[string]string)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -50,7 +50,7 @@ func Processors() []*Processor {
 			// collected for this logical processor block
 			procAttrs = append(procAttrs, curProcAttrs)
 			// Reset the current set of processor attributes...
-			curProcAttrs = make(map[string]string, 0)
+			curProcAttrs = make(map[string]string)
 			continue
 		}
 		parts := strings.Split(line, ":")
@@ -61,7 +61,7 @@ func Processors() []*Processor {
 
 	// Build a set of physical processor IDs which represent the physical
 	// package of the CPU
-	setPhysicalIds := make(map[uint32]bool, 0)
+	setPhysicalIds := make(map[uint32]bool)
 	for _, attrs := range procAttrs {
 		pid, err := strconv.Atoi(attrs["physical id"])
 		if err != nil {
