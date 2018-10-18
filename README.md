@@ -732,9 +732,9 @@ Each `ghw.GraphicsCard` struct contains the following fields:
 * `ghw.GraphicsCard.DeviceInfo` is a pointer to a `ghw.PCIDevice` struct
   describing the graphics card. This may be `nil` if no PCI device information
   could be determined for the card.
-* `ghw.GraphicsCard.Nodes` is an array of pointers to `ghw.TopologyNode`
-  structs, one for each NUMA node that the GPU/graphics card is affined to. On
-  non-NUMA systems, this will always be an empty array.
+* `ghw.GraphicsCard.Node` is an pointer to a `ghw.TopologyNode` struct that the
+  GPU/graphics card is affined to. On non-NUMA systems, this will always be
+  `nil`.
 
 ```go
 package main
