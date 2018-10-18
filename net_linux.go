@@ -34,6 +34,9 @@ func NICs() []*NIC {
 	}
 
 	etInstalled := ethtoolInstalled()
+	if !etInstalled {
+		warn(_WARN_ETHTOOL_NOT_INSTALLED)
+	}
 	for _, file := range files {
 		filename := file.Name()
 		// Ignore loopback...
