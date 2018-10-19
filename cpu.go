@@ -10,11 +10,16 @@ import (
 	"fmt"
 )
 
+// ProcessorCore describes a physical host processor core. A processor core is
+// a separate processing unit within some types of central processing units
+// (CPU).
 type ProcessorCore struct {
-	Id                uint32
+	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
+	Id                int
+	ID                int
 	Index             int
 	NumThreads        uint32
-	LogicalProcessors []uint32
+	LogicalProcessors []int
 }
 
 func (c *ProcessorCore) String() string {
@@ -26,8 +31,11 @@ func (c *ProcessorCore) String() string {
 	)
 }
 
+// Processor describes a physical host central processing unit (CPU).
 type Processor struct {
-	Id           uint32
+	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
+	Id           int
+	ID           int
 	NumCores     uint32
 	NumThreads   uint32
 	Vendor       string
@@ -36,6 +44,12 @@ type Processor struct {
 	Cores        []*ProcessorCore
 }
 
+// HasCapability returns true if the `ghw.Processor` has the supplied cpuid
+// capability, false otherwise. Example of cpuid capabilities would be 'vmx' or
+// 'sse4_2'. To see a list of potential cpuid capabilitiies, see the section on
+// CPUID feature bits in the following article:
+//
+// https://en.wikipedia.org/wiki/CPUID
 func (p *Processor) HasCapability(find string) bool {
 	for _, c := range p.Capabilities {
 		if c == find {
@@ -56,7 +70,7 @@ func (p *Processor) String() string {
 	}
 	return fmt.Sprintf(
 		"physical package #%d (%d %s, %d hardware %s)",
-		p.Id,
+		p.ID,
 		p.NumCores,
 		ncs,
 		p.NumThreads,
@@ -64,12 +78,15 @@ func (p *Processor) String() string {
 	)
 }
 
+// CPUInfo describes all central processing unit (CPU) functionality on a host.
+// Returned by the `ghw.CPU()` function.
 type CPUInfo struct {
 	TotalCores   uint32
 	TotalThreads uint32
 	Processors   []*Processor
 }
 
+// CPU returns a struct containing information about the host's CPU resources.
 func CPU() (*CPUInfo, error) {
 	info := &CPUInfo{}
 	err := cpuFillInfo(info)

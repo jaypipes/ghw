@@ -43,7 +43,7 @@ func TopologyNodes() ([]*TopologyNode, error) {
 			return nil, err
 		}
 		node.Id = uint32(nodeId)
-		cores, err := coresForNode(node.Id)
+		cores, err := coresForNode(int(node.Id))
 		if err != nil {
 			return nil, err
 		}
