@@ -68,13 +68,13 @@ func processorsGet() []*Processor {
 
 	// Build a set of physical processor IDs which represent the physical
 	// package of the CPU
-	setPhysicalIDs := make(map[uint32]bool)
+	setPhysicalIDs := make(map[int]bool)
 	for _, attrs := range procAttrs {
 		pid, err := strconv.Atoi(attrs["physical id"])
 		if err != nil {
 			continue
 		}
-		setPhysicalIDs[uint32(pid)] = true
+		setPhysicalIDs[pid] = true
 	}
 
 	for pid := range setPhysicalIDs {
@@ -89,7 +89,7 @@ func processorsGet() []*Processor {
 			if err != nil {
 				continue
 			}
-			if pid == uint32(lppid) {
+			if pid == lppid {
 				lps = append(lps, x)
 			}
 		}
@@ -122,20 +122,20 @@ func processorsGet() []*Processor {
 			}
 			var core *ProcessorCore
 			for _, c := range cores {
-				if c.Id == uint32(coreID) {
+				if c.Id == coreID {
 					c.LogicalProcessors = append(
 						c.LogicalProcessors,
-						uint32(lpid),
+						lpid,
 					)
 					c.NumThreads = uint32(len(c.LogicalProcessors))
 					core = c
 				}
 			}
 			if core == nil {
-				coreLps := make([]uint32, 1)
-				coreLps[0] = uint32(lpid)
+				coreLps := make([]int, 1)
+				coreLps[0] = lpid
 				core = &ProcessorCore{
-					Id:                uint32(coreID),
+					Id:                coreID,
 					Index:             len(cores),
 					NumThreads:        1,
 					LogicalProcessors: coreLps,
@@ -149,7 +149,7 @@ func processorsGet() []*Processor {
 	return procs
 }
 
-func coresForNode(nodeID uint32) ([]*ProcessorCore, error) {
+func coresForNode(nodeID int) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a
@@ -161,7 +161,7 @@ func coresForNode(nodeID uint32) ([]*ProcessorCore, error) {
 	)
 	cores := make([]*ProcessorCore, 0)
 
-	findCoreByID := func(coreID uint32) *ProcessorCore {
+	findCoreByID := func(coreID int) *ProcessorCore {
 		for _, c := range cores {
 			if c.Id == coreID {
 				return c
@@ -173,7 +173,7 @@ func coresForNode(nodeID uint32) ([]*ProcessorCore, error) {
 			Id:                coreID,
 			ID:                coreID,
 			Index:             len(cores),
-			LogicalProcessors: make([]uint32, 0),
+			LogicalProcessors: make([]int, 0),
 		}
 		cores = append(cores, c)
 		return c
@@ -197,21 +197,21 @@ func coresForNode(nodeID uint32) ([]*ProcessorCore, error) {
 		// Grab the logical processor ID by cutting the integer from the
 		// /sys/devices/system/node/nodeX/cpuX filename
 		cpuPath := filepath.Join(path, filename)
-		procID, _ := strconv.Atoi(filename[3:])
-		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
-		coreIDContents, err := ioutil.ReadFile(coreIDPath)
+		procID, err := strconv.Atoi(filename[3:])
 		if err != nil {
+			_, _ = fmt.Fprintf(
+				os.Stderr,
+				"failed to determine procID from %s. Expected integer after 3rd char.",
+				filename,
+			)
 			continue
 		}
-		// coreIDContents is a []byte with the last byte being a newline rune
-		coreIDStr := string(coreIDContents[:len(coreIDContents)-1])
-		coreIDInt, _ := strconv.Atoi(coreIDStr)
-		coreID := uint32(coreIDInt)
-
+		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
+		coreID := safeIntFromFile(coreIDPath)
 		core := findCoreByID(coreID)
 		core.LogicalProcessors = append(
 			core.LogicalProcessors,
-			uint32(procID),
+			procID,
 		)
 	}
 

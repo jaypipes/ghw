@@ -15,11 +15,11 @@ import (
 // (CPU).
 type ProcessorCore struct {
 	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id                uint32
-	ID                uint32
+	Id                int
+	ID                int
 	Index             int
 	NumThreads        uint32
-	LogicalProcessors []uint32
+	LogicalProcessors []int
 }
 
 func (c *ProcessorCore) String() string {
@@ -34,8 +34,8 @@ func (c *ProcessorCore) String() string {
 // Processor describes a physical host central processing unit (CPU).
 type Processor struct {
 	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id           uint32
-	ID           uint32
+	Id           int
+	ID           int
 	NumCores     uint32
 	NumThreads   uint32
 	Vendor       string
