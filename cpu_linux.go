@@ -16,7 +16,7 @@ import (
 )
 
 func cpuFillInfo(info *CPUInfo) error {
-	info.Processors = Processors()
+	info.Processors = processorsGet()
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range info.Processors {
@@ -28,7 +28,14 @@ func cpuFillInfo(info *CPUInfo) error {
 	return nil
 }
 
+// Processors has been DEPRECATED in 0.2 and will be REMOVED in 1.0. Please use
+// the CPUInfo.Processors attribute.
+// TODO(jaypipes): Remove in 1.0
 func Processors() []*Processor {
+	return processorsGet()
+}
+
+func processorsGet() []*Processor {
 	procs := make([]*Processor, 0)
 
 	r, err := os.Open(pathProcCpuinfo())
@@ -61,23 +68,23 @@ func Processors() []*Processor {
 
 	// Build a set of physical processor IDs which represent the physical
 	// package of the CPU
-	setPhysicalIds := make(map[uint32]bool)
+	setPhysicalIDs := make(map[uint32]bool)
 	for _, attrs := range procAttrs {
 		pid, err := strconv.Atoi(attrs["physical id"])
 		if err != nil {
 			continue
 		}
-		setPhysicalIds[uint32(pid)] = true
+		setPhysicalIDs[uint32(pid)] = true
 	}
 
-	for pid, _ := range setPhysicalIds {
+	for pid := range setPhysicalIDs {
 		p := &Processor{
 			Id: pid,
 		}
 		// The indexes into the array of attribute maps for each logical
 		// processor within the physical processor
 		lps := make([]int, 0)
-		for x, _ := range procAttrs {
+		for x := range procAttrs {
 			lppid, err := strconv.Atoi(procAttrs[x]["physical id"])
 			if err != nil {
 				continue
@@ -109,13 +116,13 @@ func Processors() []*Processor {
 			if err != nil {
 				continue
 			}
-			coreId, err := strconv.Atoi(procAttrs[lpidx]["core id"])
+			coreID, err := strconv.Atoi(procAttrs[lpidx]["core id"])
 			if err != nil {
 				continue
 			}
 			var core *ProcessorCore
 			for _, c := range cores {
-				if c.Id == uint32(coreId) {
+				if c.Id == uint32(coreID) {
 					c.LogicalProcessors = append(
 						c.LogicalProcessors,
 						uint32(lpid),
@@ -128,7 +135,7 @@ func Processors() []*Processor {
 				coreLps := make([]uint32, 1)
 				coreLps[0] = uint32(lpid)
 				core = &ProcessorCore{
-					Id:                uint32(coreId),
+					Id:                uint32(coreID),
 					Index:             len(cores),
 					NumThreads:        1,
 					LogicalProcessors: coreLps,
@@ -142,7 +149,7 @@ func Processors() []*Processor {
 	return procs
 }
 
-func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
+func coresForNode(nodeID uint32) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a
@@ -150,19 +157,21 @@ func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 	// the logical processor (hardware thread) is on.
 	path := filepath.Join(
 		pathSysDevicesSystemNode(),
-		fmt.Sprintf("node%d", nodeId),
+		fmt.Sprintf("node%d", nodeID),
 	)
 	cores := make([]*ProcessorCore, 0)
 
-	findCoreById := func(cid uint32) *ProcessorCore {
+	findCoreByID := func(coreID uint32) *ProcessorCore {
 		for _, c := range cores {
-			if c.Id == cid {
+			if c.Id == coreID {
 				return c
 			}
 		}
 
 		c := &ProcessorCore{
-			Id:                cid,
+			// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
+			Id:                coreID,
+			ID:                coreID,
 			Index:             len(cores),
 			LogicalProcessors: make([]uint32, 0),
 		}
@@ -188,21 +197,21 @@ func coresForNode(nodeId uint32) ([]*ProcessorCore, error) {
 		// Grab the logical processor ID by cutting the integer from the
 		// /sys/devices/system/node/nodeX/cpuX filename
 		cpuPath := filepath.Join(path, filename)
-		lpId, _ := strconv.Atoi(filename[3:])
-		coreIdPath := filepath.Join(cpuPath, "topology", "core_id")
-		coreIdContents, err := ioutil.ReadFile(coreIdPath)
+		procID, _ := strconv.Atoi(filename[3:])
+		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
+		coreIDContents, err := ioutil.ReadFile(coreIDPath)
 		if err != nil {
 			continue
 		}
-		// coreIdContents is a []byte with the last byte being a newline rune
-		coreIdStr := string(coreIdContents[:len(coreIdContents)-1])
-		coreIdInt, _ := strconv.Atoi(coreIdStr)
-		coreId := uint32(coreIdInt)
+		// coreIDContents is a []byte with the last byte being a newline rune
+		coreIDStr := string(coreIDContents[:len(coreIDContents)-1])
+		coreIDInt, _ := strconv.Atoi(coreIDStr)
+		coreID := uint32(coreIDInt)
 
-		core := findCoreById(coreId)
+		core := findCoreByID(coreID)
 		core.LogicalProcessors = append(
 			core.LogicalProcessors,
-			uint32(lpId),
+			uint32(procID),
 		)
 	}
 
