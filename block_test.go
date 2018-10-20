@@ -63,22 +63,22 @@ func TestBlock(t *testing.T) {
 	for _, p := range d0.Partitions {
 		// Check that all the singular functions return the same information as
 		// the information constructed by ghw.Block()
-		ps := PartitionSizeBytes(p.Name)
+		ps := partitionSizeBytes(p.Name)
 		if ps != p.SizeBytes {
 			t.Fatalf("Expected matching size, but got %d != %d",
 				ps, p.SizeBytes)
 		}
-		pmp := PartitionMountPoint(p.Name)
+		pmp := partitionMountPoint(p.Name)
 		if pmp != p.MountPoint {
 			t.Fatalf("Expected matching mountpoints, but got %s != %s",
 				pmp, p.MountPoint)
 		}
-		pt := PartitionType(p.Name)
+		pt := partitionType(p.Name)
 		if pt != p.Type {
 			t.Fatalf("Expected matching types, but got %s != %s",
 				pt, p.Type)
 		}
-		pro := PartitionIsReadOnly(p.Name)
+		pro := partitionIsReadOnly(p.Name)
 		if pro != p.IsReadOnly {
 			t.Fatalf("Expected matching readonly, but got %v != %v",
 				pro, p.IsReadOnly)

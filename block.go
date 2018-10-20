@@ -11,6 +11,8 @@ import (
 	"math"
 )
 
+// Disk describes a single disk drive on the host system. Disk drives provide
+// raw block storage resources.
 type Disk struct {
 	Name                   string
 	SizeBytes              uint64
@@ -25,6 +27,7 @@ type Disk struct {
 	Partitions             []*Partition
 }
 
+// Partition describes a logical division of a Disk.
 type Partition struct {
 	Disk       *Disk
 	Name       string
@@ -35,12 +38,15 @@ type Partition struct {
 	IsReadOnly bool
 }
 
+// BlockInfo describes all disk drives and partitions in the host system.
 type BlockInfo struct {
 	TotalPhysicalBytes uint64
 	Disks              []*Disk
 	Partitions         []*Partition
 }
 
+// Block returns a BlockInfo struct that describes the block storage resources
+// of the host system.
 func Block() (*BlockInfo, error) {
 	info := &BlockInfo{}
 	err := blockFillInfo(info)
