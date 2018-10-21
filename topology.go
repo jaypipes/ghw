@@ -11,14 +11,18 @@ import (
 	"sort"
 )
 
+// Architecture describes the overall hardware architecture. It can be either
+// Symmetric Multi-Processor (SMP) or Non-Uniform Memory Access (NUMA)
 type Architecture int
 
 const (
+	// SMP is a Symmetric Multi-Processor system
 	SMP Architecture = iota
+	// NUMA is a Non-Uniform Memory Access system
 	NUMA
 )
 
-// A TopologyNode is an abstract construct representing a collection of
+// TopologyNode is an abstract construct representing a collection of
 // processors and various levels of memory cache that those processors share.
 // In a NUMA architecture, there are multiple NUMA nodes, abstracted here as
 // multiple TopologyNode structs. In an SMP architecture, a single TopologyNode
@@ -26,7 +30,9 @@ const (
 // used to describe the levels of memory caching available to the single
 // physical processor package's physical processor cores
 type TopologyNode struct {
-	Id     uint32
+	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
+	Id     int
+	ID     int
 	Cores  []*ProcessorCore
 	Caches []*MemoryCache
 }
@@ -34,16 +40,19 @@ type TopologyNode struct {
 func (n *TopologyNode) String() string {
 	return fmt.Sprintf(
 		"node #%d (%d cores)",
-		n.Id,
+		n.ID,
 		len(n.Cores),
 	)
 }
 
+// TopologyInfo describes the system topology for the host hardware
 type TopologyInfo struct {
 	Architecture Architecture
 	Nodes        []*TopologyNode
 }
 
+// Topology returns a TopologyInfo struct that describes the system topology of
+// the host hardware
 func Topology() (*TopologyInfo, error) {
 	info := &TopologyInfo{}
 	err := topologyFillInfo(info)
