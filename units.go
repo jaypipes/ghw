@@ -8,11 +8,11 @@ package ghw
 
 var (
 	KB int64 = 1024
-	MB int64 = KB * 1024
-	GB int64 = MB * 1024
-	TB int64 = GB * 1024
-	PB int64 = TB * 1024
-	EB int64 = PB * 1024
+	MB       = KB * 1024
+	GB       = MB * 1024
+	TB       = GB * 1024
+	PB       = TB * 1024
+	EB       = PB * 1024
 )
 
 func unitWithString(size int64) (int64, string) {
