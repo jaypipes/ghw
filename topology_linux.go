@@ -12,7 +12,7 @@ import (
 )
 
 func topologyFillInfo(info *TopologyInfo) error {
-	nodes, err := TopologyNodes()
+	nodes, err := topologyNodes()
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,19 @@ func topologyFillInfo(info *TopologyInfo) error {
 	return nil
 }
 
+// TopologyNodes has been deprecated in 0.2. Please use the TopologyInfo.Nodes
+// attribute.
+// TODO(jaypipes): Remove in 1.0.
 func TopologyNodes() ([]*TopologyNode, error) {
+	msg := `
+The TopologyNodes() function has been DEPRECATED and will be removed in the 1.0
+release of ghw. Please use the TopologyInfo.Nodes attribute.
+`
+	warn(msg)
+	return topologyNodes()
+}
+
+func topologyNodes() ([]*TopologyNode, error) {
 	nodes := make([]*TopologyNode, 0)
 
 	files, err := ioutil.ReadDir(pathSysDevicesSystemNode())
@@ -38,17 +50,17 @@ func TopologyNodes() ([]*TopologyNode, error) {
 			continue
 		}
 		node := &TopologyNode{}
-		nodeId, err := strconv.Atoi(filename[4:])
+		nodeID, err := strconv.Atoi(filename[4:])
 		if err != nil {
 			return nil, err
 		}
-		node.Id = uint32(nodeId)
-		cores, err := coresForNode(int(node.Id))
+		node.ID = nodeID
+		cores, err := coresForNode(nodeID)
 		if err != nil {
 			return nil, err
 		}
 		node.Cores = cores
-		caches, err := cachesForNode(int(node.Id))
+		caches, err := cachesForNode(nodeID)
 		if err != nil {
 			return nil, err
 		}
