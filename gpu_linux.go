@@ -14,12 +14,7 @@ import (
 )
 
 const (
-	_WARN_CANNOT_READ_NUMA_NODE = `
-Unable to read numa_node descriptor file on this system.
-Setting graphics card's Node attribute to nil.
-`
-	_WARN_NUMA_NODE_NOT_INTEGER = `device numa_node not an integer`
-	_WARN_NO_SYS_CLASS_DRM      = `
+	_WARN_NO_SYS_CLASS_DRM = `
 /sys/class/drm does not exist on this system (likely the host system is a
 virtual machine or container with no graphics). Therefore,
 GPUInfo.GraphicsCards will be an empty array.
@@ -134,15 +129,8 @@ func gpuFillNUMANodes(cards []*GraphicsCard) {
 			"device",
 			"numa_node",
 		)
-		numaContents, err := ioutil.ReadFile(fpath)
-		if err != nil {
-			warn(_WARN_CANNOT_READ_NUMA_NODE)
-			card.Node = nil
-			continue
-		}
-		nodeIdx, err := strconv.Atoi(string(numaContents))
-		if err != nil {
-			warn(_WARN_NUMA_NODE_NOT_INTEGER)
+		nodeIdx := safeIntFromFile(fpath)
+		if nodeIdx == -1 {
 			continue
 		}
 		for _, node := range topo.Nodes {
