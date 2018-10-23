@@ -97,7 +97,7 @@ func findPCIVendor(info *PCIInfo, vendorID string) *pcidb.PCIVendor {
 	vendor := info.Vendors[vendorID]
 	if vendor == nil {
 		return &pcidb.PCIVendor{
-			Id:       vendorID,
+			ID:       vendorID,
 			Name:     UNKNOWN,
 			Products: []*pcidb.PCIProduct{},
 		}
@@ -117,7 +117,7 @@ func findPCIProduct(
 	product := info.Products[vendorID+productID]
 	if product == nil {
 		return &pcidb.PCIProduct{
-			Id:         productID,
+			ID:         productID,
 			Name:       UNKNOWN,
 			Subsystems: []*pcidb.PCIProduct{},
 		}
@@ -140,14 +140,14 @@ func findPCISubsystem(
 	subvendor := info.Vendors[subvendorID]
 	if subvendor != nil && product != nil {
 		for _, p := range product.Subsystems {
-			if p.Id == subproductID {
+			if p.ID == subproductID {
 				return p
 			}
 		}
 	}
 	return &pcidb.PCIProduct{
-		VendorId: subvendorID,
-		Id:       subproductID,
+		VendorID: subvendorID,
+		ID:       subproductID,
 		Name:     UNKNOWN,
 	}
 }
@@ -160,7 +160,7 @@ func findPCIClass(info *PCIInfo, classID string) *pcidb.PCIClass {
 	class := info.Classes[classID]
 	if class == nil {
 		return &pcidb.PCIClass{
-			Id:         classID,
+			ID:         classID,
 			Name:       UNKNOWN,
 			Subclasses: []*pcidb.PCISubclass{},
 		}
@@ -180,13 +180,13 @@ func findPCISubclass(
 	class := info.Classes[classID]
 	if class != nil {
 		for _, sc := range class.Subclasses {
-			if sc.Id == subclassID {
+			if sc.ID == subclassID {
 				return sc
 			}
 		}
 	}
 	return &pcidb.PCISubclass{
-		Id:   subclassID,
+		ID:   subclassID,
 		Name: UNKNOWN,
 		ProgrammingInterfaces: []*pcidb.PCIProgrammingInterface{},
 	}
@@ -204,12 +204,12 @@ func findPCIProgrammingInterface(
 ) *pcidb.PCIProgrammingInterface {
 	subclass := findPCISubclass(info, classID, subclassID)
 	for _, pi := range subclass.ProgrammingInterfaces {
-		if pi.Id == progIfaceID {
+		if pi.ID == progIfaceID {
 			return pi
 		}
 	}
 	return &pcidb.PCIProgrammingInterface{
-		Id:   progIfaceID,
+		ID:   progIfaceID,
 		Name: UNKNOWN,
 	}
 }
