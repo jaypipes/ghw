@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	_RE_PCI_ADDRESS *regexp.Regexp = regexp.MustCompile(
+	regexPCIAddress *regexp.Regexp = regexp.MustCompile(
 		`^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
 	)
 )
@@ -77,7 +77,7 @@ type PCIAddress struct {
 // Returns "" if the address string wasn't a valid PCI address.
 func PCIAddressFromString(address string) *PCIAddress {
 	addrLowered := strings.ToLower(address)
-	matches := _RE_PCI_ADDRESS.FindStringSubmatch(addrLowered)
+	matches := regexPCIAddress.FindStringSubmatch(addrLowered)
 	if len(matches) == 6 {
 		dom := "0000"
 		if matches[1] != "" {
