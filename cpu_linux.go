@@ -15,8 +15,8 @@ import (
 	"strings"
 )
 
-func cpuFillInfo(info *CPUInfo) error {
-	info.Processors = processorsGet()
+func (ctx *context) cpuFillInfo(info *CPUInfo) error {
+	info.Processors = ctx.processorsGet()
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range info.Processors {
@@ -32,13 +32,14 @@ func cpuFillInfo(info *CPUInfo) error {
 // the CPUInfo.Processors attribute.
 // TODO(jaypipes): Remove in 1.0
 func Processors() []*Processor {
-	return processorsGet()
+	ctx := contextFromEnv()
+	return ctx.processorsGet()
 }
 
-func processorsGet() []*Processor {
+func (ctx *context) processorsGet() []*Processor {
 	procs := make([]*Processor, 0)
 
-	r, err := os.Open(pathProcCpuinfo())
+	r, err := os.Open(ctx.pathProcCpuinfo())
 	if err != nil {
 		return nil
 	}
@@ -149,14 +150,14 @@ func processorsGet() []*Processor {
 	return procs
 }
 
-func coresForNode(nodeID int) ([]*ProcessorCore, error) {
+func (ctx *context) coresForNode(nodeID int) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a
 	// core_id file that indicates the 0-based identifier of the physical core
 	// the logical processor (hardware thread) is on.
 	path := filepath.Join(
-		pathSysDevicesSystemNode(),
+		ctx.pathSysDevicesSystemNode(),
 		fmt.Sprintf("node%d", nodeID),
 	)
 	cores := make([]*ProcessorCore, 0)

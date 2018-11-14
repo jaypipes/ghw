@@ -53,6 +53,7 @@ func (di *PCIDevice) String() string {
 }
 
 type PCIInfo struct {
+	ctx *context
 	// hash of class ID -> class information
 	Classes map[string]*pcidb.PCIClass
 	// hash of vendor ID -> vendor information
@@ -93,10 +94,13 @@ func PCIAddressFromString(address string) *PCIAddress {
 	return nil
 }
 
-func PCI() (*PCIInfo, error) {
+func PCI(opts ...*WithOption) (*PCIInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &PCIInfo{}
-	err := pciFillInfo(info)
-	if err != nil {
+	if err := ctx.pciFillInfo(info); err != nil {
 		return nil, err
 	}
 	return info, nil

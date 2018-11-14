@@ -87,10 +87,13 @@ type CPUInfo struct {
 }
 
 // CPU returns a struct containing information about the host's CPU resources.
-func CPU() (*CPUInfo, error) {
+func CPU(opts ...*WithOption) (*CPUInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &CPUInfo{}
-	err := cpuFillInfo(info)
-	if err != nil {
+	if err := ctx.cpuFillInfo(info); err != nil {
 		return nil, err
 	}
 	return info, nil

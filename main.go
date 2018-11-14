@@ -10,6 +10,12 @@ const (
 	UNKNOWN = "unknown"
 )
 
+// Concrete merged set of configuration switches that act as an execution
+// context when calling internal discovery methods
+type context struct {
+	chroot string
+}
+
 type HostInfo struct {
 	Memory   *MemoryInfo
 	Block    *BlockInfo
@@ -21,29 +27,33 @@ type HostInfo struct {
 
 // Host returns a pointer to a HostInfo struct that contains fields with
 // information about the host system's CPU, memory, network devices, etc
-func Host() (*HostInfo, error) {
-	mem, err := Memory()
-	if err != nil {
+func Host(opts ...*WithOption) (*HostInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
+	mem := &MemoryInfo{}
+	if err := ctx.memFillInfo(mem); err != nil {
 		return nil, err
 	}
-	block, err := Block()
-	if err != nil {
+	block := &BlockInfo{}
+	if err := ctx.blockFillInfo(block); err != nil {
 		return nil, err
 	}
-	cpu, err := CPU()
-	if err != nil {
+	cpu := &CPUInfo{}
+	if err := ctx.cpuFillInfo(cpu); err != nil {
 		return nil, err
 	}
-	topology, err := Topology()
-	if err != nil {
+	topology := &TopologyInfo{}
+	if err := ctx.topologyFillInfo(topology); err != nil {
 		return nil, err
 	}
-	net, err := Network()
-	if err != nil {
+	net := &NetworkInfo{}
+	if err := ctx.netFillInfo(net); err != nil {
 		return nil, err
 	}
-	gpu, err := GPU()
-	if err != nil {
+	gpu := &GPUInfo{}
+	if err := ctx.gpuFillInfo(gpu); err != nil {
 		return nil, err
 	}
 	return &HostInfo{

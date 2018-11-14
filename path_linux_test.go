@@ -24,18 +24,23 @@ func TestPathRoot(t *testing.T) {
 		defer os.Unsetenv("GHW_CHROOT")
 	}
 
-	// No environment variable is set for GHW_CHROOT, so pathRoot() should
-	// return the default "/"
-	path := pathRoot()
-	if path != DEFAULT_ROOT_PATH {
-		t.Fatalf("Expected pathRoot() to return '/' but got %s", path)
+	ctx := contextFromEnv()
+
+	// No environment variable is set for GHW_CHROOT, so pathProcCpuinfo() should
+	// return the default "/proc/cpuinfo"
+	path := ctx.pathProcCpuinfo()
+	if path != "/proc/cpuinfo" {
+		t.Fatalf("Expected pathProcCpuInfo() to return '/proc/cpuinfo' but got %s", path)
 	}
 
 	// Now set the GHW_CHROOT environ variable and verify that pathRoot()
 	// returns that value
 	os.Setenv("GHW_CHROOT", "/host")
-	path = pathRoot()
-	if path != "/host" {
-		t.Fatalf("Expected pathRoot() to return '/host' but got %s", path)
+
+	ctx = contextFromEnv()
+
+	path = ctx.pathProcCpuinfo()
+	if path != "/host/proc/cpuinfo" {
+		t.Fatalf("Expected pathProcCpuinfo() to return '/host/proc/cpuinfo' but got %s", path)
 	}
 }

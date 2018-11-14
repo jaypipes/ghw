@@ -39,10 +39,13 @@ type NetworkInfo struct {
 	NICs []*NIC
 }
 
-func Network() (*NetworkInfo, error) {
+func Network(opts ...*WithOption) (*NetworkInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &NetworkInfo{}
-	err := netFillInfo(info)
-	if err != nil {
+	if err := ctx.netFillInfo(info); err != nil {
 		return nil, err
 	}
 	return info, nil

@@ -23,8 +23,8 @@ const (
 var regexNVMeDev = regexp.MustCompile(`^nvme\d+n\d+$`)
 var regexNVMePart = regexp.MustCompile(`^(nvme\d+n\d+)p\d+$`)
 
-func blockFillInfo(info *BlockInfo) error {
-	info.Disks = disks()
+func (ctx *context) blockFillInfo(info *BlockInfo) error {
+	info.Disks = ctx.disks()
 	var tpb uint64
 	for _, d := range info.Disks {
 		tpb += d.SizeBytes
@@ -43,13 +43,14 @@ removed in the 1.0 release of ghw. Please use the Disk.PhysicalBlockSizeBytes
 attribute.
 `
 	warn(msg)
-	return diskPhysicalBlockSizeBytes(disk)
+	ctx := contextFromEnv()
+	return ctx.diskPhysicalBlockSizeBytes(disk)
 }
 
-func diskPhysicalBlockSizeBytes(disk string) uint64 {
+func (ctx *context) diskPhysicalBlockSizeBytes(disk string) uint64 {
 	// We can find the sector size in Linux by looking at the
 	// /sys/block/$DEVICE/queue/physical_block_size file in sysfs
-	path := filepath.Join(pathSysBlock(), disk, "queue", "physical_block_size")
+	path := filepath.Join(ctx.pathSysBlock(), disk, "queue", "physical_block_size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -70,13 +71,14 @@ The DiskSizeBytes() function has been DEPRECATED and will be
 removed in the 1.0 release of ghw. Please use the Disk.SizeBytes attribute.
 `
 	warn(msg)
-	return diskSizeBytes(disk)
+	ctx := contextFromEnv()
+	return ctx.diskSizeBytes(disk)
 }
 
-func diskSizeBytes(disk string) uint64 {
+func (ctx *context) diskSizeBytes(disk string) uint64 {
 	// We can find the number of 512-byte sectors by examining the contents of
 	// /sys/block/$DEVICE/size and calculate the physical bytes accordingly.
-	path := filepath.Join(pathSysBlock(), disk, "size")
+	path := filepath.Join(ctx.pathSysBlock(), disk, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -97,16 +99,17 @@ The DiskNUMANodeID() function has been DEPRECATED and will be
 removed in the 1.0 release of ghw. Please use the Disk.NUMANodeID attribute.
 `
 	warn(msg)
-	return diskNUMANodeID(disk)
+	ctx := contextFromEnv()
+	return ctx.diskNUMANodeID(disk)
 }
 
-func diskNUMANodeID(disk string) int {
-	link, err := os.Readlink(filepath.Join(pathSysBlock(), disk))
+func (ctx *context) diskNUMANodeID(disk string) int {
+	link, err := os.Readlink(filepath.Join(ctx.pathSysBlock(), disk))
 	if err != nil {
 		return -1
 	}
 	for partial := link; strings.HasPrefix(partial, "../devices/"); partial = filepath.Base(partial) {
-		if nodeContents, err := ioutil.ReadFile(filepath.Join(pathSysBlock(), partial, "numa_node")); err != nil {
+		if nodeContents, err := ioutil.ReadFile(filepath.Join(ctx.pathSysBlock(), partial, "numa_node")); err != nil {
 			if nodeInt, err := strconv.Atoi(string(nodeContents)); err != nil {
 				return nodeInt
 			}
@@ -123,13 +126,14 @@ The DiskVendor() function has been DEPRECATED and will be
 removed in the 1.0 release of ghw. Please use the Disk.Vendor attribute.
 `
 	warn(msg)
-	return diskVendor(disk)
+	ctx := contextFromEnv()
+	return ctx.diskVendor(disk)
 }
 
-func diskVendor(disk string) string {
+func (ctx *context) diskVendor(disk string) string {
 	// In Linux, the vendor for a disk device is found in the
 	// /sys/block/$DEVICE/device/vendor file in sysfs
-	path := filepath.Join(pathSysBlock(), disk, "device", "vendor")
+	path := filepath.Join(ctx.pathSysBlock(), disk, "device", "vendor")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return UNKNOWN
@@ -137,16 +141,16 @@ func diskVendor(disk string) string {
 	return strings.TrimSpace(string(contents))
 }
 
-func udevInfo(disk string) (map[string]string, error) {
+func (ctx *context) udevInfo(disk string) (map[string]string, error) {
 	// Get device major:minor numbers
-	devNo, err := ioutil.ReadFile(filepath.Join(pathSysBlock(), disk, "dev"))
+	devNo, err := ioutil.ReadFile(filepath.Join(ctx.pathSysBlock(), disk, "dev"))
 	if err != nil {
 		return nil, err
 	}
 
 	// Look up block device in udev runtime database
 	udevID := "b" + strings.TrimSpace(string(devNo))
-	udevBytes, err := ioutil.ReadFile(filepath.Join(pathRunUdevData(), udevID))
+	udevBytes, err := ioutil.ReadFile(filepath.Join(ctx.pathRunUdevData(), udevID))
 	if err != nil {
 		return nil, err
 	}
@@ -170,11 +174,12 @@ The DiskModel() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the Disk.Model attribute.
 `
 	warn(msg)
-	return diskModel(disk)
+	ctx := contextFromEnv()
+	return ctx.diskModel(disk)
 }
 
-func diskModel(disk string) string {
-	info, err := udevInfo(disk)
+func (ctx *context) diskModel(disk string) string {
+	info, err := ctx.udevInfo(disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -193,11 +198,12 @@ The DiskSerialNumber() function has been DEPRECATED and will be removed in the
 1.0 release of ghw. Please use the Disk.SerialNumber attribute.
 `
 	warn(msg)
-	return diskSerialNumber(disk)
+	ctx := contextFromEnv()
+	return ctx.diskSerialNumber(disk)
 }
 
-func diskSerialNumber(disk string) string {
-	info, err := udevInfo(disk)
+func (ctx *context) diskSerialNumber(disk string) string {
+	info, err := ctx.udevInfo(disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -218,11 +224,12 @@ The DiskBusPath() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the Disk.BusPath attribute.
 `
 	warn(msg)
-	return diskBusPath(disk)
+	ctx := contextFromEnv()
+	return ctx.diskBusPath(disk)
 }
 
-func diskBusPath(disk string) string {
-	info, err := udevInfo(disk)
+func (ctx *context) diskBusPath(disk string) string {
+	info, err := ctx.udevInfo(disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -243,11 +250,12 @@ The DiskWWN() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the Disk.WWN attribute.
 `
 	warn(msg)
-	return diskWWN(disk)
+	ctx := contextFromEnv()
+	return ctx.diskWWN(disk)
 }
 
-func diskWWN(disk string) string {
-	info, err := udevInfo(disk)
+func (ctx *context) diskWWN(disk string) string {
+	info, err := ctx.udevInfo(disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -270,12 +278,13 @@ The DiskPartitions() function has been DEPRECATED and will be removed in the
 1.0 release of ghw. Please use the Disk.Partitions attribute.
 `
 	warn(msg)
-	return diskPartitions(disk)
+	ctx := contextFromEnv()
+	return ctx.diskPartitions(disk)
 }
 
-func diskPartitions(disk string) []*Partition {
+func (ctx *context) diskPartitions(disk string) []*Partition {
 	out := make([]*Partition, 0)
-	path := filepath.Join(pathSysBlock(), disk)
+	path := filepath.Join(ctx.pathSysBlock(), disk)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil
@@ -285,8 +294,8 @@ func diskPartitions(disk string) []*Partition {
 		if !strings.HasPrefix(fname, disk) {
 			continue
 		}
-		size := partitionSizeBytes(fname)
-		mp, pt, ro := partitionInfo(fname)
+		size := ctx.partitionSizeBytes(fname)
+		mp, pt, ro := ctx.partitionInfo(fname)
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
@@ -301,22 +310,23 @@ func diskPartitions(disk string) []*Partition {
 
 // Disks has been deprecated in 0.2. Please use the BlockInfo.Disks attribute.
 // TODO(jaypipes): Remove in 1.0.
-func Disks(disk string) []*Disk {
+func Disks() []*Disk {
 	msg := `
 The Disks() function has been DEPRECATED and will be removed in the
 1.0 release of ghw. Please use the BlockInfo.Disks attribute.
 `
 	warn(msg)
-	return disks()
+	ctx := contextFromEnv()
+	return ctx.disks()
 }
 
-func disks() []*Disk {
+func (ctx *context) disks() []*Disk {
 	// In Linux, we could use the fdisk, lshw or blockdev commands to list disk
 	// information, however all of these utilities require root privileges to
 	// run. We can get all of this information by examining the /sys/block
 	// and /sys/class/block files
 	disks := make([]*Disk, 0)
-	files, err := ioutil.ReadDir(pathSysBlock())
+	files, err := ioutil.ReadDir(ctx.pathSysBlock())
 	if err != nil {
 		return nil
 	}
@@ -335,14 +345,14 @@ func disks() []*Disk {
 			continue
 		}
 
-		size := diskSizeBytes(dname)
-		pbs := diskPhysicalBlockSizeBytes(dname)
-		busPath := diskBusPath(dname)
-		node := diskNUMANodeID(dname)
-		vendor := diskVendor(dname)
-		model := diskModel(dname)
-		serialNo := diskSerialNumber(dname)
-		wwn := diskWWN(dname)
+		size := ctx.diskSizeBytes(dname)
+		pbs := ctx.diskPhysicalBlockSizeBytes(dname)
+		busPath := ctx.diskBusPath(dname)
+		node := ctx.diskNUMANodeID(dname)
+		vendor := ctx.diskVendor(dname)
+		model := ctx.diskModel(dname)
+		serialNo := ctx.diskSerialNumber(dname)
+		wwn := ctx.diskWWN(dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -357,7 +367,7 @@ func disks() []*Disk {
 			WWN:                    wwn,
 		}
 
-		parts := diskPartitions(dname)
+		parts := ctx.diskPartitions(dname)
 		// Map this Disk object into the Partition...
 		for _, part := range parts {
 			part.Disk = d
@@ -378,10 +388,11 @@ The PartitionSizeBytes() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.SizeBytes attribute.
 `
 	warn(msg)
-	return partitionSizeBytes(part)
+	ctx := contextFromEnv()
+	return ctx.partitionSizeBytes(part)
 }
 
-func partitionSizeBytes(part string) uint64 {
+func (ctx *context) partitionSizeBytes(part string) uint64 {
 	// Allow calling PartitionSize with either the full partition name
 	// "/dev/sda1" or just "sda1"
 	part = strings.TrimPrefix(part, "/dev")
@@ -389,7 +400,7 @@ func partitionSizeBytes(part string) uint64 {
 	if m := regexNVMePart.FindStringSubmatch(part); len(m) > 0 {
 		disk = m[1]
 	}
-	path := filepath.Join(pathSysBlock(), disk, part, "size")
+	path := filepath.Join(ctx.pathSysBlock(), disk, part, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -409,12 +420,13 @@ The PartitionInfo() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition struct.
 `
 	warn(msg)
-	return partitionInfo(part)
+	ctx := contextFromEnv()
+	return ctx.partitionInfo(part)
 }
 
 // Given a full or short partition name, returns the mount point, the type of
 // the partition and whether it's readonly
-func partitionInfo(part string) (string, string, bool) {
+func (ctx *context) partitionInfo(part string) (string, string, bool) {
 	// Allow calling PartitionInfo with either the full partition name
 	// "/dev/sda1" or just "sda1"
 	if !strings.HasPrefix(part, "/dev") {
@@ -424,7 +436,7 @@ func partitionInfo(part string) (string, string, bool) {
 	// /etc/mtab entries for mounted partitions look like this:
 	// /dev/sda6 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
 	var r io.ReadCloser
-	r, err := os.Open(pathEtcMtab())
+	r, err := os.Open(ctx.pathEtcMtab())
 	if err != nil {
 		return "", "", true
 	}
@@ -502,11 +514,12 @@ The PartitionMountPoint() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.MountPoint attribute.
 `
 	warn(msg)
-	return partitionMountPoint(part)
+	ctx := contextFromEnv()
+	return ctx.partitionMountPoint(part)
 }
 
-func partitionMountPoint(part string) string {
-	mp, _, _ := partitionInfo(part)
+func (ctx *context) partitionMountPoint(part string) string {
+	mp, _, _ := ctx.partitionInfo(part)
 	return mp
 }
 
@@ -518,11 +531,12 @@ The PartitionType() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.Type attribute.
 `
 	warn(msg)
-	return partitionType(part)
+	ctx := contextFromEnv()
+	return ctx.partitionType(part)
 }
 
-func partitionType(part string) string {
-	_, pt, _ := partitionInfo(part)
+func (ctx *context) partitionType(part string) string {
+	_, pt, _ := ctx.partitionInfo(part)
 	return pt
 }
 
@@ -534,10 +548,11 @@ The PartitionIsReadOnly() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.IsReadOnly attribute.
 `
 	warn(msg)
-	return partitionIsReadOnly(part)
+	ctx := contextFromEnv()
+	return ctx.partitionIsReadOnly(part)
 }
 
-func partitionIsReadOnly(part string) bool {
-	_, _, ro := partitionInfo(part)
+func (ctx *context) partitionIsReadOnly(part string) bool {
+	_, _, ro := ctx.partitionInfo(part)
 	return ro
 }

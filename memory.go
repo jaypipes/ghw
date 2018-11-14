@@ -18,10 +18,13 @@ type MemoryInfo struct {
 	SupportedPageSizes []uint64
 }
 
-func Memory() (*MemoryInfo, error) {
+func Memory(opts ...*WithOption) (*MemoryInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &MemoryInfo{}
-	err := memFillInfo(info)
-	if err != nil {
+	if err := ctx.memFillInfo(info); err != nil {
 		return nil, err
 	}
 	return info, nil

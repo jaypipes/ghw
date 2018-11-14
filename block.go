@@ -47,10 +47,13 @@ type BlockInfo struct {
 
 // Block returns a BlockInfo struct that describes the block storage resources
 // of the host system.
-func Block() (*BlockInfo, error) {
+func Block(opts ...*WithOption) (*BlockInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &BlockInfo{}
-	err := blockFillInfo(info)
-	if err != nil {
+	if err := ctx.blockFillInfo(info); err != nil {
 		return nil, err
 	}
 	return info, nil
