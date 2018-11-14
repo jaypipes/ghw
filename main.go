@@ -19,37 +19,39 @@ type HostInfo struct {
 	GPU      *GPUInfo
 }
 
+// Host returns a pointer to a HostInfo struct that contains fields with
+// information about the host system's CPU, memory, network devices, etc
 func Host() (*HostInfo, error) {
-	info := &HostInfo{}
 	mem, err := Memory()
 	if err != nil {
 		return nil, err
 	}
-	info.Memory = mem
 	block, err := Block()
 	if err != nil {
 		return nil, err
 	}
-	info.Block = block
 	cpu, err := CPU()
 	if err != nil {
 		return nil, err
 	}
-	info.CPU = cpu
 	topology, err := Topology()
 	if err != nil {
 		return nil, err
 	}
-	info.Topology = topology
 	net, err := Network()
 	if err != nil {
 		return nil, err
 	}
-	info.Network = net
 	gpu, err := GPU()
 	if err != nil {
 		return nil, err
 	}
-	info.GPU = gpu
-	return info, nil
+	return &HostInfo{
+		CPU:      cpu,
+		Memory:   mem,
+		Block:    block,
+		Topology: topology,
+		Network:  net,
+		GPU:      gpu,
+	}, nil
 }
