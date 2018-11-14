@@ -29,6 +29,18 @@ func pathRoot() string {
 	return path
 }
 
+func pathVarLog() string {
+	return filepath.Join(pathRoot(), "var", "log")
+}
+
+func pathProcMeminfo() string {
+	return filepath.Join(pathRoot(), "proc", "meminfo")
+}
+
+func pathSysKernelMMHugepages() string {
+	return filepath.Join(pathRoot(), "sys", "kernel", "mm", "hugepages")
+}
+
 func pathProcCpuinfo() string {
 	return filepath.Join(pathRoot(), "proc", "cpuinfo")
 }
