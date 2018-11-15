@@ -3,7 +3,7 @@
 
 [[constraint]]
   name = "github.com/jaypipes/pcidb"
-  version = "0.2"
+  version = "0.3"
 
 [[constraint]]
   name = "github.com/spf13/cobra"

@@ -10,8 +10,8 @@
 [[projects]]
   name = "github.com/jaypipes/pcidb"
   packages = ["."]
-  revision = "a366ef0d1cd2ab000beb0a21a73793455c3b693f"
-  version = "0.2"
+  revision = "141a53e65d4ad43fdbd2760c714344da88f24adb"
+  version = "0.3"
 
 [[projects]]
   name = "github.com/mitchellh/go-homedir"
@@ -40,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ed869e2dd2448260e7cb8fa3eddcf9488d2c5724902ac5649ed09747e91b7006"
+  inputs-digest = "d4e1adb583f0a5bc5d521064063b34804ec61cfd9446eacc2230804f38108142"
   solver-name = "gps-cdcl"
   solver-version = 1
