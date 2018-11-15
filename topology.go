@@ -53,14 +53,17 @@ type TopologyInfo struct {
 
 // Topology returns a TopologyInfo struct that describes the system topology of
 // the host hardware
-func Topology() (*TopologyInfo, error) {
+func Topology(opts ...*WithOption) (*TopologyInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &TopologyInfo{}
-	err := topologyFillInfo(info)
+	if err := ctx.topologyFillInfo(info); err != nil {
+		return nil, err
+	}
 	for _, node := range info.Nodes {
 		sort.Sort(SortByMemoryCacheLevelTypeFirstProcessor(node.Caches))
-	}
-	if err != nil {
-		return nil, err
 	}
 	return info, nil
 }

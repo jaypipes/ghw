@@ -17,8 +17,12 @@ func TestBlock(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
-	info, err := Block()
-	if err != nil {
+
+	ctx := contextFromEnv()
+
+	info := &BlockInfo{}
+
+	if err := ctx.blockFillInfo(info); err != nil {
 		t.Fatalf("Expected no error creating BlockInfo, but got %v", err)
 	}
 	tpb := info.TotalPhysicalBytes
@@ -63,22 +67,22 @@ func TestBlock(t *testing.T) {
 	for _, p := range d0.Partitions {
 		// Check that all the singular functions return the same information as
 		// the information constructed by ghw.Block()
-		ps := partitionSizeBytes(p.Name)
+		ps := ctx.partitionSizeBytes(p.Name)
 		if ps != p.SizeBytes {
 			t.Fatalf("Expected matching size, but got %d != %d",
 				ps, p.SizeBytes)
 		}
-		pmp := partitionMountPoint(p.Name)
+		pmp := ctx.partitionMountPoint(p.Name)
 		if pmp != p.MountPoint {
 			t.Fatalf("Expected matching mountpoints, but got %s != %s",
 				pmp, p.MountPoint)
 		}
-		pt := partitionType(p.Name)
+		pt := ctx.partitionType(p.Name)
 		if pt != p.Type {
 			t.Fatalf("Expected matching types, but got %s != %s",
 				pt, p.Type)
 		}
-		pro := partitionIsReadOnly(p.Name)
+		pro := ctx.partitionIsReadOnly(p.Name)
 		if pro != p.IsReadOnly {
 			t.Fatalf("Expected matching readonly, but got %v != %v",
 				pro, p.IsReadOnly)

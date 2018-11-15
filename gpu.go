@@ -45,10 +45,13 @@ type GPUInfo struct {
 	GraphicsCards []*GraphicsCard
 }
 
-func GPU() (*GPUInfo, error) {
+func GPU(opts ...*WithOption) (*GPUInfo, error) {
+	mergeOpts := mergeOptions(opts...)
+	ctx := &context{
+		chroot: *mergeOpts.Chroot,
+	}
 	info := &GPUInfo{}
-	err := gpuFillInfo(info)
-	if err != nil {
+	if err := ctx.gpuFillInfo(info); err != nil {
 		return nil, err
 	}
 	return info, nil

@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-func topologyFillInfo(info *TopologyInfo) error {
-	nodes, err := topologyNodes()
+func (ctx *context) topologyFillInfo(info *TopologyInfo) error {
+	nodes, err := ctx.topologyNodes()
 	if err != nil {
 		return err
 	}
@@ -34,13 +34,14 @@ The TopologyNodes() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the TopologyInfo.Nodes attribute.
 `
 	warn(msg)
-	return topologyNodes()
+	ctx := contextFromEnv()
+	return ctx.topologyNodes()
 }
 
-func topologyNodes() ([]*TopologyNode, error) {
+func (ctx *context) topologyNodes() ([]*TopologyNode, error) {
 	nodes := make([]*TopologyNode, 0)
 
-	files, err := ioutil.ReadDir(pathSysDevicesSystemNode())
+	files, err := ioutil.ReadDir(ctx.pathSysDevicesSystemNode())
 	if err != nil {
 		return nil, err
 	}
@@ -55,12 +56,12 @@ func topologyNodes() ([]*TopologyNode, error) {
 			return nil, err
 		}
 		node.ID = nodeID
-		cores, err := coresForNode(nodeID)
+		cores, err := ctx.coresForNode(nodeID)
 		if err != nil {
 			return nil, err
 		}
 		node.Cores = cores
-		caches, err := cachesForNode(nodeID)
+		caches, err := ctx.cachesForNode(nodeID)
 		if err != nil {
 			return nil, err
 		}

@@ -6,57 +6,49 @@
 package ghw
 
 import (
-	"os"
 	"path/filepath"
 )
 
-const (
-	DEFAULT_ROOT_PATH = "/"
-)
-
-// To facilitate querying of sysfs filesystems that are bind-mounted to a
-// non-default root mountpoint, we allow users to set the GHW_CHROOT environ
-// vairable to an alternate mountpoint. For instance, assume that the user of
-// ghw is a Golang binary being executed from an application container that has
-// certain host filesystems bind-mounted into the container at /host. The user
-// would ensure the GHW_CHROOT environ variable is set to "/host" and ghw will
-// build its paths from that location instead of /
-func pathRoot() string {
-	path := DEFAULT_ROOT_PATH
-	if override, exists := os.LookupEnv("GHW_CHROOT"); exists {
-		path = override
-	}
-	return path
+func (ctx *context) pathVarLog() string {
+	return filepath.Join(ctx.chroot, "var", "log")
 }
 
-func pathProcCpuinfo() string {
-	return filepath.Join(pathRoot(), "proc", "cpuinfo")
+func (ctx *context) pathProcMeminfo() string {
+	return filepath.Join(ctx.chroot, "proc", "meminfo")
 }
 
-func pathEtcMtab() string {
-	return filepath.Join(pathRoot(), "etc", "mtab")
+func (ctx *context) pathSysKernelMMHugepages() string {
+	return filepath.Join(ctx.chroot, "sys", "kernel", "mm", "hugepages")
 }
 
-func pathSysBlock() string {
-	return filepath.Join(pathRoot(), "sys", "block")
+func (ctx *context) pathProcCpuinfo() string {
+	return filepath.Join(ctx.chroot, "proc", "cpuinfo")
 }
 
-func pathSysDevicesSystemNode() string {
-	return filepath.Join(pathRoot(), "sys", "devices", "system", "node")
+func (ctx *context) pathEtcMtab() string {
+	return filepath.Join(ctx.chroot, "etc", "mtab")
 }
 
-func pathSysBusPciDevices() string {
-	return filepath.Join(pathRoot(), "sys", "bus", "pci", "devices")
+func (ctx *context) pathSysBlock() string {
+	return filepath.Join(ctx.chroot, "sys", "block")
 }
 
-func pathSysClassDrm() string {
-	return filepath.Join(pathRoot(), "sys", "class", "drm")
+func (ctx *context) pathSysDevicesSystemNode() string {
+	return filepath.Join(ctx.chroot, "sys", "devices", "system", "node")
 }
 
-func pathSysClassNet() string {
-	return filepath.Join(pathRoot(), "sys", "class", "net")
+func (ctx *context) pathSysBusPciDevices() string {
+	return filepath.Join(ctx.chroot, "sys", "bus", "pci", "devices")
 }
 
-func pathRunUdevData() string {
-	return filepath.Join(pathRoot(), "run", "udev", "data")
+func (ctx *context) pathSysClassDrm() string {
+	return filepath.Join(ctx.chroot, "sys", "class", "drm")
+}
+
+func (ctx *context) pathSysClassNet() string {
+	return filepath.Join(ctx.chroot, "sys", "class", "net")
+}
+
+func (ctx *context) pathRunUdevData() string {
+	return filepath.Join(ctx.chroot, "run", "udev", "data")
 }
