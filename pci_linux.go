@@ -96,7 +96,7 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 // ID string. If no such vendor ID string could be found, returns the
 // pcidb.Vendor struct populated with "unknown" vendor Name attribute and
 // empty Products attribute.
-func findVendor(info *PCIInfo, vendorID string) *pcidb.Vendor {
+func findPCIVendor(info *PCIInfo, vendorID string) *pcidb.Vendor {
 	vendor := info.Vendors[vendorID]
 	if vendor == nil {
 		return &pcidb.Vendor{
@@ -112,7 +112,7 @@ func findVendor(info *PCIInfo, vendorID string) *pcidb.Vendor {
 // and product ID strings. If no such product could be found, returns the
 // pcidb.Product struct populated with "unknown" product Name attribute and
 // empty Subsystems attribute.
-func findProduct(
+func findPCIProduct(
 	info *PCIInfo,
 	vendorID string,
 	productID string,
@@ -159,7 +159,7 @@ func findPCISubsystem(
 // string. If no such class ID string could be found, returns the
 // pcidb.Class struct populated with "unknown" class Name attribute and
 // empty Subclasses attribute.
-func findClass(info *PCIInfo, classID string) *pcidb.Class {
+func findPCIClass(info *PCIInfo, classID string) *pcidb.Class {
 	class := info.Classes[classID]
 	if class == nil {
 		return &pcidb.Class{
@@ -175,7 +175,7 @@ func findClass(info *PCIInfo, classID string) *pcidb.Class {
 // and subclass ID strings.  If no such subclass could be found, returns the
 // pcidb.Subclass struct populated with "unknown" subclass Name attribute
 // and empty ProgrammingInterfaces attribute.
-func findSubclass(
+func findPCISubclass(
 	info *PCIInfo,
 	classID string,
 	subclassID string,
@@ -199,13 +199,13 @@ func findSubclass(
 // supplied class, subclass and programming interface ID strings.  If no such
 // programming interface could be found, returns the
 // pcidb.ProgrammingInterface struct populated with "unknown" Name attribute
-func findProgrammingInterface(
+func findPCIProgrammingInterface(
 	info *PCIInfo,
 	classID string,
 	subclassID string,
 	progIfaceID string,
 ) *pcidb.ProgrammingInterface {
-	subclass := findSubclass(info, classID, subclassID)
+	subclass := findPCISubclass(info, classID, subclassID)
 	for _, pi := range subclass.ProgrammingInterfaces {
 		if pi.ID == progIfaceID {
 			return pi
@@ -231,8 +231,8 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 		return nil
 	}
 
-	vendor := findVendor(info, modaliasInfo.vendorID)
-	product := findProduct(
+	vendor := findPCIVendor(info, modaliasInfo.vendorID)
+	product := findPCIProduct(
 		info,
 		modaliasInfo.vendorID,
 		modaliasInfo.productID,
@@ -244,13 +244,13 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 		modaliasInfo.subvendorID,
 		modaliasInfo.subproductID,
 	)
-	class := findClass(info, modaliasInfo.classID)
-	subclass := findSubclass(
+	class := findPCIClass(info, modaliasInfo.classID)
+	subclass := findPCISubclass(
 		info,
 		modaliasInfo.classID,
 		modaliasInfo.subclassID,
 	)
-	progIface := findProgrammingInterface(
+	progIface := findPCIProgrammingInterface(
 		info,
 		modaliasInfo.classID,
 		modaliasInfo.subclassID,
