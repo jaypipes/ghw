@@ -16,9 +16,7 @@ import (
 )
 
 func (ctx *context) pciFillInfo(info *PCIInfo) error {
-	// TODO(jaypipes): When upgrading to pcidb 0.3, pass options to pcidb.New()
-	// as appropriate from the context's chroot value...
-	db, err := pcidb.New()
+	db, err := pcidb.New(pcidb.WithChroot(ctx.chroot))
 	if err != nil {
 		return err
 	}
