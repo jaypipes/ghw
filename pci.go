@@ -22,12 +22,12 @@ var (
 
 type PCIDevice struct {
 	Address              string // The PCI address of the device
-	Vendor               *pcidb.PCIVendor
-	Product              *pcidb.PCIProduct
-	Subsystem            *pcidb.PCIProduct // optional subvendor/sub-device information
-	Class                *pcidb.PCIClass
-	Subclass             *pcidb.PCISubclass             // optional sub-class for the device
-	ProgrammingInterface *pcidb.PCIProgrammingInterface // optional programming interface
+	Vendor               *pcidb.Vendor
+	Product              *pcidb.Product
+	Subsystem            *pcidb.Product // optional subvendor/sub-device information
+	Class                *pcidb.Class
+	Subclass             *pcidb.Subclass             // optional sub-class for the device
+	ProgrammingInterface *pcidb.ProgrammingInterface // optional programming interface
 }
 
 func (di *PCIDevice) String() string {
@@ -55,11 +55,11 @@ func (di *PCIDevice) String() string {
 type PCIInfo struct {
 	ctx *context
 	// hash of class ID -> class information
-	Classes map[string]*pcidb.PCIClass
+	Classes map[string]*pcidb.Class
 	// hash of vendor ID -> vendor information
-	Vendors map[string]*pcidb.PCIVendor
+	Vendors map[string]*pcidb.Vendor
 	// hash of vendor ID + product/device ID -> product information
-	Products map[string]*pcidb.PCIProduct
+	Products map[string]*pcidb.Product
 }
 
 type PCIAddress struct {

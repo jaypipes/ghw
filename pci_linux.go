@@ -92,45 +92,45 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 	}
 }
 
-// Returns a pointer to a pcidb.PCIVendor struct matching the supplied vendor
+// Returns a pointer to a pcidb.Vendor struct matching the supplied vendor
 // ID string. If no such vendor ID string could be found, returns the
-// pcidb.PCIVendor struct populated with "unknown" vendor Name attribute and
+// pcidb.Vendor struct populated with "unknown" vendor Name attribute and
 // empty Products attribute.
-func findPCIVendor(info *PCIInfo, vendorID string) *pcidb.PCIVendor {
+func findPCIVendor(info *PCIInfo, vendorID string) *pcidb.Vendor {
 	vendor := info.Vendors[vendorID]
 	if vendor == nil {
-		return &pcidb.PCIVendor{
+		return &pcidb.Vendor{
 			ID:       vendorID,
 			Name:     UNKNOWN,
-			Products: []*pcidb.PCIProduct{},
+			Products: []*pcidb.Product{},
 		}
 	}
 	return vendor
 }
 
-// Returns a pointer to a pcidb.PCIProduct struct matching the supplied vendor
+// Returns a pointer to a pcidb.Product struct matching the supplied vendor
 // and product ID strings. If no such product could be found, returns the
-// pcidb.PCIProduct struct populated with "unknown" product Name attribute and
+// pcidb.Product struct populated with "unknown" product Name attribute and
 // empty Subsystems attribute.
 func findPCIProduct(
 	info *PCIInfo,
 	vendorID string,
 	productID string,
-) *pcidb.PCIProduct {
+) *pcidb.Product {
 	product := info.Products[vendorID+productID]
 	if product == nil {
-		return &pcidb.PCIProduct{
+		return &pcidb.Product{
 			ID:         productID,
 			Name:       UNKNOWN,
-			Subsystems: []*pcidb.PCIProduct{},
+			Subsystems: []*pcidb.Product{},
 		}
 	}
 	return product
 }
 
-// Returns a pointer to a pcidb.PCIProduct struct matching the supplied vendor,
+// Returns a pointer to a pcidb.Product struct matching the supplied vendor,
 // product, subvendor and subproduct ID strings. If no such product could be
-// found, returns the pcidb.PCIProduct struct populated with "unknown" product
+// found, returns the pcidb.Product struct populated with "unknown" product
 // Name attribute and empty Subsystems attribute.
 func findPCISubsystem(
 	info *PCIInfo,
@@ -138,7 +138,7 @@ func findPCISubsystem(
 	productID string,
 	subvendorID string,
 	subproductID string,
-) *pcidb.PCIProduct {
+) *pcidb.Product {
 	product := info.Products[vendorID+productID]
 	subvendor := info.Vendors[subvendorID]
 	if subvendor != nil && product != nil {
@@ -148,38 +148,38 @@ func findPCISubsystem(
 			}
 		}
 	}
-	return &pcidb.PCIProduct{
+	return &pcidb.Product{
 		VendorID: subvendorID,
 		ID:       subproductID,
 		Name:     UNKNOWN,
 	}
 }
 
-// Returns a pointer to a pcidb.PCIClass struct matching the supplied class ID
+// Returns a pointer to a pcidb.Class struct matching the supplied class ID
 // string. If no such class ID string could be found, returns the
-// pcidb.PCIClass struct populated with "unknown" class Name attribute and
+// pcidb.Class struct populated with "unknown" class Name attribute and
 // empty Subclasses attribute.
-func findPCIClass(info *PCIInfo, classID string) *pcidb.PCIClass {
+func findPCIClass(info *PCIInfo, classID string) *pcidb.Class {
 	class := info.Classes[classID]
 	if class == nil {
-		return &pcidb.PCIClass{
+		return &pcidb.Class{
 			ID:         classID,
 			Name:       UNKNOWN,
-			Subclasses: []*pcidb.PCISubclass{},
+			Subclasses: []*pcidb.Subclass{},
 		}
 	}
 	return class
 }
 
-// Returns a pointer to a pcidb.PCISubclass struct matching the supplied class
+// Returns a pointer to a pcidb.Subclass struct matching the supplied class
 // and subclass ID strings.  If no such subclass could be found, returns the
-// pcidb.PCISubclass struct populated with "unknown" subclass Name attribute
+// pcidb.Subclass struct populated with "unknown" subclass Name attribute
 // and empty ProgrammingInterfaces attribute.
 func findPCISubclass(
 	info *PCIInfo,
 	classID string,
 	subclassID string,
-) *pcidb.PCISubclass {
+) *pcidb.Subclass {
 	class := info.Classes[classID]
 	if class != nil {
 		for _, sc := range class.Subclasses {
@@ -188,30 +188,30 @@ func findPCISubclass(
 			}
 		}
 	}
-	return &pcidb.PCISubclass{
+	return &pcidb.Subclass{
 		ID:   subclassID,
 		Name: UNKNOWN,
-		ProgrammingInterfaces: []*pcidb.PCIProgrammingInterface{},
+		ProgrammingInterfaces: []*pcidb.ProgrammingInterface{},
 	}
 }
 
-// Returns a pointer to a pcidb.PCIProgrammingInterface struct matching the
+// Returns a pointer to a pcidb.ProgrammingInterface struct matching the
 // supplied class, subclass and programming interface ID strings.  If no such
 // programming interface could be found, returns the
-// pcidb.PCIProgrammingInterface struct populated with "unknown" Name attribute
+// pcidb.ProgrammingInterface struct populated with "unknown" Name attribute
 func findPCIProgrammingInterface(
 	info *PCIInfo,
 	classID string,
 	subclassID string,
 	progIfaceID string,
-) *pcidb.PCIProgrammingInterface {
+) *pcidb.ProgrammingInterface {
 	subclass := findPCISubclass(info, classID, subclassID)
 	for _, pi := range subclass.ProgrammingInterfaces {
 		if pi.ID == progIfaceID {
 			return pi
 		}
 	}
-	return &pcidb.PCIProgrammingInterface{
+	return &pcidb.ProgrammingInterface{
 		ID:   progIfaceID,
 		Name: UNKNOWN,
 	}

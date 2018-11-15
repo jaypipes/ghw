@@ -113,7 +113,7 @@ information about the CPUs on the host system.
 
 Each `ghw.Processor` struct contains a number of fields:
 
-* `ghw.Processor.Id` is the physical processor `uint32` ID according to the
+* `ghw.Processor.ID` is the physical processor `uint32` ID according to the
   system
 * `ghw.Processor.NumCores` is the number of physical cores in the processor
   package
@@ -128,7 +128,7 @@ Each `ghw.Processor` struct contains a number of fields:
 
 A `ghw.ProcessorCore` has the following fields:
 
-* `ghw.ProcessorCore.Id` is the `uint32` identifier that the host gave this
+* `ghw.ProcessorCore.ID` is the `uint32` identifier that the host gave this
   core. Note that this does *not* necessarily equate to a zero-based index of
   the core within a physical package. For example, the core IDs for an Intel Core
   i7 are 0, 1, 2, 8, 9, and 10
@@ -310,7 +310,7 @@ The `ghw.TopologyInfo` struct contains two fields:
 
 Each `ghw.TopologyNode` struct contains the following fields:
 
-* `ghw.TopologyNode.Id` is the system's `uint32` identifier for the node
+* `ghw.TopologyNode.ID` is the system's `uint32` identifier for the node
 * `ghw.TopologyNode.Cores` is an array of pointers to `ghw.ProcessorCore` structs that
   are contained in this node
 * `ghw.TopologyNode.Caches` is an array of pointers to `ghw.MemoryCache` structs that
@@ -518,13 +518,13 @@ The `ghw.PCI()` function returns a `ghw.PCIInfo` struct. The `ghw.PCIInfo`
 struct contains a number of fields that may be queried for PCI information:
 
 * `ghw.PCIInfo.Classes` is a map, keyed by the PCI class ID (a hex-encoded
-  string) of pointers to `pcidb.PCIClass` structs, one for each class of PCI
+  string) of pointers to `pcidb.Class` structs, one for each class of PCI
   device known to `ghw`
 * `ghw.PCIInfo.Vendors` is a map, keyed by the PCI vendor ID (a hex-encoded
-  string) of pointers to `pcidb.PCIVendor` structs, one for each PCI vendor
+  string) of pointers to `pcidb.Vendor` structs, one for each PCI vendor
   known to `ghw`
 * `ghw.PCIInfo.Products` is a map, keyed by the PCI product ID* (a hex-encoded
-  string) of pointers to `pcidb.PCIProduct` structs, one for each PCI product
+  string) of pointers to `pcidb.Product` structs, one for each PCI product
   known to `ghw`
 
 **NOTE**: PCI products are often referred to by their "device ID". We use
@@ -543,18 +543,18 @@ This methods return either an array of or a single pointer to a `ghw.PCIDevice`
 struct, which has the following fields:
 
 
-* `ghw.PCIDevice.Vendor` is a pointer to a `pcidb.PCIVendor` struct that
+* `ghw.PCIDevice.Vendor` is a pointer to a `pcidb.Vendor` struct that
   describes the device's primary vendor. This will always be non-nil.
-* `ghw.PCIDevice.Product` is a pointer to a `pcidb.PCIProduct` struct that
+* `ghw.PCIDevice.Product` is a pointer to a `pcidb.Product` struct that
   describes the device's primary product. This will always be non-nil.
-* `ghw.PCIDevice.Subsystem` is a pointer to a `pcidb.PCIProduct` struct that
+* `ghw.PCIDevice.Subsystem` is a pointer to a `pcidb.Product` struct that
   describes the device's secondary/sub-product. This will always be non-nil.
-* `ghw.PCIDevice.Class` is a pointer to a `pcidb.PCIClass` struct that
+* `ghw.PCIDevice.Class` is a pointer to a `pcidb.Class` struct that
   describes the device's class. This will always be non-nil.
-* `ghw.PCIDevice.Subclass` is a pointer to a `pcidb.PCISubclass` struct
+* `ghw.PCIDevice.Subclass` is a pointer to a `pcidb.Subclass` struct
   that describes the device's subclass. This will always be non-nil.
 * `ghw.PCIDevice.ProgrammingInterface` is a pointer to a
-  `pcidb.PCIProgrammingInterface` struct that describes the device subclass'
+  `pcidb.ProgrammingInterface` struct that describes the device subclass'
   programming interface. This will always be non-nil.
 
 The following code snippet shows how to call the `ghw.PCIInfo.ListDevices()`
@@ -694,22 +694,22 @@ func main() {
 	}
 
 	vendor := deviceInfo.Vendor
-	fmt.Printf("Vendor: %s [%s]\n", vendor.Name, vendor.Id)
+	fmt.Printf("Vendor: %s [%s]\n", vendor.Name, vendor.ID)
 	product := deviceInfo.Product
-	fmt.Printf("Product: %s [%s]\n", product.Name, product.Id)
+	fmt.Printf("Product: %s [%s]\n", product.Name, product.ID)
 	subsystem := deviceInfo.Subsystem
-	subvendor := pci.Vendors[subsystem.VendorId]
+	subvendor := pci.Vendors[subsystem.VendorID]
 	subvendorName := "UNKNOWN"
 	if subvendor != nil {
 		subvendorName = subvendor.Name
 	}
-	fmt.Printf("Subsystem: %s [%s] (Subvendor: %s)\n", subsystem.Name, subsystem.Id, subvendorName)
+	fmt.Printf("Subsystem: %s [%s] (Subvendor: %s)\n", subsystem.Name, subsystem.ID, subvendorName)
 	class := deviceInfo.Class
-	fmt.Printf("Class: %s [%s]\n", class.Name, class.Id)
+	fmt.Printf("Class: %s [%s]\n", class.Name, class.ID)
 	subclass := deviceInfo.Subclass
-	fmt.Printf("Subclass: %s [%s]\n", subclass.Name, subclass.Id)
+	fmt.Printf("Subclass: %s [%s]\n", subclass.Name, subclass.ID)
 	progIface := deviceInfo.ProgrammingInterface
-	fmt.Printf("Programming Interface: %s [%s]\n", progIface.Name, progIface.Id)
+	fmt.Printf("Programming Interface: %s [%s]\n", progIface.Name, progIface.ID)
 }
 ```
 
