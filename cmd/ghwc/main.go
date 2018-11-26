@@ -7,7 +7,7 @@
 package main
 
 import (
-	"github.com/jaypipes/ghw/ghwc/cmd"
+	"github.com/jaypipes/ghw/cmd/ghwc/commands"
 )
 
 var (
@@ -20,5 +20,5 @@ var (
 )
 
 func main() {
-	cmd.Execute(version, buildHash, buildDate)
+	commands.Execute(version, buildHash, buildDate)
 }
