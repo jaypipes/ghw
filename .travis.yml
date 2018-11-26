@@ -6,4 +6,4 @@ env:
   - GHW_TESTING_SKIP_GPU=1
 script:
   - make test
-  - go run ghwc/main.go
+  - go run cmd/ghwc/main.go
