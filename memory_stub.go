@@ -12,6 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func memFillInfo(info *MemoryInfo) error {
+func (ctx *context) memFillInfo(info *MemoryInfo) error {
 	return errors.New("memFillInfo not implemented on " + runtime.GOOS)
 }
