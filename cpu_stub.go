@@ -12,10 +12,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-func cpuFillInfo(info *CPUInfo) error {
+func (ctx *context) cpuFillInfo(info *CPUInfo) error {
 	return errors.New("cpuFillInfo not implemented on " + runtime.GOOS)
 }
 
+// Processors has been DEPRECATED in 0.2 and will be REMOVED in 1.0. Please use
+// the CPUInfo.Processors attribute.
+// TODO(jaypipes): Remove in 1.0
 func Processors() []*Processor {
 	return nil
+}
+
+// TODO: remove
+func (ctx *context) coresForNode(nodeID int) ([]*ProcessorCore, error) {
+	return nil, errors.New("coresForNode not implemented on " + runtime.GOOS)
 }

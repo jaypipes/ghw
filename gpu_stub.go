@@ -12,6 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func gpuFillInfo(info *GPUInfo) error {
+func (ctx *context) gpuFillInfo(info *GPUInfo) error {
 	return errors.New("gpuFillInfo not implemented on " + runtime.GOOS)
 }
