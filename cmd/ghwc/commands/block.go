@@ -9,6 +9,8 @@ package commands
 import (
 	"fmt"
 
+	"github.com/jaypipes/ghw"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,11 @@ var blockCmd = &cobra.Command{
 
 // showBlock show block storage information for the host system.
 func showBlock(cmd *cobra.Command, args []string) error {
-	block := info.Block
+	block, err := ghw.Block()
+	if err != nil {
+		return errors.Wrap(err, "error getting block device info")
+	}
+
 	fmt.Printf("%v\n", block)
 
 	for _, disk := range block.Disks {

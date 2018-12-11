@@ -9,6 +9,8 @@ package commands
 import (
 	"fmt"
 
+	"github.com/jaypipes/ghw"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,11 @@ var gpuCmd = &cobra.Command{
 
 // showGPU show graphics/GPU information for the host system.
 func showGPU(cmd *cobra.Command, args []string) error {
-	gpu := info.GPU
+	gpu, err := ghw.GPU()
+	if err != nil {
+		return errors.Wrap(err, "error getting GPU info")
+	}
+
 	fmt.Printf("%v\n", gpu)
 
 	for _, card := range gpu.GraphicsCards {
