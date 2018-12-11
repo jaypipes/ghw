@@ -41,28 +41,25 @@ https://github.com/jaypipes/ghw
 }
 
 func showAll(cmd *cobra.Command, args []string) error {
-	err := showMemory(cmd, args)
-	if err != nil {
+	if err := showBlock(cmd, args); err != nil {
 		return err
 	}
-	err = showCPU(cmd, args)
-	if err != nil {
+	if err := showCPU(cmd, args); err != nil {
 		return err
 	}
-	err = showBlock(cmd, args)
-	if err != nil {
+	if err := showGPU(cmd, args); err != nil {
 		return err
 	}
-	err = showTopology(cmd, args)
-	if err != nil {
+	if err := showMemory(cmd, args); err != nil {
 		return err
 	}
-	err = showNetwork(cmd, args)
-	if err != nil {
+	if err := showNetwork(cmd, args); err != nil {
 		return err
 	}
-	err = showGPU(cmd, args)
-	return err
+	if err := showTopology(cmd, args); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
