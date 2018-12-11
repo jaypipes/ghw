@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jaypipes/ghw"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,6 @@ var (
 	buildHash string
 	buildDate string
 	debug     bool
-	info      *ghw.HostInfo
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -68,13 +66,6 @@ func Execute(v string, bh string, bd string) {
 	version = v
 	buildHash = bh
 	buildDate = bd
-
-	i, err := ghw.Host()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	info = i
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
