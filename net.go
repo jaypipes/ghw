@@ -20,6 +20,7 @@ type NIC struct {
 	Name         string
 	MacAddress   string
 	IsVirtual    bool
+	IsOnPciBus   bool
 	Capabilities []*NICCapability
 }
 
@@ -28,10 +29,17 @@ func (n *NIC) String() string {
 	if n.IsVirtual {
 		isVirtualStr = " (virtual)"
 	}
+
+	isOnPciBusStr := ""
+	if n.IsOnPciBus {
+		isOnPciBusStr = " (pci)"
+	}
+
 	return fmt.Sprintf(
-		"%s%s",
+		"%s%s%s",
 		n.Name,
 		isVirtualStr,
+		isOnPciBusStr,
 	)
 }
 

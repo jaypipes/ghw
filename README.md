@@ -401,6 +401,7 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.MacAddress` is the MAC address for the NIC, if any
 * `ghw.NIC.IsVirtual` is a boolean indicating if the NIC is a virtualized
   device
+* `ghw.NIC.IsOnPciBus` is a boolean indicating if the NIC is on PCI bus
 * `ghw.NIC.Capabilities` is an array of pointers to `ghw.NICCapability` structs
   that can describe the things the NIC supports. These capabilities match the
   returned values from the `ethtool -k <DEVICE>` call on Linux
@@ -485,14 +486,14 @@ net (3 NICs)
    - tx-sctp-segmentation
    - tx-esp-segmentation
    - tx-vlan-stag-hw-insert
- enp58s0f1
+ enp58s0f1 (pci)
   enabled capabilities:
    - rx-checksumming
    - generic-receive-offload
    - rx-vlan-offload
    - tx-vlan-offload
    - highdma
- wlp59s0
+ wlp59s0 (pci)
   enabled capabilities:
    - scatter-gather
    - tx-scatter-gather

@@ -63,9 +63,15 @@ func (ctx *context) nics() []*NIC {
 			isVirtual = true
 		}
 
+		isOnPciBus := false
+		if strings.Contains(dest, "/devices/pci") {
+			isOnPciBus = true
+		}
+
 		nic := &NIC{
-			Name:      filename,
-			IsVirtual: isVirtual,
+			Name:       filename,
+			IsVirtual:  isVirtual,
+			IsOnPciBus: isOnPciBus,
 		}
 
 		mac := ctx.netDeviceMacAddress(filename)
