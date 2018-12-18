@@ -59,7 +59,7 @@ func (ctx *context) nics() []*NIC {
 		netPath := filepath.Join(ctx.pathSysClassNet(), filename)
 		dest, _ := os.Readlink(netPath)
 		isVirtual := false
-		if strings.Contains(dest, "virtio") {
+		if strings.Contains(dest, "devices/virtual/net") {
 			isVirtual = true
 		}
 
