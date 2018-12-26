@@ -187,8 +187,8 @@ func findPCISubclass(
 		}
 	}
 	return &pcidb.Subclass{
-		ID:   subclassID,
-		Name: UNKNOWN,
+		ID:                    subclassID,
+		Name:                  UNKNOWN,
 		ProgrammingInterfaces: []*pcidb.ProgrammingInterface{},
 	}
 }
