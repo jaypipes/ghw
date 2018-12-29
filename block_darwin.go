@@ -94,35 +94,35 @@ type ioregPlist struct {
 	VendorName   string `plist:"Vendor Name"`
 }
 
-func (ctx *context) getDiskUtilListPlist() (diskUtilListPlist, error) {
+func (ctx *context) getDiskUtilListPlist() (*diskUtilListPlist, error) {
 	out, err := exec.Command("diskutil", "list", "-plist").Output()
 	if err != nil {
-		return diskUtilListPlist{}, errors.Wrap(err, "diskutil list failed")
+		return nil, errors.Wrap(err, "diskutil list failed")
 	}
 
 	var data diskUtilListPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
-		return diskUtilListPlist{}, errors.Wrap(err, "diskutil list plist unmarshal failed")
+		return nil, errors.Wrap(err, "diskutil list plist unmarshal failed")
 	}
 
-	return data, nil
+	return &data, nil
 }
 
-func (ctx *context) getDiskUtilInfoPlist(device string) (diskUtilInfoPlist, error) {
+func (ctx *context) getDiskUtilInfoPlist(device string) (*diskUtilInfoPlist, error) {
 	out, err := exec.Command("diskutil", "info", "-plist", device).Output()
 	if err != nil {
-		return diskUtilInfoPlist{}, errors.Wrapf(err, "diskutil info for %q failed", device)
+		return nil, errors.Wrapf(err, "diskutil info for %q failed", device)
 	}
 
 	var data diskUtilInfoPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
-		return diskUtilInfoPlist{}, errors.Wrapf(err, "diskutil info plist unmarshal for %q failed", device)
+		return nil, errors.Wrapf(err, "diskutil info plist unmarshal for %q failed", device)
 	}
 
-	return data, nil
+	return &data, nil
 }
 
-func (ctx *context) getIoregPlist(ioDeviceTreePath string) (ioregPlist, error) {
+func (ctx *context) getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
 	elems := strings.Split(ioDeviceTreePath, "/")
 	name := elems[len(elems)-1]
 
@@ -135,19 +135,19 @@ func (ctx *context) getIoregPlist(ioDeviceTreePath string) (ioregPlist, error) {
 	}
 	out, err := exec.Command(args[0], args[1:]...).Output()
 	if err != nil {
-		return ioregPlist{}, errors.Wrapf(err, "ioreg query for %q failed", ioDeviceTreePath)
+		return nil, errors.Wrapf(err, "ioreg query for %q failed", ioDeviceTreePath)
 	}
 
 	var data []ioregPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
-		return ioregPlist{}, errors.Wrapf(err, "ioreg unmarshal for %q failed", ioDeviceTreePath)
+		return nil, errors.Wrapf(err, "ioreg unmarshal for %q failed", ioDeviceTreePath)
 	}
 	if len(data) != 1 {
 		err := errors.Errorf("ioreg unmarshal resulted in %d I/O device tree nodes (expected 1)", len(data))
-		return ioregPlist{}, err
+		return nil, err
 	}
 
-	return data[0], nil
+	return &data[0], nil
 }
 
 func (ctx *context) makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, error) {
