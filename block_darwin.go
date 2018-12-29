@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -123,8 +124,7 @@ func (ctx *context) getDiskUtilInfoPlist(device string) (*diskUtilInfoPlist, err
 }
 
 func (ctx *context) getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
-	elems := strings.Split(ioDeviceTreePath, "/")
-	name := elems[len(elems)-1]
+	name := path.Base(ioDeviceTreePath)
 
 	args := []string{
 		"ioreg",
