@@ -759,7 +759,7 @@ import (
 )
 
 func main() {
-	gpu, err := ghw.GPU())
+	gpu, err := ghw.GPU()
 	if err != nil {
 		fmt.Printf("Error getting GPU info: %v", err)
 	}
