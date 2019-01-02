@@ -8,3 +8,12 @@
 [[constraint]]
   name = "github.com/spf13/cobra"
   version = "0.0.3"
+
+[[constraint]]
+  name = "howett.net/plist" # aka github.com/DHowett/go-plist
+  # pinning a sha since as yet no release has ever been made
+  revision = "591f970eefbbeb04d7b37f334a0c4c3256e32876"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
