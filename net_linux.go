@@ -40,7 +40,9 @@ of ghw. Please use the NetworkInfo.NICs attribute.
 func (ctx *context) nics() []*NIC {
 	nics := make([]*NIC, 0)
 
-	files, err := ioutil.ReadDir(ctx.pathSysClassNet())
+	// files, err := ioutil.ReadDir(ctx.pathSysClassNet())
+
+	
 	if err != nil {
 		return nics
 	}

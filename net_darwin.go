@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+    "net"
 )
 
 const (
@@ -40,7 +41,45 @@ of ghw. Please use the NetworkInfo.NICs attribute.
 func (ctx *context) nics() []*NIC {
 	nics := make([]*NIC, 0)
 
-	files, err := ioutil.ReadDir(ctx.pathSysClassNet())
+	// files, err := ioutil.ReadDir(ctx.pathSysClassNet())
+    files, err := net.Interfaces()
+
+	// // if err != nil {
+	// // 	return device, err
+	// // }
+	// for _, file := range files {
+    //     // if error != nil {
+    // 	// 	return device, error
+    // 	// }
+	// 	if file.Flags&net.FlagUp == 0 {
+	// 		continue // interface down
+	// 	}
+	// 	if file.Flags&net.FlagLoopback != 0 {
+	// 		continue // loopback interface
+	// 	}
+	// 	addrs, err := file.Addrs()
+	// 	// if err != nil {
+	// 	// 	return device, err
+	// 	// }
+	// 	for _, addr := range addrs {
+    //         fmt.Println(file)
+	// 		var ip net.IP
+	// 		switch v := addr.(type) {
+	// 		case *net.IPNet:
+	// 			ip = v.IP
+	// 		case *net.IPAddr:
+	// 			ip = v.IP
+	// 		}
+	// 		if ip == nil || ip.IsLoopback() {
+	// 			continue
+	// 		}
+	// 		ip = ip.To4()
+	// 		if ip == nil {
+	// 			continue // not an ipv4 address
+	// 		}
+	// 	}
+	// }
+
 	if err != nil {
 		return nics
 	}
@@ -50,13 +89,14 @@ func (ctx *context) nics() []*NIC {
 		warn(_WARN_ETHTOOL_NOT_INSTALLED)
 	}
 	for _, file := range files {
-		filename := file.Name()
+		filename := file.Name
 		// Ignore loopback...
 		if filename == "lo" {
 			continue
 		}
 
-		netPath := filepath.Join(ctx.pathSysClassNet(), filename)
+		// netPath := filepath.Join(ctx.pathSysClassNet(), filename)
+        netPath := filename
 		dest, _ := os.Readlink(netPath)
 		isVirtual := false
 		if strings.Contains(dest, "devices/virtual/net") {
@@ -85,7 +125,8 @@ func (ctx *context) netDeviceMacAddress(dev string) string {
 	// the /sys/class/net/$DEVICE/address file in sysfs. However, for devices
 	// that have addr_assign_type != 0, return None since the MAC address is
 	// random.
-	aatPath := filepath.Join(ctx.pathSysClassNet(), dev, "addr_assign_type")
+	// aatPath := filepath.Join(ctx.pathSysClassNet(), dev, "addr_assign_type")
+    aatPath := filepath.Join(dev, "addr_assign_type")
 	contents, err := ioutil.ReadFile(aatPath)
 	if err != nil {
 		return ""
@@ -93,7 +134,8 @@ func (ctx *context) netDeviceMacAddress(dev string) string {
 	if strings.TrimSpace(string(contents)) != "0" {
 		return ""
 	}
-	addrPath := filepath.Join(ctx.pathSysClassNet(), dev, "address")
+	// addrPath := filepath.Join(ctx.pathSysClassNet(), dev, "address")
+    addrPath := filepath.Join(dev, "address")
 	contents, err = ioutil.ReadFile(addrPath)
 	if err != nil {
 		return ""
