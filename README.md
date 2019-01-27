@@ -228,7 +228,7 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.SizeBytes` contains the amount of storage the disk provides
 * `ghw.Disk.PhysicalBlockSizeBytes` contains the size of the physical blocks
   used on the disk, in bytes
-* `ghw.Disk.BusType` will be either "scsi" or "ide"
+* `ghw.Disk.BusType` will be "SCSI", "IDE", "Virtio", or "NVMe"
 * `ghw.Disk.NUMANodeID` is the numeric index of the NUMA node this disk is
   local to, or -1
 * `ghw.Disk.Vendor` contains a string with the name of the hardware vendor for
