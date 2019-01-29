@@ -17,7 +17,7 @@ type Disk struct {
 	Name                   string
 	SizeBytes              uint64
 	PhysicalBlockSizeBytes uint64
-	BusType                string
+	BusType                BusType
 	BusPath                string
 	NUMANodeID             int
 	Vendor                 string
@@ -107,7 +107,7 @@ func (d *Disk) String() string {
 		"/dev/%s (%s) [%s @ %s%s]%s%s%s%s",
 		d.Name,
 		sizeStr,
-		d.BusType,
+		d.BusType.String(),
 		d.BusPath,
 		atNode,
 		vendor,
