@@ -10,7 +10,8 @@
   version = "0.0.3"
 
 [[constraint]]
-  name = "howett.net/plist" # aka github.com/DHowett/go-plist
+  name = "howett.net/plist"
+  source = "github.com/DHowett/go-plist"
   # pinning a sha since as yet no release has ever been made
   revision = "591f970eefbbeb04d7b37f334a0c4c3256e32876"
 
