@@ -333,17 +333,17 @@ func (ctx *context) disks() []*Disk {
 	for _, file := range files {
 		dname := file.Name()
 
-		var busType string
+		busType := BUS_TYPE_UNKNOWN
 		if strings.HasPrefix(dname, "sd") {
-			busType = "SCSI"
+			busType = BUS_TYPE_SCSI
 		} else if strings.HasPrefix(dname, "hd") {
-			busType = "IDE"
+			busType = BUS_TYPE_IDE
 		} else if strings.HasPrefix(dname, "vd") {
-			busType = "Virtio"
+			busType = BUS_TYPE_VIRTIO
 		} else if regexNVMeDev.MatchString(dname) {
-			busType = "NVMe"
+			busType = BUS_TYPE_NVME
 		}
-		if busType == "" {
+		if busType == BUS_TYPE_UNKNOWN {
 			continue
 		}
 
