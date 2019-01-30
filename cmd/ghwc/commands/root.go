@@ -57,12 +57,40 @@ https://github.com/jaypipes/ghw
 }
 
 func showAll(cmd *cobra.Command, args []string) error {
-	host, err := ghw.Host()
-	if err != nil {
-		return errors.Wrap(err, "error getting host info")
-	}
 
-	printInfo(host)
+	switch outputFormat {
+	case outputFormatHuman:
+		if err := showBlock(cmd, args); err != nil {
+			return err
+		}
+		if err := showCPU(cmd, args); err != nil {
+			return err
+		}
+		if err := showGPU(cmd, args); err != nil {
+			return err
+		}
+		if err := showMemory(cmd, args); err != nil {
+			return err
+		}
+		if err := showNetwork(cmd, args); err != nil {
+			return err
+		}
+		if err := showTopology(cmd, args); err != nil {
+			return err
+		}
+	case outputFormatJSON:
+		host, err := ghw.Host()
+		if err != nil {
+			return errors.Wrap(err, "error getting host info")
+		}
+		fmt.Printf("%s\n", host.JSONString(pretty))
+	case outputFormatYAML:
+		host, err := ghw.Host()
+		if err != nil {
+			return errors.Wrap(err, "error getting host info")
+		}
+		fmt.Printf("%s", host.YAMLString())
+	}
 	return nil
 }
 
