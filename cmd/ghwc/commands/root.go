@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jaypipes/ghw"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -55,24 +57,12 @@ https://github.com/jaypipes/ghw
 }
 
 func showAll(cmd *cobra.Command, args []string) error {
-	if err := showBlock(cmd, args); err != nil {
-		return err
+	host, err := ghw.Host()
+	if err != nil {
+		return errors.Wrap(err, "error getting host info")
 	}
-	if err := showCPU(cmd, args); err != nil {
-		return err
-	}
-	if err := showGPU(cmd, args); err != nil {
-		return err
-	}
-	if err := showMemory(cmd, args); err != nil {
-		return err
-	}
-	if err := showNetwork(cmd, args); err != nil {
-		return err
-	}
-	if err := showTopology(cmd, args); err != nil {
-		return err
-	}
+
+	printInfo(host)
 	return nil
 }
 

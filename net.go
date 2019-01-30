@@ -62,7 +62,7 @@ func (i *NetworkInfo) String() string {
 // simple private struct used to encapsulate net information in a
 // top-level "net" YAML/JSON map/object key
 type netPrinter struct {
-	Info *NetworkInfo `json:"net"`
+	Info *NetworkInfo `json:"network"`
 }
 
 // YAMLString returns a string with the net information formatted as YAML
