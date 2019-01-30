@@ -6,6 +6,8 @@
 
 package ghw
 
+import "strings"
+
 type BusType int
 
 const (
@@ -18,7 +20,7 @@ const (
 )
 
 var (
-	BusTypeString = map[BusType]string{
+	busTypeString = map[BusType]string{
 		BUS_TYPE_UNKNOWN: "Unknown",
 		BUS_TYPE_IDE:     "IDE",
 		BUS_TYPE_PCI:     "PCI",
@@ -29,5 +31,12 @@ var (
 )
 
 func (bt BusType) String() string {
-	return BusTypeString[bt]
+	return busTypeString[bt]
+}
+
+// NOTE(jaypipes): since serialized output is as "official" as we're going to
+// get, let's lowercase the string output when serializing, in order to
+// "normalize" the expected serialized output
+func (bt BusType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + strings.ToLower(bt.String()) + "\""), nil
 }

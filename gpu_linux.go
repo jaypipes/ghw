@@ -112,7 +112,7 @@ func (ctx *context) gpuFillNUMANodes(cards []*GraphicsCard) {
 	topo := &TopologyInfo{}
 	if err := ctx.topologyFillInfo(topo); err != nil {
 		for _, card := range cards {
-			if topo.Architecture != NUMA {
+			if topo.Architecture != ARCHITECTURE_NUMA {
 				card.Node = nil
 			}
 		}

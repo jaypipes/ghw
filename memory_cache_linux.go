@@ -178,15 +178,15 @@ func (ctx *context) memoryCacheType(nodeID int, lpID int, cacheIndex int) Memory
 	cacheTypeContents, err := ioutil.ReadFile(typePath)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
-		return UNIFIED
+		return MEMORY_CACHE_TYPE_UNIFIED
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
 	case "Data":
-		return DATA
+		return MEMORY_CACHE_TYPE_DATA
 	case "Instruction":
-		return INSTRUCTION
+		return MEMORY_CACHE_TYPE_INSTRUCTION
 	default:
-		return UNIFIED
+		return MEMORY_CACHE_TYPE_UNIFIED
 	}
 }
 

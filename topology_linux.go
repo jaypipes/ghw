@@ -18,9 +18,9 @@ func (ctx *context) topologyFillInfo(info *TopologyInfo) error {
 	}
 	info.Nodes = nodes
 	if len(info.Nodes) == 1 {
-		info.Architecture = SMP
+		info.Architecture = ARCHITECTURE_SMP
 	} else {
-		info.Architecture = NUMA
+		info.Architecture = ARCHITECTURE_NUMA
 	}
 	return nil
 }

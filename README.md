@@ -33,7 +33,7 @@ information about the host computer:
 * [Network](#network)
 * [PCI](#pci)
 * [GPU](#gpu)
-
+* [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
 
@@ -789,6 +789,48 @@ information
 **NOTE**: You can [read more](#topology) about the fields of the
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
+
+## Serialization
+
+All of the `ghw` `XXXInfo` structs -- e.g. `ghw.CPUInfo` -- have two methods
+for producing a serialized JSON or YAML string representation of the contained
+information:
+
+* `JSONString()` returns a string containing the information serialized into
+  JSON. It accepts a single boolean parameter indicating whether to use
+  indentation when outputting the string
+* `YAMLString()` returns a string containing the information serialized into
+  YAML
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	mem, err := ghw.Memory()
+	if err != nil {
+		fmt.Printf("Error getting memory info: %v", err)
+	}
+
+	fmt.Printf("%s", mem.YAMLString())
+}
+```
+
+the above example code prints the following out on my local workstation:
+
+```
+memory:
+  supported_page_sizes:
+  - 1073741824
+  - 2097152
+  total_physical_bytes: 25263415296
+  total_usable_bytes: 25263415296
+```
 
 ## Developers
 
