@@ -414,8 +414,8 @@ The `ghw.NICCapability` struct contains the following fields:
   "tcp-segmentation-offload")
 * `ghw.NICCapability.IsEnabled` is a boolean indicating whether the capability
   is currently enabled/active on the NIC
-* `ghw.NICCapability.CanChange` is a boolean indicating whether the capability
-  may be turned on or off
+* `ghw.NICCapability.CanEnable` is a boolean indicating whether the capability
+  may be enabled
 
 ```go
 package main
