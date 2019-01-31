@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+const (
+	disableWarningsEnv = "GHW_DISABLE_WARNINGS"
+)
+
 type closer interface {
 	Close() error
 }
@@ -26,6 +30,9 @@ func safeClose(c closer) {
 }
 
 func warn(msg string, args ...interface{}) {
+	if _, ok := os.LookupEnv(disableWarningsEnv); ok {
+		return
+	}
 	_, _ = fmt.Fprint(os.Stderr, "WARNING: ")
 	_, _ = fmt.Fprintf(os.Stderr, msg, args...)
 }
