@@ -178,6 +178,15 @@ func (ctx *context) makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool)
 	}, nil
 }
 
+func busTypeFromBusProtocol(busProtocol string) BusType {
+	switch busProtocol {
+	case "PCI-Express":
+		return BUS_TYPE_NVME // is this even correct?
+	default:
+		return BUS_TYPE_UNKNOWN
+	}
+}
+
 func (ctx *context) blockFillInfo(info *BlockInfo) error {
 	listPlist, err := ctx.getDiskUtilListPlist()
 	if err != nil {
@@ -214,7 +223,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			Name:                   disk.DeviceIdentifier,
 			SizeBytes:              uint64(disk.Size),
 			PhysicalBlockSizeBytes: uint64(infoPlist.DeviceBlockSize),
-			BusType:                infoPlist.BusProtocol,
+			BusType:                busTypeFromBusProtocol(infoPlist.BusProtocol),
 			BusPath:                busPath,
 			NUMANodeID:             -1,
 			Vendor:                 ioregPlist.VendorName,
