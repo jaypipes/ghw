@@ -13,8 +13,7 @@ import (
 type NICCapability struct {
 	Name      string `json:"name"`
 	IsEnabled bool   `json:"is_enabled"`
-	// TODO(jaypipes): Deprecate this and rename to CanEnable
-	CanChange bool `json:"can_enable"`
+	CanEnable bool   `json:"can_enable"`
 }
 
 type NIC struct {
