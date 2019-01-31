@@ -25,7 +25,7 @@ func TestTopology(t *testing.T) {
 		t.Fatalf("Expected >0 nodes but got 0.")
 	}
 
-	if info.Architecture == NUMA && len(info.Nodes) == 1 {
+	if info.Architecture == ARCHITECTURE_NUMA && len(info.Nodes) == 1 {
 		t.Fatalf("Got NUMA architecture but only 1 node.")
 	}
 

@@ -14,35 +14,38 @@ import (
 // Disk describes a single disk drive on the host system. Disk drives provide
 // raw block storage resources.
 type Disk struct {
-	Name                   string
-	SizeBytes              uint64
-	PhysicalBlockSizeBytes uint64
-	BusType                BusType
-	BusPath                string
-	NUMANodeID             int
-	Vendor                 string
-	Model                  string
-	SerialNumber           string
-	WWN                    string
-	Partitions             []*Partition
+	Name                   string  `json:"name"`
+	SizeBytes              uint64  `json:"size_bytes"`
+	PhysicalBlockSizeBytes uint64  `json:"physical_block_size_bytes"`
+	BusType                BusType `json:"bus_type"`
+	BusPath                string  `json:"bus_path"`
+	// TODO(jaypipes): Convert this to a TopologyNode struct pointer and then
+	// add to serialized output as "numa_node,omitempty"
+	NUMANodeID   int          `json:"-"`
+	Vendor       string       `json:"vendor"`
+	Model        string       `json:"model"`
+	SerialNumber string       `json:"serial_number"`
+	WWN          string       `json:"wwn"`
+	Partitions   []*Partition `json:"partitions"`
 }
 
 // Partition describes a logical division of a Disk.
 type Partition struct {
-	Disk       *Disk
-	Name       string
-	Label      string
-	MountPoint string
-	SizeBytes  uint64
-	Type       string
-	IsReadOnly bool
+	Disk       *Disk  `json:"-"`
+	Name       string `json:"name"`
+	Label      string `json:"label"`
+	MountPoint string `json:"mount_point"`
+	SizeBytes  uint64 `json:"size_bytes"`
+	Type       string `json:"type"`
+	IsReadOnly bool   `json:"read_only"`
 }
 
 // BlockInfo describes all disk drives and partitions in the host system.
 type BlockInfo struct {
-	TotalPhysicalBytes uint64
-	Disks              []*Disk
-	Partitions         []*Partition
+	// TODO(jaypipes): Deprecate this field and replace with TotalSizeBytes
+	TotalPhysicalBytes uint64       `json:"total_size_bytes"`
+	Disks              []*Disk      `json:"disks"`
+	Partitions         []*Partition `json:"-"`
 }
 
 // Block returns a BlockInfo struct that describes the block storage resources
@@ -140,4 +143,22 @@ func (p *Partition) String() string {
 		typeStr,
 		mountStr,
 	)
+}
+
+// simple private struct used to encapsulate block information in a top-level
+// "block" YAML/JSON map/object key
+type blockPrinter struct {
+	Info *BlockInfo `json:"block" yaml:"block"`
+}
+
+// YAMLString returns a string with the block information formatted as YAML
+// under a top-level "block:" key
+func (i *BlockInfo) YAMLString() string {
+	return safeYAML(blockPrinter{i})
+}
+
+// JSONString returns a string with the block information formatted as JSON
+// under a top-level "block:" key
+func (i *BlockInfo) JSONString(indent bool) string {
+	return safeJSON(blockPrinter{i}, indent)
 }

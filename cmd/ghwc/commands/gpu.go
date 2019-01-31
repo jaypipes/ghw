@@ -28,10 +28,17 @@ func showGPU(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error getting GPU info")
 	}
 
-	fmt.Printf("%v\n", gpu)
+	switch outputFormat {
+	case outputFormatHuman:
+		fmt.Printf("%v\n", gpu)
 
-	for _, card := range gpu.GraphicsCards {
-		fmt.Printf(" %v\n", card)
+		for _, card := range gpu.GraphicsCards {
+			fmt.Printf(" %v\n", card)
+		}
+	case outputFormatJSON:
+		fmt.Printf("%s\n", gpu.JSONString(pretty))
+	case outputFormatYAML:
+		fmt.Printf("%s", gpu.YAMLString())
 	}
 	return nil
 }

@@ -12,16 +12,18 @@ import (
 
 type GraphicsCard struct {
 	// the PCI address where the graphics card can be found
-	Address string
+	Address string `json:"address"`
 	// The "index" of the card on the bus (generally not useful information,
 	// but might as well include it)
-	Index int
+	Index int `json:"index"`
 	// pointer to a PCIDevice struct that describes the vendor and product
 	// model, etc
-	DeviceInfo *PCIDevice
-	// Topology nodes that the graphics card is affined to. Will be nil if the
+	// NOTE(jaypipes): Don't serialize the PCI device information until pcidb
+	// library is updated to marshal properly
+	DeviceInfo *PCIDevice `json:"-"`
+	// Topology node that the graphics card is affined to. Will be nil if the
 	// architecture is not NUMA.
-	Node *TopologyNode
+	Node *TopologyNode `json:"node,omitempty"`
 }
 
 func (card *GraphicsCard) String() string {
@@ -42,7 +44,7 @@ func (card *GraphicsCard) String() string {
 }
 
 type GPUInfo struct {
-	GraphicsCards []*GraphicsCard
+	GraphicsCards []*GraphicsCard `json:"cards"`
 }
 
 func GPU(opts ...*WithOption) (*GPUInfo, error) {
@@ -67,4 +69,22 @@ func (i *GPUInfo) String() string {
 		len(i.GraphicsCards),
 		numCardsStr,
 	)
+}
+
+// simple private struct used to encapsulate gpu information in a top-level
+// "gpu" YAML/JSON map/object key
+type gpuPrinter struct {
+	Info *GPUInfo `json:"gpu"`
+}
+
+// YAMLString returns a string with the gpu information formatted as YAML
+// under a top-level "gpu:" key
+func (i *GPUInfo) YAMLString() string {
+	return safeYAML(gpuPrinter{i})
+}
+
+// JSONString returns a string with the gpu information formatted as JSON
+// under a top-level "gpu:" key
+func (i *GPUInfo) JSONString(indent bool) string {
+	return safeJSON(gpuPrinter{i}, indent)
 }

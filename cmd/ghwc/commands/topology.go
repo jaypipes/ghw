@@ -28,13 +28,20 @@ func showTopology(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error getting topology info")
 	}
 
-	fmt.Printf("%v\n", topology)
+	switch outputFormat {
+	case outputFormatHuman:
+		fmt.Printf("%v\n", topology)
 
-	for _, node := range topology.Nodes {
-		fmt.Printf(" %v\n", node)
-		for _, cache := range node.Caches {
-			fmt.Printf("  %v\n", cache)
+		for _, node := range topology.Nodes {
+			fmt.Printf(" %v\n", node)
+			for _, cache := range node.Caches {
+				fmt.Printf("  %v\n", cache)
+			}
 		}
+	case outputFormatJSON:
+		fmt.Printf("%s\n", topology.JSONString(pretty))
+	case outputFormatYAML:
+		fmt.Printf("%s", topology.YAMLString())
 	}
 	return nil
 }

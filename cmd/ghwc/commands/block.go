@@ -28,13 +28,20 @@ func showBlock(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error getting block device info")
 	}
 
-	fmt.Printf("%v\n", block)
+	switch outputFormat {
+	case outputFormatHuman:
+		fmt.Printf("%v\n", block)
 
-	for _, disk := range block.Disks {
-		fmt.Printf(" %v\n", disk)
-		for _, part := range disk.Partitions {
-			fmt.Printf("  %v\n", part)
+		for _, disk := range block.Disks {
+			fmt.Printf(" %v\n", disk)
+			for _, part := range disk.Partitions {
+				fmt.Printf("  %v\n", part)
+			}
 		}
+	case outputFormatJSON:
+		fmt.Printf("%s\n", block.JSONString(pretty))
+	case outputFormatYAML:
+		fmt.Printf("%s", block.YAMLString())
 	}
 	return nil
 }

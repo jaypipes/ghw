@@ -15,11 +15,11 @@ import (
 // (CPU).
 type ProcessorCore struct {
 	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id                int
-	ID                int
-	Index             int
-	NumThreads        uint32
-	LogicalProcessors []int
+	Id                int    `json:"-"`
+	ID                int    `json:"id"`
+	Index             int    `json:"index"`
+	NumThreads        uint32 `json:"total_threads"`
+	LogicalProcessors []int  `json:"logical_processors"`
 }
 
 func (c *ProcessorCore) String() string {
@@ -34,14 +34,14 @@ func (c *ProcessorCore) String() string {
 // Processor describes a physical host central processing unit (CPU).
 type Processor struct {
 	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id           int
-	ID           int
-	NumCores     uint32
-	NumThreads   uint32
-	Vendor       string
-	Model        string
-	Capabilities []string
-	Cores        []*ProcessorCore
+	Id           int              `json:"-"`
+	ID           int              `json:"id"`
+	NumCores     uint32           `json:"total_cores"`
+	NumThreads   uint32           `json:"total_threads"`
+	Vendor       string           `json:"vendor"`
+	Model        string           `json:"model"`
+	Capabilities []string         `json:"capabilities"`
+	Cores        []*ProcessorCore `json:"cores"`
 }
 
 // HasCapability returns true if the `ghw.Processor` has the supplied cpuid
@@ -81,9 +81,10 @@ func (p *Processor) String() string {
 // CPUInfo describes all central processing unit (CPU) functionality on a host.
 // Returned by the `ghw.CPU()` function.
 type CPUInfo struct {
-	TotalCores   uint32
-	TotalThreads uint32
-	Processors   []*Processor
+	TotalCores   uint32 `json:"total_cores"`
+	TotalThreads uint32 `json:"total_threads"`
+
+	Processors []*Processor `json:"processors"`
 }
 
 // CPU returns a struct containing information about the host's CPU resources.
@@ -121,4 +122,22 @@ func (i *CPUInfo) String() string {
 		i.TotalThreads,
 		nts,
 	)
+}
+
+// simple private struct used to encapsulate cpu information in a top-level
+// "cpu" YAML/JSON map/object key
+type cpuPrinter struct {
+	Info *CPUInfo `json:"cpu"`
+}
+
+// YAMLString returns a string with the cpu information formatted as YAML
+// under a top-level "cpu:" key
+func (i *CPUInfo) YAMLString() string {
+	return safeYAML(cpuPrinter{i})
+}
+
+// JSONString returns a string with the cpu information formatted as JSON
+// under a top-level "cpu:" key
+func (i *CPUInfo) JSONString(indent bool) string {
+	return safeJSON(cpuPrinter{i}, indent)
 }

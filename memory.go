@@ -12,10 +12,10 @@ import (
 )
 
 type MemoryInfo struct {
-	TotalPhysicalBytes int64
-	TotalUsableBytes   int64
+	TotalPhysicalBytes int64 `json:"total_physical_bytes"`
+	TotalUsableBytes   int64 `json:"total_usable_bytes"`
 	// An array of sizes, in bytes, of memory pages supported by the host
-	SupportedPageSizes []uint64
+	SupportedPageSizes []uint64 `json:"supported_page_sizes"`
 }
 
 func Memory(opts ...*WithOption) (*MemoryInfo, error) {
@@ -46,4 +46,22 @@ func (i *MemoryInfo) String() string {
 		tubs = fmt.Sprintf("%d%s", tub, unitStr)
 	}
 	return fmt.Sprintf("memory (%s physical, %s usable)", tpbs, tubs)
+}
+
+// simple private struct used to encapsulate memory information in a top-level
+// "memory" YAML/JSON map/object key
+type memoryPrinter struct {
+	Info *MemoryInfo `json:"memory"`
+}
+
+// YAMLString returns a string with the memory information formatted as YAML
+// under a top-level "memory:" key
+func (i *MemoryInfo) YAMLString() string {
+	return safeYAML(memoryPrinter{i})
+}
+
+// JSONString returns a string with the memory information formatted as JSON
+// under a top-level "memory:" key
+func (i *MemoryInfo) JSONString(indent bool) string {
+	return safeJSON(memoryPrinter{i}, indent)
 }

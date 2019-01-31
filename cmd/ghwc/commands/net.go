@@ -28,23 +28,30 @@ func showNetwork(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "error getting network info")
 	}
 
-	fmt.Printf("%v\n", net)
+	switch outputFormat {
+	case outputFormatHuman:
+		fmt.Printf("%v\n", net)
 
-	for _, nic := range net.NICs {
-		fmt.Printf(" %v\n", nic)
+		for _, nic := range net.NICs {
+			fmt.Printf(" %v\n", nic)
 
-		enabledCaps := make([]int, 0)
-		for x, cap := range nic.Capabilities {
-			if cap.IsEnabled {
-				enabledCaps = append(enabledCaps, x)
+			enabledCaps := make([]int, 0)
+			for x, cap := range nic.Capabilities {
+				if cap.IsEnabled {
+					enabledCaps = append(enabledCaps, x)
+				}
+			}
+			if len(enabledCaps) > 0 {
+				fmt.Printf("  enabled capabilities:\n")
+				for _, x := range enabledCaps {
+					fmt.Printf("   - %s\n", nic.Capabilities[x].Name)
+				}
 			}
 		}
-		if len(enabledCaps) > 0 {
-			fmt.Printf("  enabled capabilities:\n")
-			for _, x := range enabledCaps {
-				fmt.Printf("   - %s\n", nic.Capabilities[x].Name)
-			}
-		}
+	case outputFormatJSON:
+		fmt.Printf("%s\n", net.JSONString(pretty))
+	case outputFormatYAML:
+		fmt.Printf("%s", net.YAMLString())
 	}
 	return nil
 }

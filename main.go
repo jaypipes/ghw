@@ -6,6 +6,8 @@
 
 package ghw
 
+import "fmt"
+
 const (
 	UNKNOWN = "unknown"
 )
@@ -17,12 +19,12 @@ type context struct {
 }
 
 type HostInfo struct {
-	Memory   *MemoryInfo
-	Block    *BlockInfo
-	CPU      *CPUInfo
-	Topology *TopologyInfo
-	Network  *NetworkInfo
-	GPU      *GPUInfo
+	Memory   *MemoryInfo   `json:"memory"`
+	Block    *BlockInfo    `json:"block"`
+	CPU      *CPUInfo      `json:"cpu"`
+	Topology *TopologyInfo `json:"topology"`
+	Network  *NetworkInfo  `json:"network"`
+	GPU      *GPUInfo      `json:"gpu"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -64,4 +66,28 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Network:  net,
 		GPU:      gpu,
 	}, nil
+}
+
+func (info *HostInfo) String() string {
+	return fmt.Sprintf(
+		"%s\n%s\n%s\n%s\n%s\n%s\n",
+		info.Block.String(),
+		info.CPU.String(),
+		info.GPU.String(),
+		info.Memory.String(),
+		info.Network.String(),
+		info.Topology.String(),
+	)
+}
+
+// YAMLString returns a string with the host information formatted as YAML
+// under a top-level "host:" key
+func (i *HostInfo) YAMLString() string {
+	return safeYAML(i)
+}
+
+// JSONString returns a string with the host information formatted as JSON
+// under a top-level "host:" key
+func (i *HostInfo) JSONString(indent bool) string {
+	return safeJSON(i, indent)
 }

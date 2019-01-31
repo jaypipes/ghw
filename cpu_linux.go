@@ -123,7 +123,7 @@ func (ctx *context) processorsGet() []*Processor {
 			}
 			var core *ProcessorCore
 			for _, c := range cores {
-				if c.Id == coreID {
+				if c.ID == coreID {
 					c.LogicalProcessors = append(
 						c.LogicalProcessors,
 						lpid,
@@ -136,7 +136,7 @@ func (ctx *context) processorsGet() []*Processor {
 				coreLps := make([]int, 1)
 				coreLps[0] = lpid
 				core = &ProcessorCore{
-					Id:                coreID,
+					ID:                coreID,
 					Index:             len(cores),
 					NumThreads:        1,
 					LogicalProcessors: coreLps,
