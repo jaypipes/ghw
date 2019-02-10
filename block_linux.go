@@ -333,18 +333,36 @@ func (ctx *context) disks() []*Disk {
 	for _, file := range files {
 		dname := file.Name()
 
+		// The conditionals below which set the controller and drive type are
+		// based on information listed here:
+		// https://en.wikipedia.org/wiki/Device_file
 		busType := BUS_TYPE_UNKNOWN
-		if strings.HasPrefix(dname, "sd") {
+		driveType := DRIVE_TYPE_UNKNOWN
+		storageController := STORAGE_CONTROLLER_UNKNOWN
+		if strings.HasPrefix(dname, "fd") {
+			driveType = DRIVE_TYPE_FDD
+		} else if strings.HasPrefix(dname, "sd") {
+			driveType = DRIVE_TYPE_HDD
 			busType = BUS_TYPE_SCSI
+			storageController = STORAGE_CONTROLLER_SCSI
 		} else if strings.HasPrefix(dname, "hd") {
+			driveType = DRIVE_TYPE_HDD
 			busType = BUS_TYPE_IDE
+			storageController = STORAGE_CONTROLLER_IDE
 		} else if strings.HasPrefix(dname, "vd") {
+			driveType = DRIVE_TYPE_HDD
 			busType = BUS_TYPE_VIRTIO
+			storageController = STORAGE_CONTROLLER_VIRTIO
 		} else if regexNVMeDev.MatchString(dname) {
+			driveType = DRIVE_TYPE_HDD
 			busType = BUS_TYPE_NVME
+			storageController = STORAGE_CONTROLLER_NVME
 		}
-		if busType == BUS_TYPE_UNKNOWN {
+		if driveType == DRIVE_TYPE_UNKNOWN {
 			continue
+		}
+		if !ctx.diskIsRotational(dname) {
+			driveType = DRIVE_TYPE_SSD
 		}
 
 		size := ctx.diskSizeBytes(dname)
@@ -360,6 +378,8 @@ func (ctx *context) disks() []*Disk {
 			Name:                   dname,
 			SizeBytes:              size,
 			PhysicalBlockSizeBytes: pbs,
+			DriveType:              driveType,
+			StorageController:      storageController,
 			BusType:                busType,
 			BusPath:                busPath,
 			NUMANodeID:             node,
@@ -380,6 +400,12 @@ func (ctx *context) disks() []*Disk {
 	}
 
 	return disks
+}
+
+func (ctx *context) diskIsRotational(devName string) bool {
+	path := filepath.Join(ctx.pathSysBlock(), devName, "queue", "rotational")
+	contents := safeIntFromFile(path)
+	return contents == 1
 }
 
 // PartitionSizeBytes has been deprecated in 0.2. Please use the
