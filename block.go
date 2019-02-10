@@ -89,7 +89,7 @@ type Disk struct {
 	DriveType              DriveType         `json:"drive_type"`
 	StorageController      StorageController `json:"storage_controller"`
 	// NOTE(jaypipes): BusType is DEPRECATED. Use the DriveType and
-	// StorageProtocol fields instead
+	// StorageController fields instead
 	BusType BusType `json:"-"`
 	BusPath string  `json:"bus_path"`
 	// TODO(jaypipes): Convert this to a TopologyNode struct pointer and then
