@@ -9,16 +9,89 @@ package ghw
 import (
 	"fmt"
 	"math"
+	"strings"
 )
+
+// DriveType describes the general category of drive device
+type DriveType int
+
+const (
+	DRIVE_TYPE_UNKNOWN DriveType = iota
+	DRIVE_TYPE_HDD               // Hard disk drive
+	DRIVE_TYPE_FDD               // Floppy disk drive
+	DRIVE_TYPE_ODD               // Optical disk drive
+	DRIVE_TYPE_SSD               // Solid-state drive
+)
+
+var (
+	driveTypeString = map[DriveType]string{
+		DRIVE_TYPE_UNKNOWN: "Unknown",
+		DRIVE_TYPE_HDD:     "HDD",
+		DRIVE_TYPE_FDD:     "FDD",
+		DRIVE_TYPE_ODD:     "ODD",
+		DRIVE_TYPE_SSD:     "SSD",
+	}
+)
+
+func (dt DriveType) String() string {
+	return driveTypeString[dt]
+}
+
+// NOTE(jaypipes): since serialized output is as "official" as we're going to
+// get, let's lowercase the string output when serializing, in order to
+// "normalize" the expected serialized output
+func (dt DriveType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + strings.ToLower(dt.String()) + "\""), nil
+}
+
+// StorageController is a category of block storage controller/driver. It
+// represents more of the physical hardware interface than the storage
+// protocol, which represents more of the software interface.
+//
+// See discussion on https://github.com/jaypipes/ghw/issues/117
+type StorageController int
+
+const (
+	STORAGE_CONTROLLER_UNKNOWN StorageController = iota
+	STORAGE_CONTROLLER_IDE                       // Integrated Drive Electronics
+	STORAGE_CONTROLLER_SCSI                      // Small computer system interface
+	STORAGE_CONTROLLER_NVME                      // Non-volatile Memory Express
+	STORAGE_CONTROLLER_VIRTIO                    // Virtualized storage controller/driver
+)
+
+var (
+	storageControllerString = map[StorageController]string{
+		STORAGE_CONTROLLER_UNKNOWN: "Unknown",
+		STORAGE_CONTROLLER_IDE:     "IDE",
+		STORAGE_CONTROLLER_SCSI:    "SCSI",
+		STORAGE_CONTROLLER_NVME:    "NVMe",
+		STORAGE_CONTROLLER_VIRTIO:  "virtio",
+	}
+)
+
+func (sc StorageController) String() string {
+	return storageControllerString[sc]
+}
+
+// NOTE(jaypipes): since serialized output is as "official" as we're going to
+// get, let's lowercase the string output when serializing, in order to
+// "normalize" the expected serialized output
+func (sc StorageController) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + strings.ToLower(sc.String()) + "\""), nil
+}
 
 // Disk describes a single disk drive on the host system. Disk drives provide
 // raw block storage resources.
 type Disk struct {
-	Name                   string  `json:"name"`
-	SizeBytes              uint64  `json:"size_bytes"`
-	PhysicalBlockSizeBytes uint64  `json:"physical_block_size_bytes"`
-	BusType                BusType `json:"bus_type"`
-	BusPath                string  `json:"bus_path"`
+	Name                   string            `json:"name"`
+	SizeBytes              uint64            `json:"size_bytes"`
+	PhysicalBlockSizeBytes uint64            `json:"physical_block_size_bytes"`
+	DriveType              DriveType         `json:"drive_type"`
+	StorageController      StorageController `json:"storage_controller"`
+	// NOTE(jaypipes): BusType is DEPRECATED. Use the DriveType and
+	// StorageController fields instead
+	BusType BusType `json:"-"`
+	BusPath string  `json:"bus_path"`
 	// TODO(jaypipes): Convert this to a TopologyNode struct pointer and then
 	// add to serialized output as "numa_node,omitempty"
 	NUMANodeID   int          `json:"-"`
@@ -107,10 +180,11 @@ func (d *Disk) String() string {
 		wwn = " WWN=" + d.WWN
 	}
 	return fmt.Sprintf(
-		"/dev/%s (%s) [%s @ %s%s]%s%s%s%s",
+		"/dev/%s %s (%s) %s [@%s%s]%s%s%s%s",
 		d.Name,
+		d.DriveType.String(),
 		sizeStr,
-		d.BusType.String(),
+		d.StorageController.String(),
 		d.BusPath,
 		atNode,
 		vendor,

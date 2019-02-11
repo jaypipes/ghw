@@ -178,6 +178,44 @@ func (ctx *context) makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool)
 	}, nil
 }
 
+// driveTypeFromPlist looks at the supplied property list struct and attempts to
+// determine the disk type
+func (ctx *context) driveTypeFromPlist(
+	infoPlist *diskUtilInfoPlist,
+) DriveType {
+	dt := DRIVE_TYPE_HDD
+	if infoPlist.SolidState {
+		dt = DRIVE_TYPE_SSD
+	}
+	// TODO(jaypipes): Figure out how to determine floppy and/or CD/optical
+	// drive type on Mac
+	return dt
+}
+
+// storageControllerFromPlist looks at the supplied property list struct and
+// attempts to determine the storage controller in use for the device
+func (ctx *context) storageControllerFromPlist(
+	infoPlist *diskUtilInfoPlist,
+) StorageController {
+	sc := STORAGE_CONTROLLER_SCSI
+	if strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController") {
+		sc = STORAGE_CONTROLLER_NVME
+	}
+	// TODO(jaypipes): I don't know if Mac even supports IDE controllers and
+	// the "virtio" controller is libvirt-specific
+	return sc
+}
+
+// busTypeFromPlist looks at the supplied property list struct and attempts to
+// determine the bus type in use for the device
+func (ctx *context) busTypeFromPlist(
+	infoPlist *diskUtilInfoPlist,
+) BusType {
+	// TODO(jaypipes): Find out if Macs support any bus other than
+	// PCIe... it doesn't seem like they do
+	return BUS_TYPE_PCI
+}
+
 func (ctx *context) blockFillInfo(info *BlockInfo) error {
 	listPlist, err := ctx.getDiskUtilListPlist()
 	if err != nil {
@@ -214,7 +252,9 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			Name:                   disk.DeviceIdentifier,
 			SizeBytes:              uint64(disk.Size),
 			PhysicalBlockSizeBytes: uint64(infoPlist.DeviceBlockSize),
-			BusType:                infoPlist.BusProtocol,
+			DriveType:              ctx.driveTypeFromPlist(infoPlist),
+			StorageController:      ctx.storageControllerFromPlist(infoPlist),
+			BusType:                ctx.busTypeFromPlist(infoPlist),
 			BusPath:                busPath,
 			NUMANodeID:             -1,
 			Vendor:                 ioregPlist.VendorName,

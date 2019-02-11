@@ -6,7 +6,7 @@ DEP := $(BIN_DIR)/dep
 GOMETALINTER := $(BIN_DIR)/gometalinter
 
 .PHONY: test
-test: fmtcheck vet
+test: vet
 	go test $(PKGS)
 
 $(DEP):
