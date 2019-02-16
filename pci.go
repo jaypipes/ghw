@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
@@ -21,13 +22,82 @@ var (
 )
 
 type PCIDevice struct {
-	Address              string // The PCI address of the device
-	Vendor               *pcidb.Vendor
-	Product              *pcidb.Product
-	Subsystem            *pcidb.Product // optional subvendor/sub-device information
-	Class                *pcidb.Class
-	Subclass             *pcidb.Subclass             // optional sub-class for the device
-	ProgrammingInterface *pcidb.ProgrammingInterface // optional programming interface
+	// The PCI address of the device
+	Address   string         `json:"address"`
+	Vendor    *pcidb.Vendor  `json:"vendor"`
+	Product   *pcidb.Product `json:"product"`
+	Subsystem *pcidb.Product `json:"subsystem"`
+	// optional subvendor/sub-device information
+	Class *pcidb.Class `json:"class"`
+	// optional sub-class for the device
+	Subclass *pcidb.Subclass `json:"subclass"`
+	// optional programming interface
+	ProgrammingInterface *pcidb.ProgrammingInterface `json:"programming_interface"`
+}
+
+// NOTE(jaypipes) PCIDevice has a custom JSON marshaller because we don't want
+// to serialize the entire PCIDB information for the Vendor (which includes all
+// of the vendor's products, etc). Instead, we simply serialize the ID and
+// human-readable name of the vendor, product, class, etc.
+func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
+	b := bytes.NewBufferString("{")
+	b.WriteString(fmt.Sprintf("\"address\":\"%s\"", pd.Address))
+	b.WriteString(",\"vendor\": {")
+	b.WriteString(
+		fmt.Sprintf(
+			"\"id\":\"%s\",\"name\":\"%s\"",
+			pd.Vendor.ID,
+			pd.Vendor.Name,
+		),
+	)
+	b.WriteString("},")
+	b.WriteString("\"product\": {")
+	b.WriteString(
+		fmt.Sprintf(
+			"\"id\":\"%s\",\"name\":\"%s\"",
+			pd.Product.ID,
+			pd.Product.Name,
+		),
+	)
+	b.WriteString("},")
+	b.WriteString("\"subsystem\": {")
+	b.WriteString(
+		fmt.Sprintf(
+			"\"id\":\"%s\",\"name\":\"%s\"",
+			pd.Subsystem.ID,
+			pd.Subsystem.Name,
+		),
+	)
+	b.WriteString("},")
+	b.WriteString("\"class\": {")
+	b.WriteString(
+		fmt.Sprintf(
+			"\"id\":\"%s\",\"name\":\"%s\"",
+			pd.Class.ID,
+			pd.Class.Name,
+		),
+	)
+	b.WriteString("},")
+	b.WriteString("\"subclass\": {")
+	b.WriteString(
+		fmt.Sprintf(
+			"\"id\":\"%s\",\"name\":\"%s\"",
+			pd.Subclass.ID,
+			pd.Subclass.Name,
+		),
+	)
+	b.WriteString("},")
+	b.WriteString("\"programming_interface\": {")
+	b.WriteString(
+		fmt.Sprintf(
+			"\"id\":\"%s\",\"name\":\"%s\"",
+			pd.ProgrammingInterface.ID,
+			pd.ProgrammingInterface.Name,
+		),
+	)
+	b.WriteString("}")
+	b.WriteString("}")
+	return b.Bytes(), nil
 }
 
 func (di *PCIDevice) String() string {
