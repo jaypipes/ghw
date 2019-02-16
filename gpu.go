@@ -18,9 +18,8 @@ type GraphicsCard struct {
 	Index int `json:"index"`
 	// pointer to a PCIDevice struct that describes the vendor and product
 	// model, etc
-	// NOTE(jaypipes): Don't serialize the PCI device information until pcidb
-	// library is updated to marshal properly
-	DeviceInfo *PCIDevice `json:"-"`
+	// TODO(jaypipes): Rename this field to PCI, instead of DeviceInfo
+	DeviceInfo *PCIDevice `json:"pci"`
 	// Topology node that the graphics card is affined to. Will be nil if the
 	// architecture is not NUMA.
 	Node *TopologyNode `json:"node,omitempty"`

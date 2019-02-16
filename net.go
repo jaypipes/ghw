@@ -21,6 +21,8 @@ type NIC struct {
 	MacAddress   string           `json:"mac_address"`
 	IsVirtual    bool             `json:"is_virtual"`
 	Capabilities []*NICCapability `json:"capabilities"`
+	// TODO(jaypipes): Add PCI field for accessing PCI device information
+	// PCI *PCIDevice `json:"pci"`
 }
 
 func (n *NIC) String() string {

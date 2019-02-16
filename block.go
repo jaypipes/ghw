@@ -100,6 +100,8 @@ type Disk struct {
 	SerialNumber string       `json:"serial_number"`
 	WWN          string       `json:"wwn"`
 	Partitions   []*Partition `json:"partitions"`
+	// TODO(jaypipes): Add PCI field for accessing PCI device information
+	// PCI *PCIDevice `json:"pci"`
 }
 
 // Partition describes a logical division of a Disk.
