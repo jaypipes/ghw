@@ -342,7 +342,11 @@ func (ctx *context) disks() []*Disk {
 		if strings.HasPrefix(dname, "fd") {
 			driveType = DRIVE_TYPE_FDD
 		} else if strings.HasPrefix(dname, "sd") {
-			driveType = DRIVE_TYPE_HDD
+			if ctx.diskIsUSBConnected(dname) {
+				driveType = DRIVE_TYPE_USB_STORAGE
+			} else {
+				driveType = DRIVE_TYPE_HDD
+			}
 			busType = BUS_TYPE_SCSI
 			storageController = STORAGE_CONTROLLER_SCSI
 		} else if strings.HasPrefix(dname, "hd") {
@@ -411,6 +415,17 @@ func (ctx *context) diskIsRotational(devName string) bool {
 	path := filepath.Join(ctx.pathSysBlock(), devName, "queue", "rotational")
 	contents := safeIntFromFile(path)
 	return contents == 1
+}
+
+func (ctx *context) diskIsUSBConnected(devName string) bool {
+	if info, err := ctx.udevInfo(devName); err == nil {
+		if value, ok := info["ID_BUS"]; ok {
+			//shall we use this?
+			//ID_USB_DRIVER=usb-storage
+			return strings.Compare(value, "usb") == 0
+		}
+	}
+	return false
 }
 
 // PartitionSizeBytes has been deprecated in 0.2. Please use the

@@ -16,20 +16,22 @@ import (
 type DriveType int
 
 const (
-	DRIVE_TYPE_UNKNOWN DriveType = iota
-	DRIVE_TYPE_HDD               // Hard disk drive
-	DRIVE_TYPE_FDD               // Floppy disk drive
-	DRIVE_TYPE_ODD               // Optical disk drive
-	DRIVE_TYPE_SSD               // Solid-state drive
+	DRIVE_TYPE_UNKNOWN     DriveType = iota
+	DRIVE_TYPE_HDD                   // Hard disk drive
+	DRIVE_TYPE_FDD                   // Floppy disk drive
+	DRIVE_TYPE_ODD                   // Optical disk drive
+	DRIVE_TYPE_SSD                   // Solid-state drive
+	DRIVE_TYPE_USB_STORAGE           // USB flash drive, SSD/HDD by USB
 )
 
 var (
 	driveTypeString = map[DriveType]string{
-		DRIVE_TYPE_UNKNOWN: "Unknown",
-		DRIVE_TYPE_HDD:     "HDD",
-		DRIVE_TYPE_FDD:     "FDD",
-		DRIVE_TYPE_ODD:     "ODD",
-		DRIVE_TYPE_SSD:     "SSD",
+		DRIVE_TYPE_UNKNOWN:     "Unknown",
+		DRIVE_TYPE_HDD:         "HDD",
+		DRIVE_TYPE_FDD:         "FDD",
+		DRIVE_TYPE_ODD:         "ODD",
+		DRIVE_TYPE_SSD:         "SSD",
+		DRIVE_TYPE_USB_STORAGE: "USB-STORAGE",
 	}
 )
 
