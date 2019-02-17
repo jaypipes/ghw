@@ -70,6 +70,10 @@ func (ctx *context) nics() []*NIC {
 
 		mac := ctx.netDeviceMacAddress(filename)
 		nic.MacAddress = mac
+
+		nic.Vendor = ctx.nicVendor(filename)
+		nic.Model = ctx.nicModel(filename)
+
 		if etInstalled {
 			nic.Capabilities = ctx.netDeviceCapabilities(filename)
 		} else {
@@ -169,4 +173,53 @@ func netParseEthtoolFeature(line string) *NICCapability {
 		IsEnabled: enabled,
 		CanEnable: !fixed,
 	}
+}
+
+func (ctx *context) udevNICInfo(nic string) (map[string]string, error) {
+	// Get interface number
+	interfaceNo, err := ioutil.ReadFile(filepath.Join(ctx.pathSysClassNet(), nic, "ifindex"))
+	if err != nil {
+		return nil, err
+	}
+
+	// Look up in udev runtime database
+	interfaceID := "n" + strings.TrimSpace(string(interfaceNo))
+	udevBytes, err := ioutil.ReadFile(filepath.Join(ctx.pathRunUdevData(), interfaceID))
+	if err != nil {
+		return nil, err
+	}
+
+	udevInfo := make(map[string]string)
+	for _, udevLine := range strings.Split(string(udevBytes), "\n") {
+		if strings.HasPrefix(udevLine, "E:") {
+			if s := strings.SplitN(udevLine[2:], "=", 2); len(s) == 2 {
+				udevInfo[s[0]] = s[1]
+			}
+		}
+	}
+	return udevInfo, nil
+}
+
+func (ctx *context) nicVendor(nic string) string {
+	info, err := ctx.udevNICInfo(nic)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	if vendor, ok := info["ID_VENDOR_FROM_DATABASE"]; ok {
+		return vendor
+	}
+	return UNKNOWN
+}
+
+func (ctx *context) nicModel(nic string) string {
+	info, err := ctx.udevNICInfo(nic)
+	if err != nil {
+		return UNKNOWN
+	}
+
+	if model, ok := info["ID_MODEL_FROM_DATABASE"]; ok {
+		return model
+	}
+	return UNKNOWN
 }

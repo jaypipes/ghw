@@ -20,6 +20,8 @@ type NIC struct {
 	Name         string           `json:"name"`
 	MacAddress   string           `json:"mac_address"`
 	IsVirtual    bool             `json:"is_virtual"`
+	Vendor       string           `json:"vendor"`
+	Model        string           `json:"model"`
 	Capabilities []*NICCapability `json:"capabilities"`
 }
 
@@ -29,9 +31,11 @@ func (n *NIC) String() string {
 		isVirtualStr = " (virtual)"
 	}
 	return fmt.Sprintf(
-		"%s%s",
+		"Name: %s%s\n Vendor: %s\n Model: %s",
 		n.Name,
 		isVirtualStr,
+		n.Vendor,
+		n.Model,
 	)
 }
 
