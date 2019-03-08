@@ -18,6 +18,8 @@ type context struct {
 	chroot string
 }
 
+// HostInfo is a wrapper struct containing information about the host system's
+// memory, block storage, CPU, etc
 type HostInfo struct {
 	Memory   *MemoryInfo   `json:"memory"`
 	Block    *BlockInfo    `json:"block"`
@@ -68,6 +70,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	}, nil
 }
 
+// String returns a newline-separated output of the HostInfo's component
+// structs' String-ified output
 func (info *HostInfo) String() string {
 	return fmt.Sprintf(
 		"%s\n%s\n%s\n%s\n%s\n%s\n",
