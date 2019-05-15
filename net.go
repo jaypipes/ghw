@@ -20,8 +20,6 @@ type NIC struct {
 	Name         string           `json:"name"`
 	MacAddress   string           `json:"mac_address"`
 	IsVirtual    bool             `json:"is_virtual"`
-	Vendor       string           `json:"vendor"`
-	Model        string           `json:"model"`
 	Capabilities []*NICCapability `json:"capabilities"`
 	// TODO(jaypipes): Add PCI field for accessing PCI device information
 	// PCI *PCIDevice `json:"pci"`
@@ -33,11 +31,9 @@ func (n *NIC) String() string {
 		isVirtualStr = " (virtual)"
 	}
 	return fmt.Sprintf(
-		"Name: %s%s\n Vendor: %s\n Model: %s",
+		"%s%s",
 		n.Name,
 		isVirtualStr,
-		n.Vendor,
-		n.Model,
 	)
 }
 
