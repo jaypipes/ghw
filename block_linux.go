@@ -55,11 +55,11 @@ func (ctx *context) diskPhysicalBlockSizeBytes(disk string) uint64 {
 	if err != nil {
 		return 0
 	}
-	i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
+	size, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 64)
 	if err != nil {
 		return 0
 	}
-	return uint64(i)
+	return size
 }
 
 // DiskSizeBytes has been deprecated in 0.2. Please use the Disk.SizeBytes
@@ -83,11 +83,11 @@ func (ctx *context) diskSizeBytes(disk string) uint64 {
 	if err != nil {
 		return 0
 	}
-	i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
+	size, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 64)
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * sectorSize
+	return size * sectorSize
 }
 
 // DiskNUMANodeID has been deprecated in 0.2. Please use the Disk.NUMANodeID
@@ -438,11 +438,11 @@ func (ctx *context) partitionSizeBytes(part string) uint64 {
 	if err != nil {
 		return 0
 	}
-	i, err := strconv.Atoi(strings.TrimSpace(string(contents)))
+	size, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 64)
 	if err != nil {
 		return 0
 	}
-	return uint64(i) * sectorSize
+	return size * sectorSize
 }
 
 // PartitionInfo has been deprecated in 0.2. Please use the Partition struct.
