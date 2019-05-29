@@ -361,6 +361,10 @@ func (ctx *context) disks() []*Disk {
 			driveType = DRIVE_TYPE_ODD
 			busType = BUS_TYPE_SCSI
 			storageController = STORAGE_CONTROLLER_SCSI
+		} else if strings.HasPrefix(dname, "xvd") {
+			driveType = DRIVE_TYPE_HDD
+			busType = BUS_TYPE_SCSI
+			storageController = STORAGE_CONTROLLER_SCSI
 		}
 
 		if driveType == DRIVE_TYPE_UNKNOWN {
