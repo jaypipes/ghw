@@ -332,48 +332,16 @@ func (ctx *context) disks() []*Disk {
 	}
 	for _, file := range files {
 		dname := file.Name()
-
-		// The conditionals below which set the controller and drive type are
-		// based on information listed here:
-		// https://en.wikipedia.org/wiki/Device_file
-		busType := BUS_TYPE_UNKNOWN
-		driveType := DRIVE_TYPE_UNKNOWN
-		storageController := STORAGE_CONTROLLER_UNKNOWN
-		if strings.HasPrefix(dname, "fd") {
-			driveType = DRIVE_TYPE_FDD
-		} else if strings.HasPrefix(dname, "sd") {
-			driveType = DRIVE_TYPE_HDD
-			busType = BUS_TYPE_SCSI
-			storageController = STORAGE_CONTROLLER_SCSI
-		} else if strings.HasPrefix(dname, "hd") {
-			driveType = DRIVE_TYPE_HDD
-			busType = BUS_TYPE_IDE
-			storageController = STORAGE_CONTROLLER_IDE
-		} else if strings.HasPrefix(dname, "vd") {
-			driveType = DRIVE_TYPE_HDD
-			busType = BUS_TYPE_VIRTIO
-			storageController = STORAGE_CONTROLLER_VIRTIO
-		} else if regexNVMeDev.MatchString(dname) {
-			driveType = DRIVE_TYPE_HDD
-			busType = BUS_TYPE_NVME
-			storageController = STORAGE_CONTROLLER_NVME
-		} else if strings.HasPrefix(dname, "sr") {
-			driveType = DRIVE_TYPE_ODD
-			busType = BUS_TYPE_SCSI
-			storageController = STORAGE_CONTROLLER_SCSI
-		} else if strings.HasPrefix(dname, "xvd") {
-			driveType = DRIVE_TYPE_HDD
-			busType = BUS_TYPE_SCSI
-			storageController = STORAGE_CONTROLLER_SCSI
-		}
-
-		if driveType == DRIVE_TYPE_UNKNOWN {
+		if strings.HasPrefix(dname, "loop") {
 			continue
 		}
+
+		driveType, storageController, busType := diskTypes(dname)
+		// TODO(jaypipes): Move this into diskTypes() once abstracting
+		// diskIsRotational for ease of unit testing
 		if !ctx.diskIsRotational(dname) {
 			driveType = DRIVE_TYPE_SSD
 		}
-
 		size := ctx.diskSizeBytes(dname)
 		pbs := ctx.diskPhysicalBlockSizeBytes(dname)
 		busPath := ctx.diskBusPath(dname)
@@ -409,6 +377,53 @@ func (ctx *context) disks() []*Disk {
 	}
 
 	return disks
+}
+
+// diskTypes returns the drive type, storage controller and bus type of a disk
+func diskTypes(dname string) (
+	DriveType,
+	StorageController,
+	BusType,
+) {
+	// The conditionals below which set the controller and drive type are
+	// based on information listed here:
+	// https://en.wikipedia.org/wiki/Device_file
+	busType := BUS_TYPE_UNKNOWN
+	driveType := DRIVE_TYPE_UNKNOWN
+	storageController := STORAGE_CONTROLLER_UNKNOWN
+	if strings.HasPrefix(dname, "fd") {
+		driveType = DRIVE_TYPE_FDD
+	} else if strings.HasPrefix(dname, "sd") {
+		driveType = DRIVE_TYPE_HDD
+		busType = BUS_TYPE_SCSI
+		storageController = STORAGE_CONTROLLER_SCSI
+	} else if strings.HasPrefix(dname, "hd") {
+		driveType = DRIVE_TYPE_HDD
+		busType = BUS_TYPE_IDE
+		storageController = STORAGE_CONTROLLER_IDE
+	} else if strings.HasPrefix(dname, "vd") {
+		driveType = DRIVE_TYPE_HDD
+		busType = BUS_TYPE_VIRTIO
+		storageController = STORAGE_CONTROLLER_VIRTIO
+	} else if regexNVMeDev.MatchString(dname) {
+		driveType = DRIVE_TYPE_SSD
+		busType = BUS_TYPE_NVME
+		storageController = STORAGE_CONTROLLER_NVME
+	} else if strings.HasPrefix(dname, "sr") {
+		driveType = DRIVE_TYPE_ODD
+		busType = BUS_TYPE_SCSI
+		storageController = STORAGE_CONTROLLER_SCSI
+	} else if strings.HasPrefix(dname, "xvd") {
+		driveType = DRIVE_TYPE_HDD
+		busType = BUS_TYPE_SCSI
+		storageController = STORAGE_CONTROLLER_SCSI
+	} else if strings.HasPrefix(dname, "mmc") {
+		driveType = DRIVE_TYPE_SSD
+		busType = BUS_TYPE_UNKNOWN
+		storageController = STORAGE_CONTROLLER_MMC
+	}
+
+	return driveType, storageController, busType
 }
 
 func (ctx *context) diskIsRotational(devName string) bool {

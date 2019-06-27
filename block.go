@@ -57,6 +57,7 @@ const (
 	STORAGE_CONTROLLER_SCSI                      // Small computer system interface
 	STORAGE_CONTROLLER_NVME                      // Non-volatile Memory Express
 	STORAGE_CONTROLLER_VIRTIO                    // Virtualized storage controller/driver
+	STORAGE_CONTROLLER_MMC                       // Multi-media controller (used for mobile phone storage devices)
 )
 
 var (
@@ -66,6 +67,7 @@ var (
 		STORAGE_CONTROLLER_SCSI:    "SCSI",
 		STORAGE_CONTROLLER_NVME:    "NVMe",
 		STORAGE_CONTROLLER_VIRTIO:  "virtio",
+		STORAGE_CONTROLLER_MMC:     "MMC",
 	}
 )
 
