@@ -260,7 +260,7 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.StorageController` is the type of storage controller/drive. It is
   of type `ghw.StorageController` which has a `ghw.StorageController.String()`
   method that can be called to return a string representation of the bus. This
-  string will be "SCSI", "IDE", "virtio", or "NVMe"
+  string will be "SCSI", "IDE", "virtio", "MMC", or "NVMe"
 * `ghw.Disk.NUMANodeID` is the numeric index of the NUMA node this disk is
   local to, or -1
 * `ghw.Disk.Vendor` contains a string with the name of the hardware vendor for
