@@ -326,6 +326,11 @@ block storage (1 disk, 2TB physical storage)
   /dev/sda6 (2TB) [ext4] mounted@/
 ```
 
+> Note that `ghw` looks in the udev runtime database for some information. If
+> you are using `ghw` in a container, remember to bind mount `/dev/disk` and
+> `/run` into your container, otherwise `ghw` won't be able to query the udev
+> DB or sysfs paths for information.
+
 ### Topology
 
 Information about the host computer's architecture (NUMA vs. SMP), the host's
