@@ -63,6 +63,9 @@ func showAll(cmd *cobra.Command, args []string) error {
 		if err := showBlock(cmd, args); err != nil {
 			return err
 		}
+		if err := showDMI(cmd, args); err != nil {
+			return err
+		}
 		if err := showCPU(cmd, args); err != nil {
 			return err
 		}

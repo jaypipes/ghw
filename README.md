@@ -35,6 +35,7 @@ information about the host computer:
 * [Network](#network)
 * [PCI](#pci)
 * [GPU](#gpu)
+* [DMI](#dmi)
 * [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
@@ -823,6 +824,71 @@ information
 **NOTE**: You can [read more](#topology) about the fields of the
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
+
+### DMI
+
+The information of the host machine's details such as BIOS, product, board
+and chassis information are accessible from the `ghw.DMI()` function.  This
+function returns a pointer to a `ghw.DMIInfo` struct.
+
+The `ghw.DMIInfo` struct contains multiple fields:
+
+* `ghw.DMIInfo.BIOSInfo` is a struct containing BIOS information including
+  things like date and version.
+* `ghw.DMIInfo.BoardInfo` is a struct containing motherboard information
+  with details on asset tags, serial, type and vendor with version.
+* `ghw.DMIInfo.ChassisInfo` is a struct containing chassis information
+  with specifics to model, serial and vendor.
+* `ghw.DMIInfo.ProductInfo` is a struct containing product information
+  giving you what type of system you have
+* `ghw.DMIInfo.SystemInfo` is a struct containing system information,
+  mostly around system vendor.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	dmi, err := ghw.DMI()
+	if err != nil {
+		fmt.Printf("Error getting DMI info: %v", err)
+	}
+
+	fmt.Printf("%v\n", dmi)
+}
+```
+
+Example output from my personal workstation:
+
+```
+dmi
+  bios: {Date:08/06/2019 Vendor:LENOVO Version:N2EET42W (1.24 )}
+  board: {AssetTag:Not Available Serial:unknown Vendor:LENOVO Version:SDK0J40697 WIN}
+  chassis: {AssetTag:No Asset Information Serial:unknown Type:10 Vendor:LENOVO Version:None}
+  product: {Name:20MF000DUS Serial:unknown UUID:unknown Version:ThinkPad X1 Extreme}
+  system: {Vendor:LENOVO}
+```
+
+**NOTE**: Some of the values such as serial numbers are shown as unknown because
+the Linux kernel by default disallows access to those fields if you're not running
+as root.  They will be populated if it runs as root or otherwise you may see warnings
+like the following:
+
+```
+WARNING: Unable to read board_serial because of open /sys/class/dmi/id/board_serial: permission denied
+WARNING: Unable to read chassis_serial because of open /sys/class/dmi/id/chassis_serial: permission denied
+WARNING: Unable to read product_serial because of open /sys/class/dmi/id/product_serial: permission denied
+WARNING: Unable to read product_uuid because of open /sys/class/dmi/id/product_uuid: permission denied
+```
+
+You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
+feature to quiet things down.
+
 
 ## Serialization
 

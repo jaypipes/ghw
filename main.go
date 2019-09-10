@@ -27,6 +27,7 @@ type HostInfo struct {
 	Topology *TopologyInfo `json:"topology"`
 	Network  *NetworkInfo  `json:"network"`
 	GPU      *GPUInfo      `json:"gpu"`
+	DMI      *DMIInfo      `json:"dmi"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -60,6 +61,10 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err := ctx.gpuFillInfo(gpu); err != nil {
 		return nil, err
 	}
+	dmi := &DMIInfo{}
+	if err := ctx.dmiFillInfo(dmi); err != nil {
+		return nil, err
+	}
 	return &HostInfo{
 		CPU:      cpu,
 		Memory:   mem,
@@ -67,6 +72,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Topology: topology,
 		Network:  net,
 		GPU:      gpu,
+		DMI:      dmi,
 	}, nil
 }
 
@@ -74,8 +80,9 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 // structs' String-ified output
 func (info *HostInfo) String() string {
 	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s\n%s\n%s\n",
+		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		info.Block.String(),
+		info.DMI.String(),
 		info.CPU.String(),
 		info.GPU.String(),
 		info.Memory.String(),
