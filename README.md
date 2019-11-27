@@ -44,6 +44,7 @@ information about the host computer:
 * [Chassis](#chassis)
 * [BIOS](#bios)
 * [Baseboard](#baseboard)
+* [Product](#product)
 * [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
@@ -969,7 +970,62 @@ as root.  They will be populated if it runs as root or otherwise you may see war
 like the following:
 
 ```
-WARNING: Unable to read baseboard_serial: open /sys/class/dmi/id/baseboard_serial: permission denied
+WARNING: Unable to read board_serial: open /sys/class/dmi/id/board_serial: permission denied
+```
+
+You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
+feature to quiet things down.
+
+### Product
+
+The host's product information is accessible with the `ghw.Product()` function.  This
+function returns a pointer to a `ghw.ProductInfo` struct.
+
+The `ghw.ProductInfo` struct contains multiple fields:
+
+* `ghw.ProductInfo.Family` is a string describing the product family
+* `ghw.ProductInfo.Name` is a string with the product name
+* `ghw.ProductInfo.SerialNumber` is a string with the product serial number
+* `ghw.ProductInfo.UUID` is a string with the product UUID
+* `ghw.ProductInfo.SKU` is a string with the product stock unit identifier (SKU)
+* `ghw.ProductInfo.Vendor` is a string with the product vendor
+* `ghw.ProductInfo.Version` is a string with the product version
+
+**NOTE**: These fields are often missing for non-server hardware. Don't be
+surprised to see empty string, "Default string" or "None" values.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	product, err := ghw.Product()
+	if err != nil {
+		fmt.Printf("Error getting product info: %v", err)
+	}
+
+	fmt.Printf("%v\n", product)
+}
+```
+
+Example output from my personal workstation:
+
+```
+product family=Default string name=Thelio vendor=System76 sku=Default string version=thelio-r1
+```
+
+**NOTE**: Some of the values such as serial numbers are shown as unknown because
+the Linux kernel by default disallows access to those fields if you're not running
+as root.  They will be populated if it runs as root or otherwise you may see warnings
+like the following:
+
+```
+WARNING: Unable to read product_serial: open /sys/class/dmi/id/product_serial: permission denied
 ```
 
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)

@@ -11,18 +11,6 @@ import (
 	"strings"
 )
 
-func (ctx *context) dmiFillInfo(info *DMIInfo) error {
-
-	info.Product.Name = ctx.dmiItem("product_name")
-	info.Product.Serial = ctx.dmiItem("product_serial")
-	info.Product.UUID = ctx.dmiItem("product_uuid")
-	info.Product.Version = ctx.dmiItem("product_version")
-
-	info.System.Vendor = ctx.dmiItem("sys_vendor")
-
-	return nil
-}
-
 func (ctx *context) dmiItem(value string) string {
 	path := filepath.Join(ctx.pathSysClassDMI(), "id", value)
 
