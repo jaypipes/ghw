@@ -137,6 +137,9 @@ func (ctx *context) getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "ioreg query for %q failed", ioDeviceTreePath)
 	}
+	if out == nil || len(out) == 0 {
+		return nil, nil
+	}
 
 	var data []ioregPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
@@ -245,6 +248,9 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 		ioregPlist, err := ctx.getIoregPlist(infoPlist.DeviceTreePath)
 		if err != nil {
 			return err
+		}
+		if ioregPlist == nil {
+			continue
 		}
 
 		// The NUMA node & WWN don't seem to be reported by any tools available by default in macOS.
