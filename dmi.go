@@ -34,15 +34,6 @@ type BoardInfo struct {
 	Version  string `json:"version"`
 }
 
-// ChassisInfo defines chassis release information
-type ChassisInfo struct {
-	AssetTag string `json:"asset_tag"`
-	Serial   string `json:"serial"`
-	Type     string `json:"type"`
-	Vendor   string `json:"vendor"`
-	Version  string `json:"version"`
-}
-
 // ProductInfo defines product information
 type ProductInfo struct {
 	Name    string `json:"name"`

@@ -12,9 +12,15 @@ support is planned for a future release.
   host hardware information as directly as possible without relying on shellouts
   to programs like `dmidecode` that require root privileges to execute.
 
+  Elevated privileges are indeed required to query for some information, but
+  `ghw` will never error out if blocked from reading that information. Instead,
+  `ghw` will print a warning message about the information that could not be
+  retrieved. You may disable these warning messages with `GHW_DISABLE_WARNINGS`
+  environment variable.
+
 * Well-documented code and plenty of example code
 
-  The code itself should be well-documented, of course, with lots of usage
+  The code itself should be well-documented with lots of usage
   examples.
 
 * Interfaces should be consistent across modules
@@ -35,7 +41,7 @@ information about the host computer:
 * [Network](#network)
 * [PCI](#pci)
 * [GPU](#gpu)
-* [DMI](#dmi)
+* [Chassis](#chassis)
 * [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
@@ -825,24 +831,22 @@ information
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
 
-### DMI
+### Chassis
 
-The information of the host machine's details such as BIOS, product, board
-and chassis information are accessible from the `ghw.DMI()` function.  This
-function returns a pointer to a `ghw.DMIInfo` struct.
+The host's chassis information is accessible with the `ghw.Chassis()` function.  This
+function returns a pointer to a `ghw.ChassisInfo` struct.
 
-The `ghw.DMIInfo` struct contains multiple fields:
+The `ghw.ChassisInfo` struct contains multiple fields:
 
-* `ghw.DMIInfo.BIOSInfo` is a struct containing BIOS information including
-  things like date and version.
-* `ghw.DMIInfo.BoardInfo` is a struct containing motherboard information
-  with details on asset tags, serial, type and vendor with version.
-* `ghw.DMIInfo.ChassisInfo` is a struct containing chassis information
-  with specifics to model, serial and vendor.
-* `ghw.DMIInfo.ProductInfo` is a struct containing product information
-  giving you what type of system you have
-* `ghw.DMIInfo.SystemInfo` is a struct containing system information,
-  mostly around system vendor.
+* `ghw.ChassisInfo.AssetTag` is a string with the chassis asset tag
+* `ghw.ChassisInfo.SerialNumber` is a string with the chassis serial number
+* `ghw.ChassisInfo.Type` is a string with the chassis type *code*
+* `ghw.ChassisInfo.TypeDescription` is a string with a description of the chassis type
+* `ghw.ChassisInfo.Vendor` is a string with the chassis vendor
+* `ghw.ChassisInfo.Version` is a string with the chassis version
+
+**NOTE**: These fields are often missing for non-server hardware. Don't be
+surprised to see empty string or "None" values.
 
 ```go
 package main
@@ -854,24 +858,19 @@ import (
 )
 
 func main() {
-	dmi, err := ghw.DMI()
+	chassis, err := ghw.Chassis()
 	if err != nil {
-		fmt.Printf("Error getting DMI info: %v", err)
+		fmt.Printf("Error getting chassis info: %v", err)
 	}
 
-	fmt.Printf("%v\n", dmi)
+	fmt.Printf("%v\n", chassis)
 }
 ```
 
 Example output from my personal workstation:
 
 ```
-dmi
-  bios: {Date:08/06/2019 Vendor:LENOVO Version:N2EET42W (1.24 )}
-  board: {AssetTag:Not Available Serial:unknown Vendor:LENOVO Version:SDK0J40697 WIN}
-  chassis: {AssetTag:No Asset Information Serial:unknown Type:10 Vendor:LENOVO Version:None}
-  product: {Name:20MF000DUS Serial:unknown UUID:unknown Version:ThinkPad X1 Extreme}
-  system: {Vendor:LENOVO}
+chassis type=Desktop vendor=System76 version=thelio-r1
 ```
 
 **NOTE**: Some of the values such as serial numbers are shown as unknown because
@@ -880,10 +879,7 @@ as root.  They will be populated if it runs as root or otherwise you may see war
 like the following:
 
 ```
-WARNING: Unable to read board_serial because of open /sys/class/dmi/id/board_serial: permission denied
-WARNING: Unable to read chassis_serial because of open /sys/class/dmi/id/chassis_serial: permission denied
-WARNING: Unable to read product_serial because of open /sys/class/dmi/id/product_serial: permission denied
-WARNING: Unable to read product_uuid because of open /sys/class/dmi/id/product_uuid: permission denied
+WARNING: Unable to read chassis_serial: open /sys/class/dmi/id/chassis_serial: permission denied
 ```
 
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)

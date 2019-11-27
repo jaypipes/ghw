@@ -7,41 +7,36 @@ package ghw
 
 import (
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 )
 
 func (ctx *context) dmiFillInfo(info *DMIInfo) error {
-	info.BIOS.Date = readDMI("bios_date")
-	info.BIOS.Vendor = readDMI("bios_vendor")
-	info.BIOS.Version = readDMI("bios_version")
+	info.BIOS.Date = ctx.dmiItem("bios_date")
+	info.BIOS.Vendor = ctx.dmiItem("bios_vendor")
+	info.BIOS.Version = ctx.dmiItem("bios_version")
 
-	info.Board.AssetTag = readDMI("board_asset_tag")
-	info.Board.Serial = readDMI("board_serial")
-	info.Board.Vendor = readDMI("board_vendor")
-	info.Board.Version = readDMI("board_version")
+	info.Board.AssetTag = ctx.dmiItem("board_asset_tag")
+	info.Board.Serial = ctx.dmiItem("board_serial")
+	info.Board.Vendor = ctx.dmiItem("board_vendor")
+	info.Board.Version = ctx.dmiItem("board_version")
 
-	info.Chassis.AssetTag = readDMI("chassis_asset_tag")
-	info.Chassis.Serial = readDMI("chassis_serial")
-	info.Chassis.Type = readDMI("chassis_type")
-	info.Chassis.Vendor = readDMI("chassis_vendor")
-	info.Chassis.Version = readDMI("chassis_version")
+	info.Product.Name = ctx.dmiItem("product_name")
+	info.Product.Serial = ctx.dmiItem("product_serial")
+	info.Product.UUID = ctx.dmiItem("product_uuid")
+	info.Product.Version = ctx.dmiItem("product_version")
 
-	info.Product.Name = readDMI("product_name")
-	info.Product.Serial = readDMI("product_serial")
-	info.Product.UUID = readDMI("product_uuid")
-	info.Product.Version = readDMI("product_version")
-
-	info.System.Vendor = readDMI("sys_vendor")
+	info.System.Vendor = ctx.dmiItem("sys_vendor")
 
 	return nil
 }
 
-func readDMI(value string) string {
-	path := "/sys/class/dmi/id/" + value
+func (ctx *context) dmiItem(value string) string {
+	path := filepath.Join(ctx.pathSysClassDMI(), "id", value)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		warn("Unable to read " + value + " because of " + err.Error() + "\n")
+		warn("Unable to read %s: %s\n", value, err)
 		return UNKNOWN
 	}
 

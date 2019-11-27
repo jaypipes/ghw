@@ -63,9 +63,6 @@ func showAll(cmd *cobra.Command, args []string) error {
 		if err := showBlock(cmd, args); err != nil {
 			return err
 		}
-		if err := showDMI(cmd, args); err != nil {
-			return err
-		}
 		if err := showCPU(cmd, args); err != nil {
 			return err
 		}
@@ -79,6 +76,9 @@ func showAll(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if err := showTopology(cmd, args); err != nil {
+			return err
+		}
+		if err := showChassis(cmd, args); err != nil {
 			return err
 		}
 	case outputFormatJSON:
