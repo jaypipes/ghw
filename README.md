@@ -42,6 +42,7 @@ information about the host computer:
 * [PCI](#pci)
 * [GPU](#gpu)
 * [Chassis](#chassis)
+* [BIOS](#bios)
 * [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
@@ -885,6 +886,41 @@ WARNING: Unable to read chassis_serial: open /sys/class/dmi/id/chassis_serial: p
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
 feature to quiet things down.
 
+### BIOS
+
+The host's basis input/output system (BIOS) information is accessible with the `ghw.BIOS()` function.  This
+function returns a pointer to a `ghw.BIOSInfo` struct.
+
+The `ghw.BIOSInfo` struct contains multiple fields:
+
+* `ghw.BIOSInfo.Vendor` is a string with the BIOS vendor
+* `ghw.BIOSInfo.Version` is a string with the BIOS version
+* `ghw.BIOSInfo.Date` is a string with the date the BIOS was flashed/created
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	bios, err := ghw.BIOS()
+	if err != nil {
+		fmt.Printf("Error getting BIOS info: %v", err)
+	}
+
+	fmt.Printf("%v\n", bios)
+}
+```
+
+Example output from my personal workstation:
+
+```
+bios vendor=System76 version=F2 Z5 date=11/14/2018
+```
 
 ## Serialization
 

@@ -12,9 +12,6 @@ import (
 )
 
 func (ctx *context) dmiFillInfo(info *DMIInfo) error {
-	info.BIOS.Date = ctx.dmiItem("bios_date")
-	info.BIOS.Vendor = ctx.dmiItem("bios_vendor")
-	info.BIOS.Version = ctx.dmiItem("bios_version")
 
 	info.Board.AssetTag = ctx.dmiItem("board_asset_tag")
 	info.Board.Serial = ctx.dmiItem("board_serial")

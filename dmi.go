@@ -19,13 +19,6 @@ type DMIInfo struct {
 	System  SystemInfo  `json:"system"`
 }
 
-// BIOSInfo defines BIOS release information
-type BIOSInfo struct {
-	Date    string `json:"date"`
-	Vendor  string `json:"vendor"`
-	Version string `json:"version"`
-}
-
 // BoardInfo defines motherboard release information
 type BoardInfo struct {
 	AssetTag string `json:"asset_tag"`
