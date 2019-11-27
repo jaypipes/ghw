@@ -43,6 +43,7 @@ information about the host computer:
 * [GPU](#gpu)
 * [Chassis](#chassis)
 * [BIOS](#bios)
+* [Baseboard](#baseboard)
 * [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
@@ -921,6 +922,58 @@ Example output from my personal workstation:
 ```
 bios vendor=System76 version=F2 Z5 date=11/14/2018
 ```
+
+### Baseboard
+
+The host's baseboard information is accessible with the `ghw.Baseboard()` function.  This
+function returns a pointer to a `ghw.BaseboardInfo` struct.
+
+The `ghw.BaseboardInfo` struct contains multiple fields:
+
+* `ghw.BaseboardInfo.AssetTag` is a string with the baseboard asset tag
+* `ghw.BaseboardInfo.SerialNumber` is a string with the baseboard serial number
+* `ghw.BaseboardInfo.Vendor` is a string with the baseboard vendor
+* `ghw.BaseboardInfo.Version` is a string with the baseboard version
+
+**NOTE**: These fields are often missing for non-server hardware. Don't be
+surprised to see empty string or "None" values.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	baseboard, err := ghw.Baseboard()
+	if err != nil {
+		fmt.Printf("Error getting baseboard info: %v", err)
+	}
+
+	fmt.Printf("%v\n", baseboard)
+}
+```
+
+Example output from my personal workstation:
+
+```
+baseboard vendor=System76 version=thelio-r1
+```
+
+**NOTE**: Some of the values such as serial numbers are shown as unknown because
+the Linux kernel by default disallows access to those fields if you're not running
+as root.  They will be populated if it runs as root or otherwise you may see warnings
+like the following:
+
+```
+WARNING: Unable to read baseboard_serial: open /sys/class/dmi/id/baseboard_serial: permission denied
+```
+
+You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
+feature to quiet things down.
 
 ## Serialization
 

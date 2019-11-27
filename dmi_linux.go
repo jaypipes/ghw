@@ -13,11 +13,6 @@ import (
 
 func (ctx *context) dmiFillInfo(info *DMIInfo) error {
 
-	info.Board.AssetTag = ctx.dmiItem("board_asset_tag")
-	info.Board.Serial = ctx.dmiItem("board_serial")
-	info.Board.Vendor = ctx.dmiItem("board_vendor")
-	info.Board.Version = ctx.dmiItem("board_version")
-
 	info.Product.Name = ctx.dmiItem("product_name")
 	info.Product.Serial = ctx.dmiItem("product_serial")
 	info.Product.UUID = ctx.dmiItem("product_uuid")

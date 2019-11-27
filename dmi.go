@@ -12,19 +12,11 @@ import (
 
 // DMIInfo describes all the information for the hardware
 type DMIInfo struct {
-	BIOS    BIOSInfo    `json:"bios_info"`
-	Board   BoardInfo   `json:"board"`
-	Chassis ChassisInfo `json:"chassis"`
-	Product ProductInfo `json:"product"`
-	System  SystemInfo  `json:"system"`
-}
-
-// BoardInfo defines motherboard release information
-type BoardInfo struct {
-	AssetTag string `json:"asset_tag"`
-	Serial   string `json:"serial"`
-	Vendor   string `json:"vendor"`
-	Version  string `json:"version"`
+	BIOS      BIOSInfo      `json:"bios_info"`
+	Baseboard BaseboardInfo `json:"board"`
+	Chassis   ChassisInfo   `json:"chassis"`
+	Product   ProductInfo   `json:"product"`
+	System    SystemInfo    `json:"system"`
 }
 
 // ProductInfo defines product information
@@ -44,7 +36,7 @@ func (info *DMIInfo) String() string {
 	return fmt.Sprintf(
 		"dmi\n  bios: %+v\n  board: %+v\n  chassis: %+v\n  product: %+v\n  system: %+v",
 		info.BIOS,
-		info.Board,
+		info.Baseboard,
 		info.Chassis,
 		info.Product,
 		info.System,
