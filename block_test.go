@@ -67,7 +67,7 @@ func TestBlock(t *testing.T) {
 	for _, p := range d0.Partitions {
 		// Check that all the singular functions return the same information as
 		// the information constructed by ghw.Block()
-		ps := ctx.partitionSizeBytes(p.Name)
+		ps := ctx.partitionSizeBytes(d0.Name, p.Name)
 		if ps != p.SizeBytes {
 			t.Fatalf("Expected matching size, but got %d != %d",
 				ps, p.SizeBytes)
