@@ -12,9 +12,15 @@ support is planned for a future release.
   host hardware information as directly as possible without relying on shellouts
   to programs like `dmidecode` that require root privileges to execute.
 
+  Elevated privileges are indeed required to query for some information, but
+  `ghw` will never error out if blocked from reading that information. Instead,
+  `ghw` will print a warning message about the information that could not be
+  retrieved. You may disable these warning messages with `GHW_DISABLE_WARNINGS`
+  environment variable.
+
 * Well-documented code and plenty of example code
 
-  The code itself should be well-documented, of course, with lots of usage
+  The code itself should be well-documented with lots of usage
   examples.
 
 * Interfaces should be consistent across modules
@@ -35,6 +41,10 @@ information about the host computer:
 * [Network](#network)
 * [PCI](#pci)
 * [GPU](#gpu)
+* [Chassis](#chassis)
+* [BIOS](#bios)
+* [Baseboard](#baseboard)
+* [Product](#product)
 * [YAML and JSON serialization](#serialization)
 
 ### Overriding the root mountpoint `ghw` uses
@@ -823,6 +833,203 @@ information
 **NOTE**: You can [read more](#topology) about the fields of the
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
+
+### Chassis
+
+The host's chassis information is accessible with the `ghw.Chassis()` function.  This
+function returns a pointer to a `ghw.ChassisInfo` struct.
+
+The `ghw.ChassisInfo` struct contains multiple fields:
+
+* `ghw.ChassisInfo.AssetTag` is a string with the chassis asset tag
+* `ghw.ChassisInfo.SerialNumber` is a string with the chassis serial number
+* `ghw.ChassisInfo.Type` is a string with the chassis type *code*
+* `ghw.ChassisInfo.TypeDescription` is a string with a description of the chassis type
+* `ghw.ChassisInfo.Vendor` is a string with the chassis vendor
+* `ghw.ChassisInfo.Version` is a string with the chassis version
+
+**NOTE**: These fields are often missing for non-server hardware. Don't be
+surprised to see empty string or "None" values.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	chassis, err := ghw.Chassis()
+	if err != nil {
+		fmt.Printf("Error getting chassis info: %v", err)
+	}
+
+	fmt.Printf("%v\n", chassis)
+}
+```
+
+Example output from my personal workstation:
+
+```
+chassis type=Desktop vendor=System76 version=thelio-r1
+```
+
+**NOTE**: Some of the values such as serial numbers are shown as unknown because
+the Linux kernel by default disallows access to those fields if you're not running
+as root.  They will be populated if it runs as root or otherwise you may see warnings
+like the following:
+
+```
+WARNING: Unable to read chassis_serial: open /sys/class/dmi/id/chassis_serial: permission denied
+```
+
+You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
+feature to quiet things down.
+
+### BIOS
+
+The host's basis input/output system (BIOS) information is accessible with the `ghw.BIOS()` function.  This
+function returns a pointer to a `ghw.BIOSInfo` struct.
+
+The `ghw.BIOSInfo` struct contains multiple fields:
+
+* `ghw.BIOSInfo.Vendor` is a string with the BIOS vendor
+* `ghw.BIOSInfo.Version` is a string with the BIOS version
+* `ghw.BIOSInfo.Date` is a string with the date the BIOS was flashed/created
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	bios, err := ghw.BIOS()
+	if err != nil {
+		fmt.Printf("Error getting BIOS info: %v", err)
+	}
+
+	fmt.Printf("%v\n", bios)
+}
+```
+
+Example output from my personal workstation:
+
+```
+bios vendor=System76 version=F2 Z5 date=11/14/2018
+```
+
+### Baseboard
+
+The host's baseboard information is accessible with the `ghw.Baseboard()` function.  This
+function returns a pointer to a `ghw.BaseboardInfo` struct.
+
+The `ghw.BaseboardInfo` struct contains multiple fields:
+
+* `ghw.BaseboardInfo.AssetTag` is a string with the baseboard asset tag
+* `ghw.BaseboardInfo.SerialNumber` is a string with the baseboard serial number
+* `ghw.BaseboardInfo.Vendor` is a string with the baseboard vendor
+* `ghw.BaseboardInfo.Version` is a string with the baseboard version
+
+**NOTE**: These fields are often missing for non-server hardware. Don't be
+surprised to see empty string or "None" values.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	baseboard, err := ghw.Baseboard()
+	if err != nil {
+		fmt.Printf("Error getting baseboard info: %v", err)
+	}
+
+	fmt.Printf("%v\n", baseboard)
+}
+```
+
+Example output from my personal workstation:
+
+```
+baseboard vendor=System76 version=thelio-r1
+```
+
+**NOTE**: Some of the values such as serial numbers are shown as unknown because
+the Linux kernel by default disallows access to those fields if you're not running
+as root.  They will be populated if it runs as root or otherwise you may see warnings
+like the following:
+
+```
+WARNING: Unable to read board_serial: open /sys/class/dmi/id/board_serial: permission denied
+```
+
+You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
+feature to quiet things down.
+
+### Product
+
+The host's product information is accessible with the `ghw.Product()` function.  This
+function returns a pointer to a `ghw.ProductInfo` struct.
+
+The `ghw.ProductInfo` struct contains multiple fields:
+
+* `ghw.ProductInfo.Family` is a string describing the product family
+* `ghw.ProductInfo.Name` is a string with the product name
+* `ghw.ProductInfo.SerialNumber` is a string with the product serial number
+* `ghw.ProductInfo.UUID` is a string with the product UUID
+* `ghw.ProductInfo.SKU` is a string with the product stock unit identifier (SKU)
+* `ghw.ProductInfo.Vendor` is a string with the product vendor
+* `ghw.ProductInfo.Version` is a string with the product version
+
+**NOTE**: These fields are often missing for non-server hardware. Don't be
+surprised to see empty string, "Default string" or "None" values.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	product, err := ghw.Product()
+	if err != nil {
+		fmt.Printf("Error getting product info: %v", err)
+	}
+
+	fmt.Printf("%v\n", product)
+}
+```
+
+Example output from my personal workstation:
+
+```
+product family=Default string name=Thelio vendor=System76 sku=Default string version=thelio-r1
+```
+
+**NOTE**: Some of the values such as serial numbers are shown as unknown because
+the Linux kernel by default disallows access to those fields if you're not running
+as root.  They will be populated if it runs as root or otherwise you may see warnings
+like the following:
+
+```
+WARNING: Unable to read product_serial: open /sys/class/dmi/id/product_serial: permission denied
+```
+
+You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
+feature to quiet things down.
 
 ## Serialization
 

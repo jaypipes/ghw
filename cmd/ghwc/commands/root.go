@@ -78,6 +78,18 @@ func showAll(cmd *cobra.Command, args []string) error {
 		if err := showTopology(cmd, args); err != nil {
 			return err
 		}
+		if err := showChassis(cmd, args); err != nil {
+			return err
+		}
+		if err := showBIOS(cmd, args); err != nil {
+			return err
+		}
+		if err := showBaseboard(cmd, args); err != nil {
+			return err
+		}
+		if err := showProduct(cmd, args); err != nil {
+			return err
+		}
 	case outputFormatJSON:
 		host, err := ghw.Host()
 		if err != nil {

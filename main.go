@@ -21,12 +21,16 @@ type context struct {
 // HostInfo is a wrapper struct containing information about the host system's
 // memory, block storage, CPU, etc
 type HostInfo struct {
-	Memory   *MemoryInfo   `json:"memory"`
-	Block    *BlockInfo    `json:"block"`
-	CPU      *CPUInfo      `json:"cpu"`
-	Topology *TopologyInfo `json:"topology"`
-	Network  *NetworkInfo  `json:"network"`
-	GPU      *GPUInfo      `json:"gpu"`
+	Memory    *MemoryInfo    `json:"memory"`
+	Block     *BlockInfo     `json:"block"`
+	CPU       *CPUInfo       `json:"cpu"`
+	Topology  *TopologyInfo  `json:"topology"`
+	Network   *NetworkInfo   `json:"network"`
+	GPU       *GPUInfo       `json:"gpu"`
+	Chassis   *ChassisInfo   `json:"chassis"`
+	BIOS      *BIOSInfo      `json:"bios"`
+	Baseboard *BaseboardInfo `json:"baseboard"`
+	Product   *ProductInfo   `json:"product"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -60,13 +64,33 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err := ctx.gpuFillInfo(gpu); err != nil {
 		return nil, err
 	}
+	chassis := &ChassisInfo{}
+	if err := ctx.chassisFillInfo(chassis); err != nil {
+		return nil, err
+	}
+	bios := &BIOSInfo{}
+	if err := ctx.biosFillInfo(bios); err != nil {
+		return nil, err
+	}
+	baseboard := &BaseboardInfo{}
+	if err := ctx.baseboardFillInfo(baseboard); err != nil {
+		return nil, err
+	}
+	product := &ProductInfo{}
+	if err := ctx.productFillInfo(product); err != nil {
+		return nil, err
+	}
 	return &HostInfo{
-		CPU:      cpu,
-		Memory:   mem,
-		Block:    block,
-		Topology: topology,
-		Network:  net,
-		GPU:      gpu,
+		CPU:       cpu,
+		Memory:    mem,
+		Block:     block,
+		Topology:  topology,
+		Network:   net,
+		GPU:       gpu,
+		Chassis:   chassis,
+		BIOS:      bios,
+		Baseboard: baseboard,
+		Product:   product,
 	}, nil
 }
 
@@ -74,13 +98,17 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 // structs' String-ified output
 func (info *HostInfo) String() string {
 	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s\n%s\n%s\n",
+		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		info.Block.String(),
 		info.CPU.String(),
 		info.GPU.String(),
 		info.Memory.String(),
 		info.Network.String(),
 		info.Topology.String(),
+		info.Chassis.String(),
+		info.BIOS.String(),
+		info.Baseboard.String(),
+		info.Product.String(),
 	)
 }
 
