@@ -22,7 +22,10 @@ matrix:
       install:
         - go get -u github.com/golang/dep/cmd/dep
         - dep ensure -v
-    # On Go 1.12, use go modules to ensure dependencies instead of dep
+    # On Go >=1.12, use go modules to ensure dependencies instead of dep
     - os: linux
       go: "1.12"
+      env: GO111MODULE=on
+    - os: linux
+      go: "1.13"
       env: GO111MODULE=on

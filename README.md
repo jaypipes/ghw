@@ -1079,10 +1079,6 @@ Contributions to `ghw` are welcomed! Fork the repo on GitHub and submit a pull
 request with your proposed changes. Or, feel free to log an issue for a feature
 request or bug report.
 
-This project uses [dep](https://github.com/golang/dep) to manage dependencies.
-Dependencies must be set to a specific tag (no open-ended dependencies) in the
-`Gopkg.toml` file.  To manually execute `dep` run `make dep`.
-
 ### Running tests
 
 You can run unit tests easily using the `make test` command, like so:
