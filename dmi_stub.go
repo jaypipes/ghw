@@ -12,6 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (ctx *context) dmiFillInfo(info *DMIInfo) error {
-	return errors.New("dmiFillInfo not implemented on " + runtime.GOOS)
+func (ctx *context) dmiItem(value string) error {
+	return errors.New("dmiItem not implemented on " + runtime.GOOS)
 }

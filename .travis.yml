@@ -29,3 +29,11 @@ matrix:
     - os: linux
       go: "1.13"
       env: GO111MODULE=on
+    # Tests that ghw builds on MacOSX (even though there is currently only
+    # support for block devices)
+    #- os: osx
+    #  go: "1.12"
+    #  env: GO111MODULE=on
+    #- os: osx
+    #  go: "1.13"
+    #  env: GO111MODULE=on
