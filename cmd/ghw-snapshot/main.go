@@ -70,13 +70,11 @@ func defaultOutPath() string {
 }
 
 func execute(cmd *cobra.Command, args []string) error {
-	// Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
-	// futility. Instead, it is necessary to build a directory structure in a
-	// tmpdir and create actual files with copies of the pseudofile contents
 	scratchDir, err := ioutil.TempDir("", "ghw-snapshot")
 	if err != nil {
 		return err
 	}
+	defer os.RemoveAll(scratchDir)
 
 	var createPaths = []string{
 		"proc",
@@ -89,13 +87,19 @@ func execute(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err = createProcfiles(scratchDir); err != nil {
+	if err = createProcFiles(scratchDir); err != nil {
+		return err
+	}
+	if err = createBlockDevices(scratchDir); err != nil {
 		return err
 	}
 	return doSnapshot(scratchDir)
 }
 
-func createProcfiles(buildDir string) error {
+func createProcFiles(buildDir string) error {
+	// Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
+	// futility. Instead, it is necessary to build a directory structure in a
+	// tmpdir and create actual files with copies of the pseudofile contents
 	var createPaths = []string{
 		"/proc/cpuinfo",
 		"/proc/meminfo",
@@ -115,6 +119,48 @@ func createProcfiles(buildDir string) error {
 			return err
 		}
 		f.Close()
+	}
+	return nil
+}
+
+func createBlockDevices(buildDir string) error {
+	// Grab all the block device pseudo-directories from /sys/block symlinks
+	// (excluding loopback devices) and inject them into our build filesystem
+	// with all but the circular symlink'd subsystem directories
+	devLinks, err := ioutil.ReadDir("/sys/block")
+	if err != nil {
+		return err
+	}
+	for _, devLink := range devLinks {
+		dname := devLink.Name()
+		if strings.HasPrefix(dname, "loop") {
+			continue
+		}
+		devPath := filepath.Join("/sys/block", dname)
+		fi, err := os.Lstat(devPath)
+		if err != nil {
+			return err
+		}
+		var link string
+		if fi.Mode()&os.ModeSymlink != 0 {
+			link, err = os.Readlink(devPath)
+			if err != nil {
+				return err
+			}
+		}
+		// Create a symlink in our build filesystem that is a directory
+		// pointing to the actual device bus path where the block device's
+		// information directory resides
+		linkPath := filepath.Join(buildDir, "sys/block", dname)
+		linkTargetPath := filepath.Join(buildDir, "sys/block", strings.TrimPrefix(link, string(os.PathSeparator)))
+		trace("creating device directory %s\n", linkTargetPath)
+		if err = os.MkdirAll(linkTargetPath, os.ModePerm); err != nil {
+			return err
+		}
+		trace("linking device directory %s to %s\n", linkPath, linkTargetPath)
+		if err = os.Symlink(linkTargetPath, linkPath); err != nil {
+			return err
+		}
 	}
 	return nil
 }
