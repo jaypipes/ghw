@@ -9,6 +9,7 @@ package main
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/md5"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -61,7 +62,13 @@ func trace(msg string, args ...interface{}) {
 }
 
 func systemFingerprint() string {
-	return "jaypipes"
+	hn, err := os.Hostname()
+	if err != nil {
+		return "unknown"
+	}
+	m := md5.New()
+	io.WriteString(m, hn)
+	return fmt.Sprintf("%x", m.Sum(nil))
 }
 
 func defaultOutPath() string {
@@ -161,7 +168,16 @@ func createBlockDevices(buildDir string) error {
 		if err = os.Symlink(linkTargetPath, linkPath); err != nil {
 			return err
 		}
+		if err = createBlockDeviceDir(linkTargetPath); err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func createBlockDeviceDir(deviceDir string) error {
+	// Populate the supplied directory (in our build filesystem) with all the
+	// appropriate information pseudofile contents for the block device
 	return nil
 }
 
