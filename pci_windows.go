@@ -77,9 +77,11 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 		return device
 	}
 	// Converting into standard structures
-	device.Vendor.ID = win32PnPDescriptions[0].Manufacturer
-	device.Vendor.Name = win32PnPDescriptions[0].Manufacturer
-	device.Product.ID = win32PnPDescriptions[0].Name
-	device.Product.Name = win32PnPDescriptions[0].Description
+	if len(win32PnPDescriptions) > 0 {
+		device.Vendor.ID = win32PnPDescriptions[0].Manufacturer
+		device.Vendor.Name = win32PnPDescriptions[0].Manufacturer
+		device.Product.ID = win32PnPDescriptions[0].Name
+		device.Product.Name = win32PnPDescriptions[0].Description
+	}
 	return device
 }
