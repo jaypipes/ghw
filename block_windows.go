@@ -143,6 +143,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 								IsReadOnly: toReadOnly(diskpartition.Access), // TODO: add information
 							}
 							disk.Partitions = append(disk.Partitions, p)
+							break
 						}
 					}
 				}
