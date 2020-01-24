@@ -18,6 +18,7 @@ type NICCapability struct {
 
 type NIC struct {
 	Name         string           `json:"name"`
+	Vendor       string           `json:"vendor"`
 	MacAddress   string           `json:"mac_address"`
 	IsVirtual    bool             `json:"is_virtual"`
 	Capabilities []*NICCapability `json:"capabilities"`
