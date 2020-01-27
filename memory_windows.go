@@ -11,14 +11,20 @@ import (
 )
 
 type Win32_PhysicalMemory struct {
-	Capacity     int64
-	DataWidth    int16
-	Description  string
-	Manufacturer string
-	Model        string
-	Name         string
-	SerialNumber string
-	TotalWidth   int16
+	BankLabel     string
+	Capacity      int64
+	DataWidth     int16
+	Description   string
+	DeviceLocator string
+	Manufacturer  string
+	Model         string
+	Name          string
+	PartNumber    string
+	PositionInRow uint32
+	SerialNumber  string
+	Speed         uint32
+	Tag           string
+	TotalWidth    int16
 }
 
 type Win32_ComputerSystem struct {
@@ -39,10 +45,19 @@ func (ctx *context) memFillInfo(info *MemoryInfo) error {
 		return err
 	}
 	// Converting into standard structures
+	info.Banks = make([]*MemoryBank, 0, len(win32MemDescriptions))
 	var totalUsableBytes int64
 	var totalPhysicalBytes int64
 	//var supportedPageSizes []uint64
 	for _, description := range win32MemDescriptions {
+		info.Banks = append(info.Banks, &MemoryBank{
+			Name:         description.Description,
+			Label:        description.BankLabel,
+			Location:     description.DeviceLocator,
+			SerialNumber: description.SerialNumber,
+			SizeBytes:    description.Capacity,
+			Vendor:       description.Manufacturer,
+		})
 		//totalUsableBytes += description.Capacity
 		totalPhysicalBytes += description.Capacity
 	}
@@ -57,7 +72,6 @@ func (ctx *context) memFillInfo(info *MemoryInfo) error {
 	for _, description := range win32SysDescriptions {
 		totalUsableBytes += description.TotalPhysicalMemory
 	}
-
 	info.TotalUsableBytes = totalUsableBytes
 	info.TotalPhysicalBytes = totalPhysicalBytes
 	// TODO: find a way to collect these informations
