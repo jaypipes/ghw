@@ -6,6 +6,11 @@
 
 package ghw
 
+import (
+	"fmt"
+	"strings"
+)
+
 // PackagesInfo defines installed package information
 type PackagesInfo struct {
 	Installed []*PackageInfo `json:"installed"`
@@ -18,19 +23,16 @@ type PackageInfo struct {
 	InstallDate string `json:"install_date"`
 }
 
-func (i *PackageInfo) String() string {
-	/*res := fmt.Sprintf(
-		"product%s%s%s%s%s%s%s",
-		familyStr,
-		nameStr,
-		vendorStr,
-		serialStr,
-		uuidStr,
-		skuStr,
-		versionStr,
-	)
-	return res*/
-	return "Hello World"
+func (info *PackagesInfo) String() string {
+	var result strings.Builder
+	result.WriteString("Installed Packages:")
+	if info != nil && info.Installed != nil {
+		for _, packageInfo := range info.Installed {
+			result.WriteString(fmt.Sprintf("\t[%s]: version %s installed on: %s\n", packageInfo.Label, packageInfo.Version, packageInfo.InstallDate))
+		}
+		return result.String()
+	}
+	return "No packages found"
 }
 
 // Packages returns a pointer to a PackageInfo collection containing information

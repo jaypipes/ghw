@@ -26,7 +26,7 @@ func (ctx *context) packageFillInfo(info *PackagesInfo) error {
 			return err
 		}
 		defer subKey.Close()
-		name, _, _ := subKey.GetStringValue("DisplayName")
+		label, _, _ := subKey.GetStringValue("DisplayName")
 		version, _, _ := subKey.GetStringValue("DisplayVersion")
 		installDate, _, _ := subKey.GetStringValue("InstallDate")
 		// Parsing installDate if set
@@ -34,12 +34,14 @@ func (ctx *context) packageFillInfo(info *PackagesInfo) error {
 			parsedTime, _ := time.Parse("20060102", installDate)
 			installDate = parsedTime.Format(time.RFC3339)
 		}
-		// Appending converted package
-		info.Installed = append(info.Installed, &PackageInfo{
-			Label:       name,
-			Version:     version,
-			InstallDate: installDate,
-		})
+		// Appending converted package if the package has at least a name...
+		if label != "" {
+			info.Installed = append(info.Installed, &PackageInfo{
+				Label:       label,
+				Version:     version,
+				InstallDate: installDate,
+			})
+		}
 	}
 	return nil
 }
