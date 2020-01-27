@@ -31,6 +31,7 @@ type HostInfo struct {
 	BIOS      *BIOSInfo      `json:"bios"`
 	Baseboard *BaseboardInfo `json:"baseboard"`
 	Product   *ProductInfo   `json:"product"`
+	Packages  *PackagesInfo  `json:"packages"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
