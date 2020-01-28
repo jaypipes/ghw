@@ -10,10 +10,19 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
+type Win32_OperatingSystem struct {
+	FreePhysicalMemory     uint64
+	FreeSpaceInPagingFiles uint64
+	FreeVirtualMemory      uint64
+	TotalSwapSpaceSize     uint64
+	TotalVirtualMemorySize uint64
+	TotalVisibleMemorySize uint64
+}
+
 type Win32_PhysicalMemory struct {
 	BankLabel     string
-	Capacity      int64
-	DataWidth     int16
+	Capacity      uint64
+	DataWidth     uint16
 	Description   string
 	DeviceLocator string
 	Manufacturer  string
@@ -24,58 +33,44 @@ type Win32_PhysicalMemory struct {
 	SerialNumber  string
 	Speed         uint32
 	Tag           string
-	TotalWidth    int16
+	TotalWidth    uint16
 }
-
-type Win32_ComputerSystem struct {
-	TotalPhysicalMemory int64
-}
-
-/* https://docs.microsoft.com/it-it/windows/win32/cimwin32prov/win32-pagefile
-type Win32_PageFile struct {
-	FileSize    uint64
-	MaximumSize uint64
-}*/
 
 func (ctx *context) memFillInfo(info *MemoryInfo) error {
-	// Getting info from WMI
+	// Getting info from WMI "Win32_OperatingSystem"
+	var win32OSDescriptions []Win32_OperatingSystem
+	q1 := wmi.CreateQuery(&win32OSDescriptions, "")
+	if err := wmi.Query(q1, &win32OSDescriptions); err != nil {
+		return err
+	}
+	// Getting info from WMI "Win32_PhysicalMemory"
 	var win32MemDescriptions []Win32_PhysicalMemory
-	q1 := wmi.CreateQuery(&win32MemDescriptions, "")
-	if err := wmi.Query(q1, &win32MemDescriptions); err != nil {
+	q2 := wmi.CreateQuery(&win32MemDescriptions, "")
+	if err := wmi.Query(q2, &win32MemDescriptions); err != nil {
 		return err
 	}
 	// Converting into standard structures
+	// Handling physical memory banks
 	info.Banks = make([]*MemoryBank, 0, len(win32MemDescriptions))
-	var totalUsableBytes int64
-	var totalPhysicalBytes int64
-	//var supportedPageSizes []uint64
 	for _, description := range win32MemDescriptions {
 		info.Banks = append(info.Banks, &MemoryBank{
 			Name:         description.Description,
 			Label:        description.BankLabel,
 			Location:     description.DeviceLocator,
 			SerialNumber: description.SerialNumber,
-			SizeBytes:    description.Capacity,
+			SizeBytes:    int64(description.Capacity),
 			Vendor:       description.Manufacturer,
 		})
-		//totalUsableBytes += description.Capacity
-		totalPhysicalBytes += description.Capacity
+		//totalPhysicalBytes += description.Capacity
 	}
-
-	// Getting info from WMI
-	var win32SysDescriptions []Win32_ComputerSystem
-	q2 := wmi.CreateQuery(&win32SysDescriptions, "")
-	if err := wmi.Query(q2, &win32SysDescriptions); err != nil {
-		return err
+	// Handling physical memory total/free size (as seen by OS)
+	var totalUsableBytes uint64
+	var totalPhysicalBytes uint64
+	for _, description := range win32OSDescriptions {
+		totalUsableBytes += description.FreePhysicalMemory
+		totalPhysicalBytes += description.TotalVisibleMemorySize
 	}
-	// Converting into standard structures
-	for _, description := range win32SysDescriptions {
-		totalUsableBytes += description.TotalPhysicalMemory
-	}
-	info.TotalUsableBytes = totalUsableBytes
-	info.TotalPhysicalBytes = totalPhysicalBytes
-	// TODO: find a way to collect these informations
-	info.SupportedPageSizes = make([]uint64, 0)
-
+	info.TotalUsableBytes = int64(totalUsableBytes)
+	info.TotalPhysicalBytes = int64(totalPhysicalBytes)
 	return nil
 }
