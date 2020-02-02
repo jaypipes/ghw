@@ -39,6 +39,7 @@ var (
 	createPseudofilePaths = []string{
 		"/proc/cpuinfo",
 		"/proc/meminfo",
+		"/etc/mtab",
 	}
 )
 
@@ -80,6 +81,7 @@ func execute(cmd *cobra.Command, args []string) error {
 
 	var createPaths = []string{
 		"proc",
+		"etc",
 		"sys/block",
 	}
 
