@@ -94,7 +94,7 @@ func execute(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err = createProcFiles(scratchDir); err != nil {
+	if err = createPseudofiles(scratchDir); err != nil {
 		return err
 	}
 	if err = createBlockDevices(scratchDir); err != nil {
@@ -103,10 +103,13 @@ func execute(cmd *cobra.Command, args []string) error {
 	return doSnapshot(scratchDir)
 }
 
-func createProcFiles(buildDir string) error {
-	// Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
-	// futility. Instead, it is necessary to build a directory structure in a
-	// tmpdir and create actual files with copies of the pseudofile contents
+// Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
+// futility. Notably, the pseudofiles, when read by syscalls, do not return the
+// number of bytes read. This causes the tar writer to write zero-length files.
+//
+// Instead, it is necessary to build a directory structure in a tmpdir and
+// create actual files with copies of the pseudofile contents
+func createPseudofiles(buildDir string) error {
 	var createPaths = []string{
 		"/proc/cpuinfo",
 		"/proc/meminfo",
@@ -159,7 +162,11 @@ func createBlockDevices(buildDir string) error {
 		// pointing to the actual device bus path where the block device's
 		// information directory resides
 		linkPath := filepath.Join(buildDir, "sys/block", dname)
-		linkTargetPath := filepath.Join(buildDir, "sys/block", strings.TrimPrefix(link, string(os.PathSeparator)))
+		linkTargetPath := filepath.Join(
+			buildDir,
+			"sys/block",
+			strings.TrimPrefix(link, string(os.PathSeparator)),
+		)
 		trace("creating device directory %s\n", linkTargetPath)
 		if err = os.MkdirAll(linkTargetPath, os.ModePerm); err != nil {
 			return err
@@ -168,16 +175,80 @@ func createBlockDevices(buildDir string) error {
 		if err = os.Symlink(linkTargetPath, linkPath); err != nil {
 			return err
 		}
-		if err = createBlockDeviceDir(linkTargetPath); err != nil {
+		// Now read the source block device directory and populate the
+		// newly-created target link in the build directory with the
+		// appropriate block device pseudofiles
+		srcDeviceDir := filepath.Join(
+			"/sys/block",
+			strings.TrimPrefix(link, string(os.PathSeparator)),
+		)
+		if err = createBlockDeviceDir(linkTargetPath, srcDeviceDir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createBlockDeviceDir(deviceDir string) error {
+func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 	// Populate the supplied directory (in our build filesystem) with all the
-	// appropriate information pseudofile contents for the block device
+	// appropriate information pseudofile contents for the block device.
+	devName := filepath.Base(srcDeviceDir)
+	devFiles, err := ioutil.ReadDir(srcDeviceDir)
+	if err != nil {
+		return err
+	}
+	for _, f := range devFiles {
+		fname := f.Name()
+		fp := filepath.Join(srcDeviceDir, fname)
+		fi, err := os.Lstat(fp)
+		if err != nil {
+			return err
+		}
+		// Ignore any symlinks in the deviceDir since they simply point to either
+		// self-referential links or information we aren't interested in like
+		// "subsystem"
+		if fi.Mode()&os.ModeSymlink != 0 {
+			continue
+		}
+		if fi.IsDir() {
+			// The only directories we're interested in are the directories
+			// that begin with the block device name. These are directories
+			// with information about the partitions on the device
+			if !strings.HasPrefix(fname, devName) {
+				buildPartitionDir := filepath.Join(
+					buildDeviceDir, fname,
+				)
+				srcPartitionDir := filepath.Join(
+					srcDeviceDir, fname,
+				)
+				err = createPartitionDir(buildPartitionDir, srcPartitionDir)
+				if err != nil {
+					return err
+				}
+			}
+		} else if fi.Mode().IsRegular() {
+			// Regular files in the block device directory are both regular and
+			// pseudofiles containing information such as the size (in sectors)
+			// and whether the device is read-only
+			buf, err := ioutil.ReadFile(fp)
+			if err != nil {
+				return err
+			}
+			targetPath := filepath.Join(buildDeviceDir, fname)
+			f, err := os.Create(targetPath)
+			if err != nil {
+				return err
+			}
+			if _, err = f.Write(buf); err != nil {
+				return err
+			}
+			f.Close()
+		}
+	}
+	return nil
+}
+
+func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error {
 	return nil
 }
 
