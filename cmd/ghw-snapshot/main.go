@@ -35,18 +35,12 @@ var (
 	outPath string
 )
 
-type FileInfoFilter func(os.FileInfo) (bool, error)
-
 var (
-	pseudoFiles = []string{
+	createPseudofilePaths = []string{
 		"/proc/cpuinfo",
 		"/proc/meminfo",
 	}
 )
-
-func regularFileFilter(fi os.FileInfo) (bool, error) {
-	return fi.Mode().IsRegular(), nil
-}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -111,12 +105,7 @@ func execute(cmd *cobra.Command, args []string) error {
 // Instead, it is necessary to build a directory structure in a tmpdir and
 // create actual files with copies of the pseudofile contents
 func createPseudofiles(buildDir string) error {
-	var createPaths = []string{
-		"/proc/cpuinfo",
-		"/proc/meminfo",
-	}
-
-	for _, path := range createPaths {
+	for _, path := range createPseudofilePaths {
 		buf, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
