@@ -310,6 +310,19 @@ func (ctx *context) diskPartitions(disk string) []*Partition {
 	return out
 }
 
+func (ctx *context) isRemovable(disk string) bool {
+        path := filepath.Join(ctx.pathSysBlock(), disk, "removable")
+        contents, err := ioutil.ReadFile(path)
+        if err != nil {
+                return false
+        }
+        removable := strings.TrimSpace(string(contents))
+        if removable == "1" {
+                return true
+        }
+        return false
+}
+
 // Disks has been deprecated in 0.2. Please use the BlockInfo.Disks attribute.
 // TODO(jaypipes): Remove in 1.0.
 func Disks() []*Disk {
@@ -352,12 +365,14 @@ func (ctx *context) disks() []*Disk {
 		model := ctx.diskModel(dname)
 		serialNo := ctx.diskSerialNumber(dname)
 		wwn := ctx.diskWWN(dname)
+		removable := ctx.isRemovable(dname)
 
 		d := &Disk{
 			Name:                   dname,
 			SizeBytes:              size,
 			PhysicalBlockSizeBytes: pbs,
 			DriveType:              driveType,
+			Removable:              removable,
 			StorageController:      storageController,
 			BusType:                busType,
 			BusPath:                busPath,
