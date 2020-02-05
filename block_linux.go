@@ -310,7 +310,7 @@ func (ctx *context) diskPartitions(disk string) []*Partition {
 	return out
 }
 
-func (ctx *context) isRemovable(disk string) bool {
+func (ctx *context) diskIsRemovable(disk string) bool {
         path := filepath.Join(ctx.pathSysBlock(), disk, "removable")
         contents, err := ioutil.ReadFile(path)
         if err != nil {
@@ -365,14 +365,14 @@ func (ctx *context) disks() []*Disk {
 		model := ctx.diskModel(dname)
 		serialNo := ctx.diskSerialNumber(dname)
 		wwn := ctx.diskWWN(dname)
-		removable := ctx.isRemovable(dname)
+		removable := ctx.diskIsRemovable(dname)
 
 		d := &Disk{
 			Name:                   dname,
 			SizeBytes:              size,
 			PhysicalBlockSizeBytes: pbs,
 			DriveType:              driveType,
-			Removable:              removable,
+			IsRemovable:            removable,
 			StorageController:      storageController,
 			BusType:                busType,
 			BusPath:                busPath,
