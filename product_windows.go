@@ -33,7 +33,7 @@ func (ctx *context) productFillInfo(info *ProductInfo) error {
 		info.Name = win32ProductDescriptions[0].Name
 		info.Vendor = win32ProductDescriptions[0].Vendor
 		info.SerialNumber = win32ProductDescriptions[0].IdentifyingNumber
-		info.UUID = UNKNOWN
+		info.UUID = win32ProductDescriptions[0].UUID
 		info.SKU = win32ProductDescriptions[0].SKUNumber
 		info.Version = win32ProductDescriptions[0].Version
 	}
