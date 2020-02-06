@@ -7,7 +7,9 @@ package ghw
 
 import "github.com/StackExchange/wmi"
 
-type cIM_BIOSElement struct {
+const wqlBIOS = "SELECT InstallDate, Manufacturer, Version FROM CIM_BIOSElement"
+
+type win32BIOS struct {
 	InstallDate  string
 	Manufacturer string
 	Version      string
@@ -15,9 +17,8 @@ type cIM_BIOSElement struct {
 
 func (ctx *context) biosFillInfo(info *BIOSInfo) error {
 	// Getting data from WMI
-	var win32BIOSDescriptions []cIM_BIOSElement
-	q1 := wmi.CreateQuery(&win32BIOSDescriptions, "")
-	if err := wmi.Query(q1, &win32BIOSDescriptions); err != nil {
+	var win32BIOSDescriptions []win32BIOS
+	if err := wmi.Query(wqlBIOS, &win32BIOSDescriptions); err != nil {
 		return err
 	}
 	if len(win32BIOSDescriptions) > 0 {

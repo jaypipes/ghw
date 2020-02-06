@@ -9,7 +9,9 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-type cIM_Chassis struct {
+const wqlChassis = "SELECT Caption, Description, Name, Manufacturer, Model, SerialNumber, Tag, TypeDescriptions, Version FROM CIM_Chassis"
+
+type win32Chassis struct {
 	Caption          string
 	Description      string
 	Name             string
@@ -23,9 +25,8 @@ type cIM_Chassis struct {
 
 func (ctx *context) chassisFillInfo(info *ChassisInfo) error {
 	// Getting data from WMI
-	var win32ChassisDescriptions []cIM_Chassis
-	q1 := wmi.CreateQuery(&win32ChassisDescriptions, "")
-	if err := wmi.Query(q1, &win32ChassisDescriptions); err != nil {
+	var win32ChassisDescriptions []win32Chassis
+	if err := wmi.Query(wqlChassis, &win32ChassisDescriptions); err != nil {
 		return err
 	}
 	if len(win32ChassisDescriptions) > 0 {

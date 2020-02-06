@@ -7,7 +7,9 @@ package ghw
 
 import "github.com/StackExchange/wmi"
 
-type win32_BaseBoard struct {
+const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version FROM Win32_BaseBoard"
+
+type win32Baseboard struct {
 	Manufacturer string
 	SerialNumber string
 	Tag          string
@@ -16,9 +18,8 @@ type win32_BaseBoard struct {
 
 func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
 	// Getting data from WMI
-	var win32BaseboardDescriptions []win32_BaseBoard
-	q1 := wmi.CreateQuery(&win32BaseboardDescriptions, "")
-	if err := wmi.Query(q1, &win32BaseboardDescriptions); err != nil {
+	var win32BaseboardDescriptions []win32Baseboard
+	if err := wmi.Query(wqlBaseboard, &win32BaseboardDescriptions); err != nil {
 		return err
 	}
 	if len(win32BaseboardDescriptions) > 0 {

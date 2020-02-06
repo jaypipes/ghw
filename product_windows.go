@@ -9,7 +9,9 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-type win32_ComputerSystemProduct struct {
+const wqlProduct = "SELECT Caption, Description, IdentifyingNumber, Name, SKUNumber, Vendor, Version, UUID FROM Win32_ComputerSystemProduct"
+
+type win32Product struct {
 	Caption           string
 	Description       string
 	IdentifyingNumber string
@@ -22,10 +24,9 @@ type win32_ComputerSystemProduct struct {
 
 func (ctx *context) productFillInfo(info *ProductInfo) error {
 	// Getting data from WMI
-	var win32ProductDescriptions []win32_ComputerSystemProduct
+	var win32ProductDescriptions []win32Product
 	// Assuming the first product is the host...
-	q1 := wmi.CreateQuery(&win32ProductDescriptions, "")
-	if err := wmi.Query(q1, &win32ProductDescriptions); err != nil {
+	if err := wmi.Query(wqlProduct, &win32ProductDescriptions); err != nil {
 		return err
 	}
 	if len(win32ProductDescriptions) > 0 {
