@@ -11,7 +11,7 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-const wqlProduct = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName  FROM Win32_NetworkAdapter"
+const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName  FROM Win32_NetworkAdapter"
 
 type win32NetworkAdapter struct {
 	Description     string
@@ -29,7 +29,7 @@ type win32NetworkAdapter struct {
 func (ctx *context) netFillInfo(info *NetworkInfo) error {
 	// Getting info from WMI
 	var win32NetDescriptions []win32NetworkAdapter
-	if err := wmi.Query(wqlProduct, &win32NetDescriptions); err != nil {
+	if err := wmi.Query(wqlNetworkAdapter, &win32NetDescriptions); err != nil {
 		return err
 	}
 
