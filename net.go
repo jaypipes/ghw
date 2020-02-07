@@ -10,6 +10,13 @@ import (
 	"fmt"
 )
 
+type NICConfiguration struct {
+	DHCPenabled bool   `json:"dhcp_enabled"`
+	Gateway     string `json:"gateway"`
+	IPv4        string `json:"ipv4"`
+	IPv6        string `json:"ipv6"`
+}
+
 type NICCapability struct {
 	Name      string `json:"name"`
 	IsEnabled bool   `json:"is_enabled"`
@@ -17,10 +24,11 @@ type NICCapability struct {
 }
 
 type NIC struct {
-	Name         string           `json:"name"`
-	MacAddress   string           `json:"mac_address"`
-	IsVirtual    bool             `json:"is_virtual"`
-	Capabilities []*NICCapability `json:"capabilities"`
+	Name           string              `json:"name"`
+	MacAddress     string              `json:"mac_address"`
+	IsVirtual      bool                `json:"is_virtual"`
+	Capabilities   []*NICCapability    `json:"capabilities"`
+	Configurations []*NICConfiguration `json:"configurations"`
 	// TODO(jaypipes): Add PCI field for accessing PCI device information
 	// PCI *PCIDevice `json:"pci"`
 }
