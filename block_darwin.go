@@ -259,6 +259,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			SizeBytes:              uint64(disk.Size),
 			PhysicalBlockSizeBytes: uint64(infoPlist.DeviceBlockSize),
 			DriveType:              ctx.driveTypeFromPlist(infoPlist),
+			IsRemovable:            infoPlist.Removable,
 			StorageController:      ctx.storageControllerFromPlist(infoPlist),
 			BusType:                ctx.busTypeFromPlist(infoPlist),
 			BusPath:                busPath,
