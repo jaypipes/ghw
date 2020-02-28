@@ -89,6 +89,7 @@ type Disk struct {
 	SizeBytes              uint64            `json:"size_bytes"`
 	PhysicalBlockSizeBytes uint64            `json:"physical_block_size_bytes"`
 	DriveType              DriveType         `json:"drive_type"`
+	IsRemovable            bool              `json:"removable"`
 	StorageController      StorageController `json:"storage_controller"`
 	// NOTE(jaypipes): BusType is DEPRECATED. Use the DriveType and
 	// StorageController fields instead
@@ -184,8 +185,12 @@ func (d *Disk) String() string {
 	if d.WWN != UNKNOWN {
 		wwn = " WWN=" + d.WWN
 	}
+	removable := ""
+	if d.IsRemovable {
+		removable = " removable=true"
+	}
 	return fmt.Sprintf(
-		"/dev/%s %s (%s) %s [@%s%s]%s%s%s%s",
+		"/dev/%s %s (%s) %s [@%s%s]%s%s%s%s%s",
 		d.Name,
 		d.DriveType.String(),
 		sizeStr,
@@ -196,6 +201,7 @@ func (d *Disk) String() string {
 		model,
 		serial,
 		wwn,
+		removable,
 	)
 }
 
