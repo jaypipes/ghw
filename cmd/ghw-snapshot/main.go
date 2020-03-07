@@ -113,6 +113,7 @@ func createPseudofiles(buildDir string) error {
 			return err
 		}
 		targetPath := filepath.Join(buildDir, path)
+		trace("creating %s\n", targetPath)
 		f, err := os.Create(targetPath)
 		if err != nil {
 			return err
@@ -196,23 +197,27 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 		if err != nil {
 			return err
 		}
-		// Ignore any symlinks in the deviceDir since they simply point to either
-		// self-referential links or information we aren't interested in like
-		// "subsystem"
 		if fi.Mode()&os.ModeSymlink != 0 {
+			// Ignore any symlinks in the deviceDir since they simply point to
+			// either self-referential links or information we aren't
+			// interested in like "subsystem"
 			continue
-		}
-		if fi.IsDir() {
-			// The only directories we're interested in are the directories
-			// that begin with the block device name. These are directories
-			// with information about the partitions on the device
-			if !strings.HasPrefix(fname, devName) {
+		} else if fi.IsDir() {
+			if strings.HasPrefix(fname, devName) {
+				// We're interested in are the directories that begin with the
+				// block device name. These are directories with information
+				// about the partitions on the device
 				buildPartitionDir := filepath.Join(
 					buildDeviceDir, fname,
 				)
 				srcPartitionDir := filepath.Join(
 					srcDeviceDir, fname,
 				)
+				trace("creating partition directory %s\n", buildPartitionDir)
+				err = os.MkdirAll(buildPartitionDir, os.ModePerm)
+				if err != nil {
+					return err
+				}
 				err = createPartitionDir(buildPartitionDir, srcPartitionDir)
 				if err != nil {
 					return err
@@ -227,6 +232,7 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 				return err
 			}
 			targetPath := filepath.Join(buildDeviceDir, fname)
+			trace("creating %s\n", targetPath)
 			f, err := os.Create(targetPath)
 			if err != nil {
 				return err
@@ -237,10 +243,80 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 			f.Close()
 		}
 	}
+	// There is a special file $DEVICE_DIR/queue/rotational that, for some hard
+	// drives, contains a 1 or 0 indicating whether the device is a spinning
+	// disk or not
+	srcQueueDir := filepath.Join(
+		srcDeviceDir,
+		"queue",
+	)
+	buildQueueDir := filepath.Join(
+		buildDeviceDir,
+		"queue",
+	)
+	err = os.MkdirAll(buildQueueDir, os.ModePerm)
+	fp := filepath.Join(srcQueueDir, "rotational")
+	buf, err := ioutil.ReadFile(fp)
+	if err != nil {
+		return err
+	}
+	targetPath := filepath.Join(buildQueueDir, "rotational")
+	trace("creating %s\n", targetPath)
+	f, err := os.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	if _, err = f.Write(buf); err != nil {
+		return err
+	}
+	f.Close()
+
 	return nil
 }
 
 func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error {
+	// Populate the supplied directory (in our build filesystem) with all the
+	// appropriate information pseudofile contents for the partition.
+	partFiles, err := ioutil.ReadDir(srcPartitionDir)
+	if err != nil {
+		return err
+	}
+	for _, f := range partFiles {
+		fname := f.Name()
+		fp := filepath.Join(srcPartitionDir, fname)
+		fi, err := os.Lstat(fp)
+		if err != nil {
+			return err
+		}
+		if fi.Mode()&os.ModeSymlink != 0 {
+			// Ignore any symlinks in the partition directory since they simply
+			// point to information we aren't interested in like "subsystem"
+			continue
+		} else if fi.IsDir() {
+			// The subdirectories in the partition directory are not
+			// interesting for us. They have information about power events and
+			// traces
+			continue
+		} else if fi.Mode().IsRegular() {
+			// Regular files in the block device directory are both regular and
+			// pseudofiles containing information such as the size (in sectors)
+			// and whether the device is read-only
+			buf, err := ioutil.ReadFile(fp)
+			if err != nil {
+				return err
+			}
+			targetPath := filepath.Join(buildPartitionDir, fname)
+			trace("creating %s\n", targetPath)
+			f, err := os.Create(targetPath)
+			if err != nil {
+				return err
+			}
+			if _, err = f.Write(buf); err != nil {
+				return err
+			}
+			f.Close()
+		}
+	}
 	return nil
 }
 
