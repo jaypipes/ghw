@@ -7,7 +7,7 @@ if [[ ! -f $SNAPSHOT_FILEPATH ]]; then
     exit 1
 fi
 
-root_dir=$(cd "$(dirname "$0").."; pwd)
+root_dir=$(cd "$(dirname "$0")/.."; pwd)
 ghwc_image_name="ghwc"
 local_git_version=$(git describe --tags --always --dirty)
 IMAGE_VERSION=${IMAGE_VERSION:-$local_git_version}
