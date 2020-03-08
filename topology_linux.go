@@ -12,11 +12,7 @@ import (
 )
 
 func (ctx *context) topologyFillInfo(info *TopologyInfo) error {
-	nodes, err := ctx.topologyNodes()
-	if err != nil {
-		return err
-	}
-	info.Nodes = nodes
+	info.Nodes = ctx.topologyNodes()
 	if len(info.Nodes) == 1 {
 		info.Architecture = ARCHITECTURE_SMP
 	} else {
@@ -35,15 +31,16 @@ release of ghw. Please use the TopologyInfo.Nodes attribute.
 `
 	warn(msg)
 	ctx := contextFromEnv()
-	return ctx.topologyNodes()
+	return ctx.topologyNodes(), nil
 }
 
-func (ctx *context) topologyNodes() ([]*TopologyNode, error) {
+func (ctx *context) topologyNodes() []*TopologyNode {
 	nodes := make([]*TopologyNode, 0)
 
 	files, err := ioutil.ReadDir(ctx.pathSysDevicesSystemNode())
 	if err != nil {
-		return nil, err
+		warn("failed to determine nodes: %s\n", err)
+		return nodes
 	}
 	for _, file := range files {
 		filename := file.Name()
@@ -53,20 +50,23 @@ func (ctx *context) topologyNodes() ([]*TopologyNode, error) {
 		node := &TopologyNode{}
 		nodeID, err := strconv.Atoi(filename[4:])
 		if err != nil {
-			return nil, err
+			warn("failed to determine node ID: %s\n", err)
+			return nodes
 		}
 		node.ID = nodeID
 		cores, err := ctx.coresForNode(nodeID)
 		if err != nil {
-			return nil, err
+			warn("failed to determine cores for node: %s\n", err)
+			return nodes
 		}
 		node.Cores = cores
 		caches, err := ctx.cachesForNode(nodeID)
 		if err != nil {
-			return nil, err
+			warn("failed to determine caches for node: %s\n", err)
+			return nodes
 		}
 		node.Caches = caches
 		nodes = append(nodes, node)
 	}
-	return nodes, nil
+	return nodes
 }
