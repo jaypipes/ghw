@@ -255,6 +255,9 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 		"queue",
 	)
 	err = os.MkdirAll(buildQueueDir, os.ModePerm)
+	if err != nil {
+		return err
+	}
 	fp := filepath.Join(srcQueueDir, "rotational")
 	buf, err := ioutil.ReadFile(fp)
 	if err != nil {
