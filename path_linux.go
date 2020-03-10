@@ -9,10 +9,6 @@ import (
 	"path/filepath"
 )
 
-func (ctx *context) pathVarLog() string {
-	return filepath.Join(ctx.chroot, "var", "log")
-}
-
 func (ctx *context) pathProcMeminfo() string {
 	return filepath.Join(ctx.chroot, "proc", "meminfo")
 }

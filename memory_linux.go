@@ -7,31 +7,12 @@ package ghw
 
 import (
 	"bufio"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
-)
-
-const (
-	_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY = `
-Could not determine total physical bytes of memory. This may
-be due to the host being a virtual machine or container with no
-/var/log/syslog file, or the current user may not have necessary
-privileges to read the syslog. We are falling back to setting the
-total physical amount of memory to the total usable amount of memory
-`
-)
-
-var (
-	// System log lines will look similar to the following:
-	// ... kernel: [0.000000] Memory: 24633272K/25155024K ...
-	_REGEX_SYSLOG_MEMLINE = regexp.MustCompile(`Memory:\s+\d+K\/(\d+)K`)
+	"syscall"
 )
 
 func (ctx *context) memFillInfo(info *MemoryInfo) error {
@@ -40,70 +21,25 @@ func (ctx *context) memFillInfo(info *MemoryInfo) error {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
 	}
 	info.TotalUsableBytes = tub
-	tpb := ctx.memTotalPhysicalBytes()
-	info.TotalPhysicalBytes = tpb
-	if tpb < 1 {
-		warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
+	tpb, err := ctx.memTotalPhysicalBytes()
+	if err != nil {
 		info.TotalPhysicalBytes = tub
+		errMsg := fmt.Sprintf("fallback to total usable bytes after error\n"+
+			"getting total physical bytes of RAM:\n"+
+			"%v", err)
+		warn(errMsg)
+	} else {
+		info.TotalPhysicalBytes = int64(tpb)
 	}
+
 	info.SupportedPageSizes = ctx.memSupportedPageSizes()
 	return nil
 }
 
-func (ctx *context) memTotalPhysicalBytes() int64 {
-	// In Linux, the total physical memory can be determined by looking at the
-	// output of dmidecode, however dmidecode requires root privileges to run,
-	// so instead we examine the system logs for startup information containing
-	// total physical memory and cache the results of this.
-	findPhysicalKb := func(line string) int64 {
-		matches := _REGEX_SYSLOG_MEMLINE.FindStringSubmatch(line)
-		if len(matches) == 2 {
-			i, err := strconv.Atoi(matches[1])
-			if err != nil {
-				return -1
-			}
-			return int64(i * 1024)
-		}
-		return -1
-	}
-
-	// /var/log will contain a file called syslog and 0 or more files called
-	// syslog.$NUMBER or syslog.$NUMBER.gz containing system log records. We
-	// search each, stopping when we match a system log record line that
-	// contains physical memory information.
-	logDir := ctx.pathVarLog()
-	logFiles, err := ioutil.ReadDir(logDir)
-	if err != nil {
-		return -1
-	}
-	for _, file := range logFiles {
-		if strings.HasPrefix(file.Name(), "syslog") {
-			fullPath := filepath.Join(logDir, file.Name())
-			unzip := strings.HasSuffix(file.Name(), ".gz")
-			var r io.ReadCloser
-			r, err = os.Open(fullPath)
-			if err != nil {
-				return -1
-			}
-			defer safeClose(r)
-			if unzip {
-				r, err = gzip.NewReader(r)
-				if err != nil {
-					return -1
-				}
-			}
-
-			scanner := bufio.NewScanner(r)
-			for scanner.Scan() {
-				line := scanner.Text()
-				size := findPhysicalKb(line)
-				if size > 0 {
-					return size
-				}
-			}
-		}
-	}
-	return -1
+func (ctx *context) memTotalPhysicalBytes() (uint64, error) {
+	var info syscall.Sysinfo_t
+	err := syscall.Sysinfo(&info)
+	return info.Totalram, err
 }
 
 func (ctx *context) memTotalUsableBytes() int64 {
