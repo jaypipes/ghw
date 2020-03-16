@@ -23,10 +23,10 @@ func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
 		return err
 	}
 	if len(win32BaseboardDescriptions) > 0 {
-		info.AssetTag = win32BaseboardDescriptions[0].Manufacturer
-		info.SerialNumber = win32BaseboardDescriptions[0].Manufacturer
+		info.AssetTag = win32BaseboardDescriptions[0].Tag
+		info.SerialNumber = win32BaseboardDescriptions[0].SerialNumber
 		info.Vendor = win32BaseboardDescriptions[0].Manufacturer
-		info.Version = win32BaseboardDescriptions[0].Manufacturer
+		info.Version = win32BaseboardDescriptions[0].Version
 	}
 
 	return nil
