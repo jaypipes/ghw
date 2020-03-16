@@ -2,8 +2,7 @@
 ![ghw mascot](images/ghw-gopher.png)
 <br /><br />
 `ghw` is a small Golang library providing hardware inspection and discovery
-for Linux. There currently exists partial support for MacOSX and Windows
-support is planned for a future release.
+for Linux and Windows. There currently exists partial support for MacOSX.
 
 ## Design Principles
 
@@ -106,6 +105,10 @@ The `ghw.MemoryInfo` struct contains three fields:
   resident memory size and some reserved system bits
 * `ghw.MemoryInfo.SupportedPageSizes` is an array of integers representing the
   size, in bytes, of memory pages the system supports
+* `ghw.MemoryInfo.Modules` is an array of pointers to `ghw.MemoryModule`
+  structs, one for each physical [DIMM](https://en.wikipedia.org/wiki/DIMM).
+  Currently, this information is only included on Windows, with Linux support
+  [planned](https://github.com/jaypipes/ghw/pull/171#issuecomment-597082409).
 
 ```go
 package main
@@ -263,6 +266,8 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.SizeBytes` contains the amount of storage the disk provides
 * `ghw.Disk.PhysicalBlockSizeBytes` contains the size of the physical blocks
   used on the disk, in bytes
+* `ghw.Disk.IsRemovable` contains a boolean indicating if the disk drive is
+  removable
 * `ghw.Disk.DriveType` is the type of drive. It is of type `ghw.DriveType`
   which has a `ghw.DriveType.String()` method that can be called to return a
   string representation of the bus. This string will be "HDD", "FDD", "ODD",
@@ -343,6 +348,9 @@ block storage (1 disk, 2TB physical storage)
 > DB or sysfs paths for information.
 
 ### Topology
+
+> **NOTE**: Topology support is currently Linux-only. Windows support is
+> [planned](https://github.com/jaypipes/ghw/issues/166).
 
 Information about the host computer's architecture (NUMA vs. SMP), the host's
 node layout and processor caches can be retrieved from the `ghw.Topology()`
