@@ -10,14 +10,9 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-const wqlOperatingSystem = "SELECT FreePhysicalMemory, FreeSpaceInPagingFiles, FreeVirtualMemory, TotalSwapSpaceSize, TotalVirtualMemorySize, TotalVisibleMemorySize FROM Win32_OperatingSystem"
+const wqlOperatingSystem = "SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem"
 
 type win32OperatingSystem struct {
-	FreePhysicalMemory     uint64
-	FreeSpaceInPagingFiles uint64
-	FreeVirtualMemory      uint64
-	TotalSwapSpaceSize     uint64
-	TotalVirtualMemorySize uint64
 	TotalVisibleMemorySize uint64
 }
 
@@ -50,10 +45,11 @@ func (ctx *context) memFillInfo(info *MemoryInfo) error {
 	if err := wmi.Query(wqlPhysicalMemory, &win32MemDescriptions); err != nil {
 		return err
 	}
-	// Converting into standard structures
-	// Handling physical memory modules
+	// We calculate total physical memory size by summing the DIMM sizes
+	var totalPhysicalBytes uint64
 	info.Modules = make([]*MemoryModule, 0, len(win32MemDescriptions))
 	for _, description := range win32MemDescriptions {
+		totalPhysicalBytes += description.Capacity
 		info.Modules = append(info.Modules, &MemoryModule{
 			Label:        description.BankLabel,
 			Location:     description.DeviceLocator,
@@ -62,12 +58,11 @@ func (ctx *context) memFillInfo(info *MemoryInfo) error {
 			Vendor:       description.Manufacturer,
 		})
 	}
-	// Handling physical memory total/free size (as seen by OS)
 	var totalUsableBytes uint64
-	var totalPhysicalBytes uint64
 	for _, description := range win32OSDescriptions {
-		totalUsableBytes += description.FreePhysicalMemory
-		totalPhysicalBytes += description.TotalVisibleMemorySize
+		// TotalVisibleMemorySize is the amount of memory available for us by
+		// the operating system **in Kilobytes**
+		totalUsableBytes += description.TotalVisibleMemorySize * uint64(KB)
 	}
 	info.TotalUsableBytes = int64(totalUsableBytes)
 	info.TotalPhysicalBytes = int64(totalPhysicalBytes)
