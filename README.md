@@ -333,7 +333,7 @@ Example output from my personal workstation:
 
 ```
 block storage (1 disk, 2TB physical storage)
- /dev/sda HDD (2TB) SCSI [@pci-0000:04:00.0-scsi-0:1:0:0 (node #0)] vendor=LSI model=Logical_Volume serial=600508e000000000f8253aac9a1abd0c WWN=0x600508e000000000f8253aac9a1abd0c
+ sda HDD (2TB) SCSI [@pci-0000:04:00.0-scsi-0:1:0:0 (node #0)] vendor=LSI model=Logical_Volume serial=600508e000000000f8253aac9a1abd0c WWN=0x600508e000000000f8253aac9a1abd0c
   /dev/sda1 (100MB)
   /dev/sda2 (187GB)
   /dev/sda3 (449MB)
