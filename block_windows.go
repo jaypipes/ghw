@@ -11,11 +11,12 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-const wqlDiskDrive = "SELECT Caption, CreationClassName, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
+const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
 
 type win32DiskDrive struct {
 	Caption           string
 	CreationClassName string
+	DefaultBlockSize  uint64
 	Description       string
 	DeviceID          string
 	Index             uint32 // Used to link with partition
@@ -97,14 +98,14 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 	disks := make([]*Disk, 0)
 	for _, diskdrive := range win32DiskDriveDescriptions {
 		disk := &Disk{
-			Name:                   diskdrive.Name,
+			Name:                   strings.TrimSpace(diskdrive.DeviceID),
 			SizeBytes:              diskdrive.Size,
-			PhysicalBlockSizeBytes: 0,
+			PhysicalBlockSizeBytes: diskdrive.DefaultBlockSize,
 			DriveType:              toDriveType(diskdrive.MediaType, diskdrive.Caption),
 			StorageController:      toStorageController(diskdrive.InterfaceType),
 			BusType:                toBusType(diskdrive.InterfaceType),
 			BusPath:                UNKNOWN, // TODO: add information
-			Vendor:                 UNKNOWN, // TODO: add information
+			Vendor:                 strings.TrimSpace(diskdrive.Manufacturer),
 			Model:                  strings.TrimSpace(diskdrive.Caption),
 			SerialNumber:           strings.TrimSpace(diskdrive.SerialNumber),
 			WWN:                    UNKNOWN, // TODO: add information
@@ -127,7 +128,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 								SizeBytes:  logicaldisk.Size,
 								MountPoint: logicaldisk.DeviceID,
 								Type:       diskpartition.Type,
-								IsReadOnly: toReadOnly(diskpartition.Access), // TODO: add information
+								IsReadOnly: toReadOnly(diskpartition.Access),
 							}
 							disk.Partitions = append(disk.Partitions, p)
 							break
