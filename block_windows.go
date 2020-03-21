@@ -100,13 +100,13 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			Name:                   diskdrive.Name,
 			SizeBytes:              diskdrive.Size,
 			PhysicalBlockSizeBytes: 0,
-			DriveType:              toDriveType(diskdrive.MediaType),
+			DriveType:              toDriveType(diskdrive.MediaType, diskdrive.Caption),
 			StorageController:      toStorageController(diskdrive.InterfaceType),
 			BusType:                toBusType(diskdrive.InterfaceType),
 			BusPath:                UNKNOWN, // TODO: add information
 			Vendor:                 UNKNOWN, // TODO: add information
-			Model:                  diskdrive.Caption,
-			SerialNumber:           diskdrive.SerialNumber,
+			Model:                  strings.TrimSpace(diskdrive.Caption),
+			SerialNumber:           strings.TrimSpace(diskdrive.SerialNumber),
 			WWN:                    UNKNOWN, // TODO: add information
 			Partitions:             make([]*Partition, 0),
 		}
@@ -122,8 +122,8 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 						if logicaldisktodiskpartition.Antecedent == desiredAntecedent && logicaldisktodiskpartition.Dependent == desiredDependent {
 							// Appending Partition
 							p := &Partition{
-								Name:       logicaldisk.Caption,
-								Label:      logicaldisk.Caption,
+								Name:       strings.TrimSpace(logicaldisk.Caption),
+								Label:      strings.TrimSpace(logicaldisk.Caption),
 								SizeBytes:  logicaldisk.Size,
 								MountPoint: logicaldisk.DeviceID,
 								Type:       diskpartition.Type,
@@ -184,18 +184,15 @@ func getLogicalDisks() ([]win32LogicalDisk, error) {
 	return win32LogicalDiskDescriptions, nil
 }
 
-// TODO: improve
-func toDriveType(mediaType string) DriveType {
-	var driveType DriveType
+func toDriveType(mediaType string, caption string) DriveType {
 	mediaType = strings.ToLower(mediaType)
-	if strings.Contains(mediaType, "fixed") || strings.Contains(mediaType, "ssd") {
-		driveType = DRIVE_TYPE_SSD
+	caption = strings.ToLower(caption)
+	if strings.Contains(mediaType, "fixed") || strings.Contains(mediaType, "ssd") || strings.Contains(caption, "ssd") {
+		return DRIVE_TYPE_SSD
 	} else if strings.ContainsAny(mediaType, "hdd") {
-		driveType = DRIVE_TYPE_HDD
-	} else {
-		driveType = DRIVE_TYPE_UNKNOWN
+		return DRIVE_TYPE_HDD
 	}
-	return driveType
+	return DRIVE_TYPE_UNKNOWN
 }
 
 // TODO: improve
