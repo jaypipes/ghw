@@ -221,7 +221,7 @@ func (p *Partition) String() string {
 		sizeStr = fmt.Sprintf("%d%s", size, unitStr)
 	}
 	return fmt.Sprintf(
-		"/dev/%s (%s) %s%s",
+		"%s (%s) %s%s",
 		p.Name,
 		sizeStr,
 		typeStr,

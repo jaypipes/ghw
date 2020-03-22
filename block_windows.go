@@ -105,6 +105,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			StorageController:      toStorageController(diskdrive.InterfaceType),
 			BusType:                toBusType(diskdrive.InterfaceType),
 			BusPath:                UNKNOWN, // TODO: add information
+			NUMANodeID:             -1,
 			Vendor:                 strings.TrimSpace(diskdrive.Manufacturer),
 			Model:                  strings.TrimSpace(diskdrive.Caption),
 			SerialNumber:           strings.TrimSpace(diskdrive.SerialNumber),
