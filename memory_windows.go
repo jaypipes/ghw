@@ -10,10 +10,10 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-const wqlOperatingSystem = "SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem"
+const wqlOperatingSystem = "SELECT FreePhysicalMemory FROM Win32_OperatingSystem"
 
 type win32OperatingSystem struct {
-	TotalVisibleMemorySize uint64
+	FreePhysicalMemory uint64
 }
 
 const wqlPhysicalMemory = "SELECT BankLabel, Capacity, DataWidth, Description, DeviceLocator, Manufacturer, Model, Name, PartNumber, PositionInRow, SerialNumber, Speed, Tag, TotalWidth FROM Win32_PhysicalMemory"
@@ -62,7 +62,7 @@ func (ctx *context) memFillInfo(info *MemoryInfo) error {
 	for _, description := range win32OSDescriptions {
 		// TotalVisibleMemorySize is the amount of memory available for us by
 		// the operating system **in Kilobytes**
-		totalUsableBytes += description.TotalVisibleMemorySize * uint64(KB)
+		totalUsableBytes += description.FreePhysicalMemory * uint64(KB)
 	}
 	info.TotalUsableBytes = int64(totalUsableBytes)
 	info.TotalPhysicalBytes = int64(totalPhysicalBytes)
