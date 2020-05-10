@@ -29,6 +29,18 @@ for Linux and Windows. There currently exists partial support for MacOSX.
   the structs returned by various library functions should have consistent
   attribute and method names.
 
+## Inspecting != Monitoring
+
+`ghw` is a tool for gathering information about your hardware's **capacity**
+and **capabilities**.
+
+It is important to point out that `ghw` does **NOT** report information that is
+temporary or variable. It is **NOT** a system monitor nor is it an appropriate
+tool for gathering data points for metrics that change over time.  If you are
+looking for a system that tracks usage of CPU, memory, network I/O or disk I/O,
+there are plenty of great open source tools that do this! Check out the
+[Prometheus project](https://prometheus.io/) for a great example.
+
 ## Usage
 
 You can use the functions in `ghw` to determine various hardware-related
@@ -133,6 +145,61 @@ Example output from my personal workstation:
 
 ```
 memory (24GB physical, 24GB usable)
+```
+
+#### Physical versus Usable Memory
+
+There has been [some](https://github.com/jaypipes/ghw/pull/171)
+[confusion](https://github.com/jaypipes/ghw/issues/183) regarding the
+difference between the total physical bytes versus total usable bytes of
+memory.
+
+Some of this confusion has been due to a misunderstanding of the term "usable".
+As mentioned [above](#inspection!=monitoring), `ghw` does inspection of the
+system's capacity.
+
+A host computer has two capacities when it comes to RAM. The first capacity is
+the amount of RAM that is contained in all memory banks (DIMMs) that are
+attached to the motherboard. `ghw.MemoryInfo.TotalPhysicalBytes` refers to this
+first capacity.
+
+There is a (usually small) amount of RAM that is consumed by the bootloader
+before the operating system is started (booted). Once the bootloader has booted
+the operating system, the amount of RAM that may be used by the operating
+system and its applications is fixed. `ghw.MemoryInfo.TotalUsableBytes` refers
+to this second capacity.
+
+You can determine the amount of RAM that the bootloader used (that is not made
+available to the operating system) by subtracting
+`ghw.MemoryInfo.TotalUsableBytes` from `ghw.MemoryInfo.TotalPhysicalBytes`:
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	memory, err := ghw.Memory()
+	if err != nil {
+		fmt.Printf("Error getting memory info: %v", err)
+	}
+
+        phys := memory.TotalPhysicalBytes
+        usable := memory.TotalUsableBytes
+
+	fmt.Printf("The bootloader consumes %d bytes of RAM\n", phys - usable)
+}
+```
+
+Example output from my personal workstation booted into a Windows10 operating
+system with a Linux GRUB bootloader:
+
+```
+The bootloader consumes 3832720 bytes of RAM
 ```
 
 ### CPU
