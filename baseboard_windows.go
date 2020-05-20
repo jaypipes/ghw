@@ -10,10 +10,10 @@ import "github.com/StackExchange/wmi"
 const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version FROM Win32_BaseBoard"
 
 type win32Baseboard struct {
-	Manufacturer string
-	SerialNumber string
-	Tag          string
-	Version      string
+	Manufacturer *string
+	SerialNumber *string
+	Tag          *string
+	Version      *string
 }
 
 func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
@@ -23,10 +23,10 @@ func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
 		return err
 	}
 	if len(win32BaseboardDescriptions) > 0 {
-		info.AssetTag = win32BaseboardDescriptions[0].Tag
-		info.SerialNumber = win32BaseboardDescriptions[0].SerialNumber
-		info.Vendor = win32BaseboardDescriptions[0].Manufacturer
-		info.Version = win32BaseboardDescriptions[0].Version
+		info.AssetTag = *win32BaseboardDescriptions[0].Tag
+		info.SerialNumber = *win32BaseboardDescriptions[0].SerialNumber
+		info.Vendor = *win32BaseboardDescriptions[0].Manufacturer
+		info.Version = *win32BaseboardDescriptions[0].Version
 	}
 
 	return nil

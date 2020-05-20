@@ -14,19 +14,19 @@ import (
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
 
 type win32DiskDrive struct {
-	Caption           string
-	CreationClassName string
+	Caption           *string
+	CreationClassName *string
 	DefaultBlockSize  uint64
-	Description       string
-	DeviceID          string
+	Description       *string
+	DeviceID          *string
 	Index             uint32 // Used to link with partition
-	InterfaceType     string
-	Manufacturer      string
-	MediaType         string
-	Model             string
-	Name              string
+	InterfaceType     *string
+	Manufacturer      *string
+	MediaType         *string
+	Model             *string
+	Name              *string
 	Partitions        int32
-	SerialNumber      string
+	SerialNumber      *string
 	Size              uint64
 	TotalCylinders    int64
 	TotalHeads        int32
@@ -40,37 +40,37 @@ const wqlDiskPartition = "SELECT Access, BlockSize, Caption, CreationClassName, 
 type win32DiskPartition struct {
 	Access            uint16
 	BlockSize         uint64
-	Caption           string
-	CreationClassName string
-	Description       string
-	DeviceID          string
+	Caption           *string
+	CreationClassName *string
+	Description       *string
+	DeviceID          *string
 	DiskIndex         uint32 // Used to link with Disk Drive
 	Index             uint32
-	Name              string
+	Name              *string
 	Size              int64
-	SystemName        string
-	Type              string
+	SystemName        *string
+	Type              *string
 }
 
 const wqlLogicalDiskToPartition = "SELECT Antecedent, Dependent FROM Win32_LogicalDiskToPartition"
 
 type win32LogicalDiskToPartition struct {
-	Antecedent string
-	Dependent  string
+	Antecedent *string
+	Dependent  *string
 }
 
 const wqlLogicalDisk = "SELECT Caption, CreationClassName, Description, DeviceID, FileSystem, FreeSpace, Name, Size, SystemName FROM Win32_LogicalDisk"
 
 type win32LogicalDisk struct {
-	Caption           string
-	CreationClassName string
-	Description       string
-	DeviceID          string
-	FileSystem        string
+	Caption           *string
+	CreationClassName *string
+	Description       *string
+	DeviceID          *string
+	FileSystem        *string
 	FreeSpace         uint64
-	Name              string
+	Name              *string
 	Size              uint64
-	SystemName        string
+	SystemName        *string
 }
 
 func (ctx *context) blockFillInfo(info *BlockInfo) error {
@@ -98,17 +98,17 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 	disks := make([]*Disk, 0)
 	for _, diskdrive := range win32DiskDriveDescriptions {
 		disk := &Disk{
-			Name:                   strings.TrimSpace(diskdrive.DeviceID),
+			Name:                   strings.TrimSpace(*diskdrive.DeviceID),
 			SizeBytes:              diskdrive.Size,
 			PhysicalBlockSizeBytes: diskdrive.DefaultBlockSize,
-			DriveType:              toDriveType(diskdrive.MediaType, diskdrive.Caption),
-			StorageController:      toStorageController(diskdrive.InterfaceType),
-			BusType:                toBusType(diskdrive.InterfaceType),
+			DriveType:              toDriveType(*diskdrive.MediaType, *diskdrive.Caption),
+			StorageController:      toStorageController(*diskdrive.InterfaceType),
+			BusType:                toBusType(*diskdrive.InterfaceType),
 			BusPath:                UNKNOWN, // TODO: add information
 			NUMANodeID:             -1,
-			Vendor:                 strings.TrimSpace(diskdrive.Manufacturer),
-			Model:                  strings.TrimSpace(diskdrive.Caption),
-			SerialNumber:           strings.TrimSpace(diskdrive.SerialNumber),
+			Vendor:                 strings.TrimSpace(*diskdrive.Manufacturer),
+			Model:                  strings.TrimSpace(*diskdrive.Caption),
+			SerialNumber:           strings.TrimSpace(*diskdrive.SerialNumber),
 			WWN:                    UNKNOWN, // TODO: add information
 			Partitions:             make([]*Partition, 0),
 		}
@@ -119,16 +119,16 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 				// Finding logical partition linked to current disk partition
 				for _, logicaldisk := range win32LogicalDiskDescriptions {
 					for _, logicaldisktodiskpartition := range win32LogicalDiskToPartitionDescriptions {
-						var desiredAntecedent = "\\\\" + diskpartition.SystemName + "\\root\\cimv2:" + diskpartition.CreationClassName + ".DeviceID=\"" + diskpartition.DeviceID + "\""
-						var desiredDependent = "\\\\" + logicaldisk.SystemName + "\\root\\cimv2:" + logicaldisk.CreationClassName + ".DeviceID=\"" + logicaldisk.DeviceID + "\""
-						if logicaldisktodiskpartition.Antecedent == desiredAntecedent && logicaldisktodiskpartition.Dependent == desiredDependent {
+						var desiredAntecedent = "\\\\" + *diskpartition.SystemName + "\\root\\cimv2:" + *diskpartition.CreationClassName + ".DeviceID=\"" + *diskpartition.DeviceID + "\""
+						var desiredDependent = "\\\\" + *logicaldisk.SystemName + "\\root\\cimv2:" + *logicaldisk.CreationClassName + ".DeviceID=\"" + *logicaldisk.DeviceID + "\""
+						if *logicaldisktodiskpartition.Antecedent == desiredAntecedent && *logicaldisktodiskpartition.Dependent == desiredDependent {
 							// Appending Partition
 							p := &Partition{
-								Name:       strings.TrimSpace(logicaldisk.Caption),
-								Label:      strings.TrimSpace(logicaldisk.Caption),
+								Name:       strings.TrimSpace(*logicaldisk.Caption),
+								Label:      strings.TrimSpace(*logicaldisk.Caption),
 								SizeBytes:  logicaldisk.Size,
-								MountPoint: logicaldisk.DeviceID,
-								Type:       diskpartition.Type,
+								MountPoint: *logicaldisk.DeviceID,
+								Type:       *diskpartition.Type,
 								IsReadOnly: toReadOnly(diskpartition.Access),
 							}
 							disk.Partitions = append(disk.Partitions, p)

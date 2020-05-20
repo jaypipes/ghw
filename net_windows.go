@@ -14,16 +14,16 @@ import (
 const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName  FROM Win32_NetworkAdapter"
 
 type win32NetworkAdapter struct {
-	Description     string
-	DeviceID        string
+	Description     *string
+	DeviceID        *string
 	Index           uint32
 	InterfaceIndex  uint32
-	MACAddress      string
-	Manufacturer    string
-	Name            string
-	NetConnectionID string
-	ProductName     string
-	ServiceName     string
+	MACAddress      *string
+	Manufacturer    *string
+	Name            *string
+	NetConnectionID *string
+	ProductName     *string
+	ServiceName     *string
 }
 
 func (ctx *context) netFillInfo(info *NetworkInfo) error {
@@ -43,7 +43,7 @@ func (ctx *context) nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
 	for _, nicDescription := range win32NetDescriptions {
 		nic := &NIC{
 			Name:         ctx.netDeviceName(nicDescription),
-			MacAddress:   nicDescription.MACAddress,
+			MacAddress:   *nicDescription.MACAddress,
 			IsVirtual:    false,
 			Capabilities: []*NICCapability{},
 		}
@@ -56,10 +56,10 @@ func (ctx *context) nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
 
 func (ctx *context) netDeviceName(description win32NetworkAdapter) string {
 	var name string
-	if strings.TrimSpace(description.NetConnectionID) != "" {
-		name = description.NetConnectionID + " - " + description.Description
+	if strings.TrimSpace(*description.NetConnectionID) != "" {
+		name = *description.NetConnectionID + " - " + *description.Description
 	} else {
-		name = description.Description
+		name = *description.Description
 	}
 	return name
 }

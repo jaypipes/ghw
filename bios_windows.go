@@ -10,9 +10,9 @@ import "github.com/StackExchange/wmi"
 const wqlBIOS = "SELECT InstallDate, Manufacturer, Version FROM CIM_BIOSElement"
 
 type win32BIOS struct {
-	InstallDate  string
-	Manufacturer string
-	Version      string
+	InstallDate  *string
+	Manufacturer *string
+	Version      *string
 }
 
 func (ctx *context) biosFillInfo(info *BIOSInfo) error {
@@ -22,9 +22,9 @@ func (ctx *context) biosFillInfo(info *BIOSInfo) error {
 		return err
 	}
 	if len(win32BIOSDescriptions) > 0 {
-		info.Vendor = win32BIOSDescriptions[0].Manufacturer
-		info.Version = win32BIOSDescriptions[0].Version
-		info.Date = win32BIOSDescriptions[0].InstallDate
+		info.Vendor = *win32BIOSDescriptions[0].Manufacturer
+		info.Version = *win32BIOSDescriptions[0].Version
+		info.Date = *win32BIOSDescriptions[0].InstallDate
 	}
 	return nil
 }
