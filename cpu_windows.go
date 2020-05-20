@@ -13,8 +13,8 @@ import (
 const wmqlProcessor = "SELECT Manufacturer, Name, NumberOfLogicalProcessors, NumberOfCores FROM Win32_Processor"
 
 type win32Processor struct {
-	Manufacturer              string
-	Name                      string
+	Manufacturer              *string
+	Name                      *string
 	NumberOfLogicalProcessors uint32
 	NumberOfCores             uint32
 }
@@ -44,8 +44,8 @@ func (ctx *context) processorsGet(win32descriptions []win32Processor) []*Process
 	for index, description := range win32descriptions {
 		p := &Processor{
 			Id:         index, // TODO: how to get a decent "Physical ID" to use ?
-			Model:      description.Name,
-			Vendor:     description.Manufacturer,
+			Model:      *description.Name,
+			Vendor:     *description.Manufacturer,
 			NumCores:   description.NumberOfCores,
 			NumThreads: description.NumberOfLogicalProcessors,
 		}
