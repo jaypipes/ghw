@@ -16,38 +16,38 @@ const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Descr
 type win32DiskDrive struct {
 	Caption           *string
 	CreationClassName *string
-	DefaultBlockSize  uint64
+	DefaultBlockSize  *uint64
 	Description       *string
 	DeviceID          *string
-	Index             uint32 // Used to link with partition
+	Index             *uint32 // Used to link with partition
 	InterfaceType     *string
 	Manufacturer      *string
 	MediaType         *string
 	Model             *string
 	Name              *string
-	Partitions        int32
+	Partitions        *int32
 	SerialNumber      *string
-	Size              uint64
-	TotalCylinders    int64
-	TotalHeads        int32
-	TotalSectors      int64
-	TotalTracks       int64
-	TracksPerCylinder int32
+	Size              *uint64
+	TotalCylinders    *int64
+	TotalHeads        *int32
+	TotalSectors      *int64
+	TotalTracks       *int64
+	TracksPerCylinder *int32
 }
 
 const wqlDiskPartition = "SELECT Access, BlockSize, Caption, CreationClassName, Description, DeviceID, DiskIndex, Index, Name, Size, SystemName, Type FROM Win32_DiskPartition"
 
 type win32DiskPartition struct {
-	Access            uint16
-	BlockSize         uint64
+	Access            *uint16
+	BlockSize         *uint64
 	Caption           *string
 	CreationClassName *string
 	Description       *string
 	DeviceID          *string
-	DiskIndex         uint32 // Used to link with Disk Drive
-	Index             uint32
+	DiskIndex         *uint32 // Used to link with Disk Drive
+	Index             *uint32
 	Name              *string
-	Size              int64
+	Size              *int64
 	SystemName        *string
 	Type              *string
 }
@@ -67,9 +67,9 @@ type win32LogicalDisk struct {
 	Description       *string
 	DeviceID          *string
 	FileSystem        *string
-	FreeSpace         uint64
+	FreeSpace         *uint64
 	Name              *string
-	Size              uint64
+	Size              *uint64
 	SystemName        *string
 }
 
@@ -99,8 +99,8 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 	for _, diskdrive := range win32DiskDriveDescriptions {
 		disk := &Disk{
 			Name:                   strings.TrimSpace(*diskdrive.DeviceID),
-			SizeBytes:              diskdrive.Size,
-			PhysicalBlockSizeBytes: diskdrive.DefaultBlockSize,
+			SizeBytes:              *diskdrive.Size,
+			PhysicalBlockSizeBytes: *diskdrive.DefaultBlockSize,
 			DriveType:              toDriveType(*diskdrive.MediaType, *diskdrive.Caption),
 			StorageController:      toStorageController(*diskdrive.InterfaceType),
 			BusType:                toBusType(*diskdrive.InterfaceType),
@@ -115,7 +115,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 		for _, diskpartition := range win32DiskPartitionDescriptions {
 			// Finding disk partition linked to current disk drive
 			if diskdrive.Index == diskpartition.DiskIndex {
-				disk.PhysicalBlockSizeBytes = diskpartition.BlockSize
+				disk.PhysicalBlockSizeBytes = *diskpartition.BlockSize
 				// Finding logical partition linked to current disk partition
 				for _, logicaldisk := range win32LogicalDiskDescriptions {
 					for _, logicaldisktodiskpartition := range win32LogicalDiskToPartitionDescriptions {
@@ -126,10 +126,10 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 							p := &Partition{
 								Name:       strings.TrimSpace(*logicaldisk.Caption),
 								Label:      strings.TrimSpace(*logicaldisk.Caption),
-								SizeBytes:  logicaldisk.Size,
+								SizeBytes:  *logicaldisk.Size,
 								MountPoint: *logicaldisk.DeviceID,
 								Type:       *diskpartition.Type,
-								IsReadOnly: toReadOnly(diskpartition.Access),
+								IsReadOnly: toReadOnly(*diskpartition.Access),
 							}
 							disk.Partitions = append(disk.Partitions, p)
 							break

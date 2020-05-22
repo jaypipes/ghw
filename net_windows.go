@@ -16,8 +16,8 @@ const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, 
 type win32NetworkAdapter struct {
 	Description     *string
 	DeviceID        *string
-	Index           uint32
-	InterfaceIndex  uint32
+	Index           *uint32
+	InterfaceIndex  *uint32
 	MACAddress      *string
 	Manufacturer    *string
 	Name            *string
