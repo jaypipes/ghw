@@ -8,6 +8,8 @@ package ghw
 
 import (
 	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 // ProcessorCore describes a physical host processor core. A processor core is
@@ -116,12 +118,9 @@ type CPUInfo struct {
 // CPU returns a CPUInfo struct that contains information about the CPUs on the
 // host system
 func CPU(opts ...*WithOption) (*CPUInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &CPUInfo{}
-	if err := ctx.cpuFillInfo(info); err != nil {
+	if err := cpuFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

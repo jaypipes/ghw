@@ -5,15 +5,19 @@
 
 package ghw
 
-func (ctx *context) productFillInfo(info *ProductInfo) error {
+import (
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
-	info.Family = ctx.dmiItem("product_family")
-	info.Name = ctx.dmiItem("product_name")
-	info.Vendor = ctx.dmiItem("sys_vendor")
-	info.SerialNumber = ctx.dmiItem("product_serial")
-	info.UUID = ctx.dmiItem("product_uuid")
-	info.SKU = ctx.dmiItem("product_sku")
-	info.Version = ctx.dmiItem("product_version")
+func productFillInfo(ctx *context.Context, info *ProductInfo) error {
+
+	info.Family = dmiItem(ctx, "product_family")
+	info.Name = dmiItem(ctx, "product_name")
+	info.Vendor = dmiItem(ctx, "sys_vendor")
+	info.SerialNumber = dmiItem(ctx, "product_serial")
+	info.UUID = dmiItem(ctx, "product_uuid")
+	info.SKU = dmiItem(ctx, "product_sku")
+	info.Version = dmiItem(ctx, "product_version")
 
 	return nil
 }

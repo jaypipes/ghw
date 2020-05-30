@@ -10,8 +10,10 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
+func baseboardFillInfo(ctx *context.Context, info *BaseboardInfo) error {
 	return errors.New("baseboardFillInfo not implemented on " + runtime.GOOS)
 }

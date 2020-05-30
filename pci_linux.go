@@ -13,27 +13,29 @@ import (
 	"strings"
 
 	"github.com/jaypipes/pcidb"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) pciFillInfo(info *PCIInfo) error {
-	db, err := pcidb.New(pcidb.WithChroot(ctx.chroot))
+func pciFillInfo(ctx *context.Context, info *PCIInfo) error {
+	db, err := pcidb.New(pcidb.WithChroot(ctx.Chroot))
 	if err != nil {
 		return err
 	}
+	info.ctx = ctx
 	info.Classes = db.Classes
 	info.Vendors = db.Vendors
 	info.Products = db.Products
-	info.ctx = ctx
 	return nil
 }
 
-func (ctx *context) getPCIDeviceModaliasPath(address string) string {
+func getPCIDeviceModaliasPath(ctx *context.Context, address string) string {
 	pciAddr := PCIAddressFromString(address)
 	if pciAddr == nil {
 		return ""
 	}
 	return filepath.Join(
-		ctx.pathSysBusPciDevices(),
+		pathSysBusPciDevices(ctx),
 		pciAddr.Domain+":"+pciAddr.Bus+":"+pciAddr.Slot+"."+pciAddr.Function,
 		"modalias",
 	)
@@ -187,8 +189,8 @@ func findPCISubclass(
 		}
 	}
 	return &pcidb.Subclass{
-		ID:   subclassID,
-		Name: UNKNOWN,
+		ID:                    subclassID,
+		Name:                  UNKNOWN,
 		ProgrammingInterfaces: []*pcidb.ProgrammingInterface{},
 	}
 }
@@ -219,7 +221,7 @@ func findPCIProgrammingInterface(
 // device at the requested address. If no such device could be found, returns
 // nil
 func (info *PCIInfo) GetDevice(address string) *PCIDevice {
-	fp := info.ctx.getPCIDeviceModaliasPath(address)
+	fp := getPCIDeviceModaliasPath(info.ctx, address)
 	if fp == "" {
 		return nil
 	}
@@ -274,7 +276,7 @@ func (info *PCIInfo) ListDevices() []*PCIDevice {
 	// of symlinks. The names of the symlinks are all the known PCI addresses
 	// for the host. For each address, we grab a *PCIDevice matching the
 	// address and append to the returned array.
-	links, err := ioutil.ReadDir(info.ctx.pathSysBusPciDevices())
+	links, err := ioutil.ReadDir(pathSysBusPciDevices(info.ctx))
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
 		return nil

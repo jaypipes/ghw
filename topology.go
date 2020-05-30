@@ -9,6 +9,8 @@ package ghw
 import (
 	"fmt"
 	"sort"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 // TopologyNode is an abstract construct representing a collection of
@@ -43,12 +45,9 @@ type TopologyInfo struct {
 // Topology returns a TopologyInfo struct that describes the system topology of
 // the host hardware
 func Topology(opts ...*WithOption) (*TopologyInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &TopologyInfo{}
-	if err := ctx.topologyFillInfo(info); err != nil {
+	if err := topologyFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	for _, node := range info.Nodes {

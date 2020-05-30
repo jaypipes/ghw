@@ -6,7 +6,11 @@
 
 package ghw
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
 // BaseboardInfo defines baseboard release information
 type BaseboardInfo struct {
@@ -43,12 +47,9 @@ func (i *BaseboardInfo) String() string {
 // Baseboard returns a pointer to a BaseboardInfo struct containing information
 // about the host's baseboard
 func Baseboard(opts ...*WithOption) (*BaseboardInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &BaseboardInfo{}
-	if err := ctx.baseboardFillInfo(info); err != nil {
+	if err := baseboardFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

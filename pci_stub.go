@@ -10,9 +10,11 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) pciFillInfo(info *PCIInfo) error {
+func pciFillInfo(ctx *context.Context, info *PCIInfo) error {
 	return errors.New("pciFillInfo not implemented on " + runtime.GOOS)
 }
 

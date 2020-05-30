@@ -13,10 +13,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) cpuFillInfo(info *CPUInfo) error {
-	info.Processors = ctx.processorsGet()
+func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
+	info.Processors = processorsGet(ctx)
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range info.Processors {
@@ -32,14 +34,14 @@ func (ctx *context) cpuFillInfo(info *CPUInfo) error {
 // the CPUInfo.Processors attribute.
 // TODO(jaypipes): Remove in 1.0
 func Processors() []*Processor {
-	ctx := contextFromEnv()
-	return ctx.processorsGet()
+	ctx := context.FromEnv()
+	return processorsGet(ctx)
 }
 
-func (ctx *context) processorsGet() []*Processor {
+func processorsGet(ctx *context.Context) []*Processor {
 	procs := make([]*Processor, 0)
 
-	r, err := os.Open(ctx.pathProcCpuinfo())
+	r, err := os.Open(pathProcCpuinfo(ctx))
 	if err != nil {
 		return nil
 	}
@@ -150,14 +152,14 @@ func (ctx *context) processorsGet() []*Processor {
 	return procs
 }
 
-func (ctx *context) coresForNode(nodeID int) ([]*ProcessorCore, error) {
+func coresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a
 	// core_id file that indicates the 0-based identifier of the physical core
 	// the logical processor (hardware thread) is on.
 	path := filepath.Join(
-		ctx.pathSysDevicesSystemNode(),
+		pathSysDevicesSystemNode(ctx),
 		fmt.Sprintf("node%d", nodeID),
 	)
 	cores := make([]*ProcessorCore, 0)

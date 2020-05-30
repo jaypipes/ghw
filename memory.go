@@ -9,6 +9,8 @@ package ghw
 import (
 	"fmt"
 	"math"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 type MemoryModule struct {
@@ -28,12 +30,9 @@ type MemoryInfo struct {
 }
 
 func Memory(opts ...*WithOption) (*MemoryInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &MemoryInfo{}
-	if err := ctx.memFillInfo(info); err != nil {
+	if err := memFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

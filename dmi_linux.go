@@ -9,10 +9,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) dmiItem(value string) string {
-	path := filepath.Join(ctx.pathSysClassDMI(), "id", value)
+func dmiItem(ctx *context.Context, value string) string {
+	path := filepath.Join(pathSysClassDMI(ctx), "id", value)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {

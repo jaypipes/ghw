@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 // nolint: gocyclo
@@ -18,11 +20,11 @@ func TestBlock(t *testing.T) {
 		t.Skip("Skipping block tests.")
 	}
 
-	ctx := contextFromEnv()
+	ctx := context.FromEnv()
 
 	info := &BlockInfo{}
 
-	if err := ctx.blockFillInfo(info); err != nil {
+	if err := blockFillInfo(ctx, info); err != nil {
 		t.Fatalf("Expected no error creating BlockInfo, but got %v", err)
 	}
 	tpb := info.TotalPhysicalBytes

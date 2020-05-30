@@ -14,6 +14,8 @@ import (
 
 	"github.com/pkg/errors"
 	"howett.net/plist"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 type diskOrPartitionPlistNode struct {
@@ -95,7 +97,7 @@ type ioregPlist struct {
 	VendorName   string `plist:"Vendor Name"`
 }
 
-func (ctx *context) getDiskUtilListPlist() (*diskUtilListPlist, error) {
+func getDiskUtilListPlist() (*diskUtilListPlist, error) 
 	out, err := exec.Command("diskutil", "list", "-plist").Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "diskutil list failed")
@@ -109,7 +111,7 @@ func (ctx *context) getDiskUtilListPlist() (*diskUtilListPlist, error) {
 	return &data, nil
 }
 
-func (ctx *context) getDiskUtilInfoPlist(device string) (*diskUtilInfoPlist, error) {
+func getDiskUtilInfoPlist(device string) (*diskUtilInfoPlist, error) {
 	out, err := exec.Command("diskutil", "info", "-plist", device).Output()
 	if err != nil {
 		return nil, errors.Wrapf(err, "diskutil info for %q failed", device)
@@ -123,7 +125,7 @@ func (ctx *context) getDiskUtilInfoPlist(device string) (*diskUtilInfoPlist, err
 	return &data, nil
 }
 
-func (ctx *context) getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
+func getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
 	name := path.Base(ioDeviceTreePath)
 
 	args := []string{
@@ -153,7 +155,7 @@ func (ctx *context) getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) 
 	return &data[0], nil
 }
 
-func (ctx *context) makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, error) {
+func makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, error) {
 	if s.Size < 0 {
 		return nil, errors.Errorf("invalid size %q of partition %q", s.Size, s.DeviceIdentifier)
 	}
@@ -165,7 +167,7 @@ func (ctx *context) makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool)
 		partType = s.Content
 	}
 
-	info, err := ctx.getDiskUtilInfoPlist(s.DeviceIdentifier)
+	info, err := getDiskUtilInfoPlist(s.DeviceIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -183,9 +185,7 @@ func (ctx *context) makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool)
 
 // driveTypeFromPlist looks at the supplied property list struct and attempts to
 // determine the disk type
-func (ctx *context) driveTypeFromPlist(
-	infoPlist *diskUtilInfoPlist,
-) DriveType {
+func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
 	dt := DRIVE_TYPE_HDD
 	if infoPlist.SolidState {
 		dt = DRIVE_TYPE_SSD
@@ -197,9 +197,7 @@ func (ctx *context) driveTypeFromPlist(
 
 // storageControllerFromPlist looks at the supplied property list struct and
 // attempts to determine the storage controller in use for the device
-func (ctx *context) storageControllerFromPlist(
-	infoPlist *diskUtilInfoPlist,
-) StorageController {
+func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController {
 	sc := STORAGE_CONTROLLER_SCSI
 	if strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController") {
 		sc = STORAGE_CONTROLLER_NVME
@@ -211,16 +209,14 @@ func (ctx *context) storageControllerFromPlist(
 
 // busTypeFromPlist looks at the supplied property list struct and attempts to
 // determine the bus type in use for the device
-func (ctx *context) busTypeFromPlist(
-	infoPlist *diskUtilInfoPlist,
-) BusType {
+func busTypeFromPlist(infoPlist *diskUtilInfoPlist) BusType {
 	// TODO(jaypipes): Find out if Macs support any bus other than
 	// PCIe... it doesn't seem like they do
 	return BUS_TYPE_PCI
 }
 
-func (ctx *context) blockFillInfo(info *BlockInfo) error {
-	listPlist, err := ctx.getDiskUtilListPlist()
+func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
+	listPlist, err := getDiskUtilListPlist()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		return err
@@ -235,7 +231,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			return errors.Errorf("invalid size %q of disk %q", disk.Size, disk.DeviceIdentifier)
 		}
 
-		infoPlist, err := ctx.getDiskUtilInfoPlist(disk.DeviceIdentifier)
+		infoPlist, err := getDiskUtilInfoPlist(disk.DeviceIdentifier)
 		if err != nil {
 			return err
 		}
@@ -245,7 +241,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 
 		busPath := strings.TrimPrefix(infoPlist.DeviceTreePath, "IODeviceTree:")
 
-		ioregPlist, err := ctx.getIoregPlist(infoPlist.DeviceTreePath)
+		ioregPlist, err := getIoregPlist(infoPlist.DeviceTreePath)
 		if err != nil {
 			return err
 		}
@@ -258,10 +254,10 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			Name:                   disk.DeviceIdentifier,
 			SizeBytes:              uint64(disk.Size),
 			PhysicalBlockSizeBytes: uint64(infoPlist.DeviceBlockSize),
-			DriveType:              ctx.driveTypeFromPlist(infoPlist),
+			DriveType:              driveTypeFromPlist(infoPlist),
 			IsRemovable:            infoPlist.Removable,
-			StorageController:      ctx.storageControllerFromPlist(infoPlist),
-			BusType:                ctx.busTypeFromPlist(infoPlist),
+			StorageController:      storageControllerFromPlist(infoPlist),
+			BusType:                busTypeFromPlist(infoPlist),
 			BusPath:                busPath,
 			NUMANodeID:             -1,
 			Vendor:                 ioregPlist.VendorName,
@@ -272,7 +268,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 		}
 
 		for _, partition := range disk.Partitions {
-			part, err := ctx.makePartition(disk, partition, false)
+			part, err := makePartition(disk, partition, false)
 			if err != nil {
 				return err
 			}
@@ -280,7 +276,7 @@ func (ctx *context) blockFillInfo(info *BlockInfo) error {
 			diskReport.Partitions = append(diskReport.Partitions, part)
 		}
 		for _, volume := range disk.APFSVolumes {
-			part, err := ctx.makePartition(disk, volume, true)
+			part, err := makePartition(disk, volume, true)
 			if err != nil {
 				return err
 			}

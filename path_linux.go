@@ -7,52 +7,54 @@ package ghw
 
 import (
 	"path/filepath"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) pathVarLog() string {
-	return filepath.Join(ctx.chroot, "var", "log")
+func pathVarLog(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "var", "log")
 }
 
-func (ctx *context) pathProcMeminfo() string {
-	return filepath.Join(ctx.chroot, "proc", "meminfo")
+func pathProcMeminfo(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "proc", "meminfo")
 }
 
-func (ctx *context) pathSysKernelMMHugepages() string {
-	return filepath.Join(ctx.chroot, "sys", "kernel", "mm", "hugepages")
+func pathSysKernelMMHugepages(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "kernel", "mm", "hugepages")
 }
 
-func (ctx *context) pathProcCpuinfo() string {
-	return filepath.Join(ctx.chroot, "proc", "cpuinfo")
+func pathProcCpuinfo(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "proc", "cpuinfo")
 }
 
-func (ctx *context) pathEtcMtab() string {
-	return filepath.Join(ctx.chroot, "etc", "mtab")
+func pathEtcMtab(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "etc", "mtab")
 }
 
-func (ctx *context) pathSysBlock() string {
-	return filepath.Join(ctx.chroot, "sys", "block")
+func pathSysBlock(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "block")
 }
 
-func (ctx *context) pathSysDevicesSystemNode() string {
-	return filepath.Join(ctx.chroot, "sys", "devices", "system", "node")
+func pathSysDevicesSystemNode(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "devices", "system", "node")
 }
 
-func (ctx *context) pathSysBusPciDevices() string {
-	return filepath.Join(ctx.chroot, "sys", "bus", "pci", "devices")
+func pathSysBusPciDevices(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "bus", "pci", "devices")
 }
 
-func (ctx *context) pathSysClassDrm() string {
-	return filepath.Join(ctx.chroot, "sys", "class", "drm")
+func pathSysClassDrm(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "class", "drm")
 }
 
-func (ctx *context) pathSysClassDMI() string {
-	return filepath.Join(ctx.chroot, "sys", "class", "dmi")
+func pathSysClassDMI(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "class", "dmi")
 }
 
-func (ctx *context) pathSysClassNet() string {
-	return filepath.Join(ctx.chroot, "sys", "class", "net")
+func pathSysClassNet(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "sys", "class", "net")
 }
 
-func (ctx *context) pathRunUdevData() string {
-	return filepath.Join(ctx.chroot, "run", "udev", "data")
+func pathRunUdevData(ctx *context.Context) string {
+	return filepath.Join(ctx.Chroot, "run", "udev", "data")
 }

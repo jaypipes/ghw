@@ -5,7 +5,11 @@
 
 package ghw
 
-import "github.com/StackExchange/wmi"
+import (
+	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
 const wqlBIOS = "SELECT InstallDate, Manufacturer, Version FROM CIM_BIOSElement"
 
@@ -15,7 +19,7 @@ type win32BIOS struct {
 	Version      *string
 }
 
-func (ctx *context) biosFillInfo(info *BIOSInfo) error {
+func biosFillInfo(ctx *context.Context, info *BIOSInfo) error {
 	// Getting data from WMI
 	var win32BIOSDescriptions []win32BIOS
 	if err := wmi.Query(wqlBIOS, &win32BIOSDescriptions); err != nil {

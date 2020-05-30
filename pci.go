@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/jaypipes/pcidb"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 var (
@@ -123,7 +125,7 @@ func (di *PCIDevice) String() string {
 }
 
 type PCIInfo struct {
-	ctx *context
+	ctx *context.Context
 	// hash of class ID -> class information
 	Classes map[string]*pcidb.Class
 	// hash of vendor ID -> vendor information
@@ -165,12 +167,9 @@ func PCIAddressFromString(address string) *PCIAddress {
 }
 
 func PCI(opts ...*WithOption) (*PCIInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &PCIInfo{}
-	if err := ctx.pciFillInfo(info); err != nil {
+	if err := pciFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

@@ -10,8 +10,10 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) gpuFillInfo(info *GPUInfo) error {
+func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 	return errors.New("gpuFillInfo not implemented on " + runtime.GOOS)
 }

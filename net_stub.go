@@ -10,9 +10,11 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) netFillInfo(info *NetworkInfo) error {
+func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
 	return errors.New("netFillInfo not implemented on " + runtime.GOOS)
 }
 
@@ -24,10 +26,10 @@ The NICs() function has been DEPRECATED and will be removed in the 1.0 release
 of ghw. Please use the NetworkInfo.NICs attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.nics()
+	ctx := context.FromEnv()
+	return nics(ctx)
 }
 
-func (ctx *context) nics() []*NIC {
+func nics(ctx *context.Context) []*NIC {
 	return nil
 }

@@ -10,6 +10,8 @@ import (
 
 	"github.com/StackExchange/wmi"
 	"github.com/jaypipes/pcidb"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlVideoController = "SELECT Caption, CreationClassName, Description, DeviceID, Name, PNPDeviceID, SystemCreationClassName, SystemName, VideoArchitecture, VideoMemoryType, VideoModeDescription, VideoProcessor FROM Win32_VideoController"
@@ -42,7 +44,7 @@ type win32PnPEntity struct {
 	PNPDeviceID       string
 }
 
-func (ctx *context) gpuFillInfo(info *GPUInfo) error {
+func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 	// Getting data from WMI
 	var win32VideoControllerDescriptions []win32VideoController
 	if err := wmi.Query(wqlVideoController, &win32VideoControllerDescriptions); err != nil {
@@ -70,7 +72,7 @@ func (ctx *context) gpuFillInfo(info *GPUInfo) error {
 		card := &GraphicsCard{
 			Address:    description.DeviceID, // https://stackoverflow.com/questions/32073667/how-do-i-discover-the-pcie-bus-topology-and-slot-numbers-on-the-board
 			Index:      0,
-			DeviceInfo: ctx.GetDevice(description.PNPDeviceID, win32PnPDescriptions),
+			DeviceInfo: GetDevice(description.PNPDeviceID, win32PnPDescriptions),
 		}
 		cards = append(cards, card)
 	}
@@ -78,7 +80,7 @@ func (ctx *context) gpuFillInfo(info *GPUInfo) error {
 	return nil
 }
 
-func (ctx *context) GetDevice(id string, entities []win32PnPEntity) *PCIDevice {
+func GetDevice(id string, entities []win32PnPEntity) *PCIDevice {
 	// Backslashing PnP address ID as requested by JSON and VMI query: https://docs.microsoft.com/en-us/windows/win32/wmisdk/where-clause
 	var queryAddress = strings.Replace(id, "\\", `\\`, -1)
 	// Preparing default structure

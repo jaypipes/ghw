@@ -7,6 +7,8 @@ package ghw
 
 import (
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlChassis = "SELECT Caption, Description, Name, Manufacturer, Model, SerialNumber, Tag, TypeDescriptions, Version FROM CIM_Chassis"
@@ -23,7 +25,7 @@ type win32Chassis struct {
 	Version          *string
 }
 
-func (ctx *context) chassisFillInfo(info *ChassisInfo) error {
+func chassisFillInfo(ctx *context.Context, info *ChassisInfo) error {
 	// Getting data from WMI
 	var win32ChassisDescriptions []win32Chassis
 	if err := wmi.Query(wqlChassis, &win32ChassisDescriptions); err != nil {

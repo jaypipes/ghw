@@ -1,4 +1,10 @@
-package ghw
+//
+// Use and distribution licensed under the Apache license version 2.
+//
+// See the COPYING file in the root project directory for full text.
+//
+
+package option
 
 import "os"
 
@@ -7,9 +13,9 @@ const (
 	envKeyChroot  = "GHW_CHROOT"
 )
 
-// optDefaultChroot returns the value of the GHW_CHROOT environs variable or
+// EnvOrDefaultChroot returns the value of the GHW_CHROOT environs variable or
 // the default value of "/" if not set
-func envOrDefaultChroot() string {
+func EnvOrDefaultChroot() string {
 	// Grab options from the environs by default
 	if val, exists := os.LookupEnv(envKeyChroot); exists {
 		return val
@@ -17,10 +23,10 @@ func envOrDefaultChroot() string {
 	return defaultChroot
 }
 
-// WithOption is used to represent optionally-configured settings. Each field
-// is a pointer to some concrete value so that we can tell when something has
-// been set or left unset.
-type WithOption struct {
+// Option is used to represent optionally-configured settings. Each field is a
+// pointer to some concrete value so that we can tell when something has been
+// set or left unset.
+type Option struct {
 	// To facilitate querying of sysfs filesystems that are bind-mounted to a
 	// non-default root mountpoint, we allow users to set the GHW_CHROOT environ
 	// vairable to an alternate mountpoint. For instance, assume that the user of
@@ -31,12 +37,12 @@ type WithOption struct {
 	Chroot *string
 }
 
-func WithChroot(dir string) *WithOption {
-	return &WithOption{Chroot: &dir}
+func WithChroot(dir string) *Option {
+	return &Option{Chroot: &dir}
 }
 
-func mergeOptions(opts ...*WithOption) *WithOption {
-	merged := &WithOption{}
+func Merge(opts ...*Option) *Option {
+	merged := &Option{}
 	for _, opt := range opts {
 		if opt.Chroot != nil {
 			merged.Chroot = opt.Chroot
@@ -44,16 +50,8 @@ func mergeOptions(opts ...*WithOption) *WithOption {
 	}
 	// Set the default value if missing from mergeOpts
 	if merged.Chroot == nil {
-		chroot := envOrDefaultChroot()
+		chroot := EnvOrDefaultChroot()
 		merged.Chroot = &chroot
 	}
 	return merged
-}
-
-// contextFromEnv returns a pointer to a context struct that has been populated
-// from the environs or default options values
-func contextFromEnv() *context {
-	return &context{
-		chroot: envOrDefaultChroot(),
-	}
 }

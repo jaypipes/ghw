@@ -7,6 +7,8 @@ package ghw
 
 import (
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlProduct = "SELECT Caption, Description, IdentifyingNumber, Name, SKUNumber, Vendor, Version, UUID FROM Win32_ComputerSystemProduct"
@@ -22,7 +24,7 @@ type win32Product struct {
 	UUID              *string
 }
 
-func (ctx *context) productFillInfo(info *ProductInfo) error {
+func productFillInfo(ctx *context.Context, info *ProductInfo) error {
 	// Getting data from WMI
 	var win32ProductDescriptions []win32Product
 	// Assuming the first product is the host...

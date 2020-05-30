@@ -10,9 +10,11 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) topologyFillInfo(info *TopologyInfo) error {
+func topologyFillInfo(ctx *context.Context, info *TopologyInfo) error {
 	return errors.New("topologyFillInfo not implemented on " + runtime.GOOS)
 }
 
@@ -25,10 +27,10 @@ The TopologyNodes() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the TopologyInfo.Nodes attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.topologyNodes()
+	ctx := context.FromEnv()
+	return topologyNodes(ctx)
 }
 
-func (ctx *context) topologyNodes() ([]*TopologyNode, error) {
+func topologyNodes(ctx *context.Context) ([]*TopologyNode, error) {
 	return nil, errors.New("Don't know how to get topology on " + runtime.GOOS)
 }

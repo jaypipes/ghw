@@ -10,9 +10,11 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) cpuFillInfo(info *CPUInfo) error {
+func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
 	return errors.New("cpuFillInfo not implemented on " + runtime.GOOS)
 }
 
@@ -24,6 +26,6 @@ func Processors() []*Processor {
 }
 
 // TODO: remove
-func (ctx *context) coresForNode(nodeID int) ([]*ProcessorCore, error) {
+func coresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 	return nil, errors.New("coresForNode not implemented on " + runtime.GOOS)
 }

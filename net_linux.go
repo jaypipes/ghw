@@ -14,14 +14,16 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const (
 	_WARN_ETHTOOL_NOT_INSTALLED = `ethtool not installed. Cannot grab NIC capabilities`
 )
 
-func (ctx *context) netFillInfo(info *NetworkInfo) error {
-	info.NICs = ctx.nics()
+func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
+	info.NICs = nics(ctx)
 	return nil
 }
 
@@ -33,14 +35,14 @@ The NICs() function has been DEPRECATED and will be removed in the 1.0 release
 of ghw. Please use the NetworkInfo.NICs attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.nics()
+	ctx := context.FromEnv()
+	return nics(ctx)
 }
 
-func (ctx *context) nics() []*NIC {
+func nics(ctx *context.Context) []*NIC {
 	nics := make([]*NIC, 0)
 
-	files, err := ioutil.ReadDir(ctx.pathSysClassNet())
+	files, err := ioutil.ReadDir(pathSysClassNet(ctx))
 	if err != nil {
 		return nics
 	}
@@ -56,7 +58,7 @@ func (ctx *context) nics() []*NIC {
 			continue
 		}
 
-		netPath := filepath.Join(ctx.pathSysClassNet(), filename)
+		netPath := filepath.Join(pathSysClassNet(ctx), filename)
 		dest, _ := os.Readlink(netPath)
 		isVirtual := false
 		if strings.Contains(dest, "devices/virtual/net") {
@@ -68,10 +70,10 @@ func (ctx *context) nics() []*NIC {
 			IsVirtual: isVirtual,
 		}
 
-		mac := ctx.netDeviceMacAddress(filename)
+		mac := netDeviceMacAddress(ctx, filename)
 		nic.MacAddress = mac
 		if etInstalled {
-			nic.Capabilities = ctx.netDeviceCapabilities(filename)
+			nic.Capabilities = netDeviceCapabilities(filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
 		}
@@ -80,12 +82,12 @@ func (ctx *context) nics() []*NIC {
 	return nics
 }
 
-func (ctx *context) netDeviceMacAddress(dev string) string {
+func netDeviceMacAddress(ctx *context.Context, dev string) string {
 	// Instead of use udevadm, we can get the device's MAC address by examing
 	// the /sys/class/net/$DEVICE/address file in sysfs. However, for devices
 	// that have addr_assign_type != 0, return None since the MAC address is
 	// random.
-	aatPath := filepath.Join(ctx.pathSysClassNet(), dev, "addr_assign_type")
+	aatPath := filepath.Join(pathSysClassNet(ctx), dev, "addr_assign_type")
 	contents, err := ioutil.ReadFile(aatPath)
 	if err != nil {
 		return ""
@@ -93,7 +95,7 @@ func (ctx *context) netDeviceMacAddress(dev string) string {
 	if strings.TrimSpace(string(contents)) != "0" {
 		return ""
 	}
-	addrPath := filepath.Join(ctx.pathSysClassNet(), dev, "address")
+	addrPath := filepath.Join(pathSysClassNet(ctx), dev, "address")
 	contents, err = ioutil.ReadFile(addrPath)
 	if err != nil {
 		return ""
@@ -106,7 +108,7 @@ func ethtoolInstalled() bool {
 	return err == nil
 }
 
-func (ctx *context) netDeviceCapabilities(dev string) []*NICCapability {
+func netDeviceCapabilities(dev string) []*NICCapability {
 	caps := make([]*NICCapability, 0)
 	path, _ := exec.LookPath("ethtool")
 	cmd := exec.Command(path, "-k", dev)

@@ -9,10 +9,12 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) topologyFillInfo(info *TopologyInfo) error {
-	info.Nodes = ctx.topologyNodes()
+func topologyFillInfo(ctx *context.Context, info *TopologyInfo) error {
+	info.Nodes = topologyNodes(ctx)
 	if len(info.Nodes) == 1 {
 		info.Architecture = ARCHITECTURE_SMP
 	} else {
@@ -30,14 +32,14 @@ The TopologyNodes() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the TopologyInfo.Nodes attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.topologyNodes(), nil
+	ctx := context.FromEnv()
+	return topologyNodes(ctx), nil
 }
 
-func (ctx *context) topologyNodes() []*TopologyNode {
+func topologyNodes(ctx *context.Context) []*TopologyNode {
 	nodes := make([]*TopologyNode, 0)
 
-	files, err := ioutil.ReadDir(ctx.pathSysDevicesSystemNode())
+	files, err := ioutil.ReadDir(pathSysDevicesSystemNode(ctx))
 	if err != nil {
 		warn("failed to determine nodes: %s\n", err)
 		return nodes
@@ -54,13 +56,13 @@ func (ctx *context) topologyNodes() []*TopologyNode {
 			return nodes
 		}
 		node.ID = nodeID
-		cores, err := ctx.coresForNode(nodeID)
+		cores, err := coresForNode(ctx, nodeID)
 		if err != nil {
 			warn("failed to determine cores for node: %s\n", err)
 			return nodes
 		}
 		node.Cores = cores
-		caches, err := ctx.cachesForNode(nodeID)
+		caches, err := cachesForNode(ctx, nodeID)
 		if err != nil {
 			warn("failed to determine caches for node: %s\n", err)
 			return nodes

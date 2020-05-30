@@ -10,9 +10,11 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) blockFillInfo(info *BlockInfo) error {
+func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
 	return errors.New("blockFillInfo not implemented on " + runtime.GOOS)
 }
 
@@ -26,11 +28,11 @@ removed in the 1.0 release of ghw. Please use the Disk.PhysicalBlockSizeBytes
 attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskPhysicalBlockSizeBytes(disk)
+	ctx := context.FromEnv()
+	return diskPhysicalBlockSizeBytes(ctx, disk)
 }
 
-func (ctx *context) diskPhysicalBlockSizeBytes(disk string) uint64 {
+func diskPhysicalBlockSizeBytes(ctx *context.Context, disk string) uint64 {
 	return 0
 }
 
@@ -43,11 +45,11 @@ The DiskSizeBytes() function has been DEPRECATED and will be
 removed in the 1.0 release of ghw. Please use the Disk.SizeBytes attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskSizeBytes(disk)
+	ctx := context.FromEnv()
+	return diskSizeBytes(ctx, disk)
 }
 
-func (ctx *context) diskSizeBytes(disk string) uint64 {
+func diskSizeBytes(ctx *context.Context, disk string) uint64 {
 	return 0
 }
 
@@ -60,11 +62,11 @@ The DiskNUMANodeID() function has been DEPRECATED and will be
 removed in the 1.0 release of ghw. Please use the Disk.NUMANodeID attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskNUMANodeID(disk)
+	ctx := context.FromEnv()
+	return diskNUMANodeID(ctx, disk)
 }
 
-func (ctx *context) diskNUMANodeID(disk string) int {
+func diskNUMANodeID(ctx *context.Context, disk string) int {
 	return -1
 }
 
@@ -76,11 +78,11 @@ The DiskVendor() function has been DEPRECATED and will be
 removed in the 1.0 release of ghw. Please use the Disk.Vendor attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskVendor(disk)
+	ctx := context.FromEnv()
+	return diskVendor(ctx, disk)
 }
 
-func (ctx *context) diskVendor(disk string) string {
+func diskVendor(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
@@ -92,11 +94,11 @@ The DiskModel() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the Disk.Model attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskModel(disk)
+	ctx := context.FromEnv()
+	return diskModel(ctx, disk)
 }
 
-func (ctx *context) diskModel(disk string) string {
+func diskModel(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
@@ -108,11 +110,11 @@ The DiskSerialNumber() function has been DEPRECATED and will be removed in the
 1.0 release of ghw. Please use the Disk.SerialNumber attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskSerialNumber(disk)
+	ctx := context.FromEnv()
+	return diskSerialNumber(ctx, disk)
 }
 
-func (ctx *context) diskSerialNumber(disk string) string {
+func diskSerialNumber(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
@@ -124,11 +126,11 @@ The DiskBusPath() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the Disk.BusPath attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskBusPath(disk)
+	ctx := context.FromEnv()
+	return diskBusPath(ctx, disk)
 }
 
-func (ctx *context) diskBusPath(disk string) string {
+func diskBusPath(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
@@ -140,11 +142,11 @@ The DiskWWN() function has been DEPRECATED and will be removed in the 1.0
 release of ghw. Please use the Disk.WWN attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskWWN(disk)
+	ctx := context.FromEnv()
+	return diskWWN(ctx, disk)
 }
 
-func (ctx *context) diskWWN(disk string) string {
+func diskWWN(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
@@ -156,11 +158,11 @@ The DiskPartitions() function has been DEPRECATED and will be removed in the
 1.0 release of ghw. Please use the Disk.Partitions attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.diskPartitions(disk)
+	ctx := context.FromEnv()
+	return diskPartitions(ctx, disk)
 }
 
-func (ctx *context) diskPartitions(disk string) []*Partition {
+func diskPartitions(ctx *context.Context, disk string) []*Partition {
 	return nil
 }
 
@@ -172,11 +174,11 @@ The Disks() function has been DEPRECATED and will be removed in the
 1.0 release of ghw. Please use the BlockInfo.Disks attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.disks()
+	ctx := context.FromEnv()
+	return disks(ctx)
 }
 
-func (ctx *context) disks() []*Disk {
+func disks(ctx *context.Context) []*Disk {
 	return nil
 }
 
@@ -188,11 +190,11 @@ The PartitionSizeBytes() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.SizeBytes attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.partitionSizeBytes(part)
+	ctx := context.FromEnv()
+	return partitionSizeBytes(ctx, part)
 }
 
-func (ctx *context) partitionSizeBytes(part string) uint64 {
+func partitionSizeBytes(ctx *context.Context, part string) uint64 {
 	return 0
 }
 
@@ -204,13 +206,13 @@ The PartitionInfo() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition struct.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.partitionInfo(part)
+	ctx := context.FromEnv()
+	return partitionInfo(ctx, part)
 }
 
 // Given a full or short partition name, returns the mount point, the type of
 // the partition and whether it's readonly
-func (ctx *context) partitionInfo(part string) (string, string, bool) {
+func partitionInfo(ctx *context.Context, part string) (string, string, bool) {
 	// full name, short name, read-only
 	return "", "", true
 }
@@ -223,12 +225,12 @@ The PartitionMountPoint() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.MountPoint attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.partitionMountPoint(part)
+	ctx := context.FromEnv()
+	return partitionMountPoint(ctx, part)
 }
 
-func (ctx *context) partitionMountPoint(part string) string {
-	mp, _, _ := ctx.partitionInfo(part)
+func (ctx *context) partitionMountPoint(ctx *context.Context, part string) string {
+	mp, _, _ := partitionInfo(ctx, part)
 	return mp
 }
 
@@ -240,12 +242,12 @@ The PartitionType() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.Type attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.partitionType(part)
+	ctx := context.FromEnv()
+	return partitionType(ctx, part)
 }
 
-func (ctx *context) partitionType(part string) string {
-	_, pt, _ := ctx.partitionInfo(part)
+func (ctx *context) partitionType(ctx *context.Context, part string) string {
+	_, pt, _ := partitionInfo(ctx, part)
 	return pt
 }
 
@@ -257,11 +259,11 @@ The PartitionIsReadOnly() function has been DEPRECATED and will be removed in
 the 1.0 release of ghw. Please use the Partition.IsReadOnly attribute.
 `
 	warn(msg)
-	ctx := contextFromEnv()
-	return ctx.partitionIsReadOnly(part)
+	ctx := context.FromEnv()
+	return partitionIsReadOnly(ctx, part)
 }
 
-func (ctx *context) partitionIsReadOnly(part string) bool {
-	_, _, ro := ctx.partitionInfo(part)
+func partitionIsReadOnly(ctx *context.Context, part string) bool {
+	_, _, ro := partitionInfo(ctx, part)
 	return ro
 }

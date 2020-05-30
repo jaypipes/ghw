@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 // DriveType describes the general category of drive device
@@ -129,12 +131,9 @@ type BlockInfo struct {
 // Block returns a BlockInfo struct that describes the block storage resources
 // of the host system.
 func Block(opts ...*WithOption) (*BlockInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &BlockInfo{}
-	if err := ctx.blockFillInfo(info); err != nil {
+	if err := blockFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

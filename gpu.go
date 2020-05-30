@@ -8,6 +8,8 @@ package ghw
 
 import (
 	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 type GraphicsCard struct {
@@ -47,12 +49,9 @@ type GPUInfo struct {
 }
 
 func GPU(opts ...*WithOption) (*GPUInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &GPUInfo{}
-	if err := ctx.gpuFillInfo(info); err != nil {
+	if err := gpuFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

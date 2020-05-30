@@ -16,6 +16,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const (
@@ -34,23 +36,23 @@ var (
 	_REGEX_SYSLOG_MEMLINE = regexp.MustCompile(`Memory:\s+\d+K\/(\d+)K`)
 )
 
-func (ctx *context) memFillInfo(info *MemoryInfo) error {
-	tub := ctx.memTotalUsableBytes()
+func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
+	tub := memTotalUsableBytes(ctx)
 	if tub < 1 {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
 	}
 	info.TotalUsableBytes = tub
-	tpb := ctx.memTotalPhysicalBytes()
+	tpb := memTotalPhysicalBytes(ctx)
 	info.TotalPhysicalBytes = tpb
 	if tpb < 1 {
 		warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
 		info.TotalPhysicalBytes = tub
 	}
-	info.SupportedPageSizes = ctx.memSupportedPageSizes()
+	info.SupportedPageSizes = memSupportedPageSizes(ctx)
 	return nil
 }
 
-func (ctx *context) memTotalPhysicalBytes() int64 {
+func memTotalPhysicalBytes(ctx *context.Context) int64 {
 	// In Linux, the total physical memory can be determined by looking at the
 	// output of dmidecode, however dmidecode requires root privileges to run,
 	// so instead we examine the system logs for startup information containing
@@ -71,7 +73,7 @@ func (ctx *context) memTotalPhysicalBytes() int64 {
 	// syslog.$NUMBER or syslog.$NUMBER.gz containing system log records. We
 	// search each, stopping when we match a system log record line that
 	// contains physical memory information.
-	logDir := ctx.pathVarLog()
+	logDir := pathVarLog(ctx)
 	logFiles, err := ioutil.ReadDir(logDir)
 	if err != nil {
 		return -1
@@ -106,7 +108,7 @@ func (ctx *context) memTotalPhysicalBytes() int64 {
 	return -1
 }
 
-func (ctx *context) memTotalUsableBytes() int64 {
+func memTotalUsableBytes(ctx *context.Context) int64 {
 	// In Linux, /proc/meminfo contains a set of memory-related amounts, with
 	// lines looking like the following:
 	//
@@ -129,7 +131,7 @@ func (ctx *context) memTotalUsableBytes() int64 {
 	// information, see:
 	//
 	//  https://www.kernel.org/doc/Documentation/filesystems/proc.txt
-	filePath := ctx.pathProcMeminfo()
+	filePath := pathProcMeminfo(ctx)
 	r, err := os.Open(filePath)
 	if err != nil {
 		return -1
@@ -157,11 +159,11 @@ func (ctx *context) memTotalUsableBytes() int64 {
 	return -1
 }
 
-func (ctx *context) memSupportedPageSizes() []uint64 {
+func memSupportedPageSizes(ctx *context.Context) []uint64 {
 	// In Linux, /sys/kernel/mm/hugepages contains a directory per page size
 	// supported by the kernel. The directory name corresponds to the pattern
 	// 'hugepages-{pagesize}kb'
-	dir := ctx.pathSysKernelMMHugepages()
+	dir := pathSysKernelMMHugepages(ctx)
 	out := make([]uint64, 0)
 
 	files, err := ioutil.ReadDir(dir)

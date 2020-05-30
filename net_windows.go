@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName  FROM Win32_NetworkAdapter"
@@ -26,23 +28,23 @@ type win32NetworkAdapter struct {
 	ServiceName     *string
 }
 
-func (ctx *context) netFillInfo(info *NetworkInfo) error {
+func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
 	// Getting info from WMI
 	var win32NetDescriptions []win32NetworkAdapter
 	if err := wmi.Query(wqlNetworkAdapter, &win32NetDescriptions); err != nil {
 		return err
 	}
 
-	info.NICs = ctx.nics(win32NetDescriptions)
+	info.NICs = nics(win32NetDescriptions)
 	return nil
 }
 
-func (ctx *context) nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
+func nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
 	// Converting into standard structures
 	nics := make([]*NIC, 0)
 	for _, nicDescription := range win32NetDescriptions {
 		nic := &NIC{
-			Name:         ctx.netDeviceName(nicDescription),
+			Name:         netDeviceName(nicDescription),
 			MacAddress:   *nicDescription.MACAddress,
 			IsVirtual:    false,
 			Capabilities: []*NICCapability{},
@@ -54,7 +56,7 @@ func (ctx *context) nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
 	return nics
 }
 
-func (ctx *context) netDeviceName(description win32NetworkAdapter) string {
+func netDeviceName(description win32NetworkAdapter) string {
 	var name string
 	if strings.TrimSpace(*description.NetConnectionID) != "" {
 		name = *description.NetConnectionID + " - " + *description.Description

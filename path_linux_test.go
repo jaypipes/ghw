@@ -10,7 +10,10 @@ package ghw
 
 import (
 	"os"
+
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 func TestPathRoot(t *testing.T) {
@@ -24,11 +27,11 @@ func TestPathRoot(t *testing.T) {
 		defer os.Unsetenv("GHW_CHROOT")
 	}
 
-	ctx := contextFromEnv()
+	ctx := context.FromEnv()
 
 	// No environment variable is set for GHW_CHROOT, so pathProcCpuinfo() should
 	// return the default "/proc/cpuinfo"
-	path := ctx.pathProcCpuinfo()
+	path := pathProcCpuinfo(ctx)
 	if path != "/proc/cpuinfo" {
 		t.Fatalf("Expected pathProcCpuInfo() to return '/proc/cpuinfo' but got %s", path)
 	}
@@ -37,9 +40,9 @@ func TestPathRoot(t *testing.T) {
 	// returns that value
 	os.Setenv("GHW_CHROOT", "/host")
 
-	ctx = contextFromEnv()
+	ctx = context.FromEnv()
 
-	path = ctx.pathProcCpuinfo()
+	path = pathProcCpuinfo(ctx)
 	if path != "/host/proc/cpuinfo" {
 		t.Fatalf("Expected pathProcCpuinfo() to return '/host/proc/cpuinfo' but got %s", path)
 	}

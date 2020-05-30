@@ -5,10 +5,14 @@
 
 package ghw
 
-func (ctx *context) biosFillInfo(info *BIOSInfo) error {
-	info.Vendor = ctx.dmiItem("bios_vendor")
-	info.Version = ctx.dmiItem("bios_version")
-	info.Date = ctx.dmiItem("bios_date")
+import (
+	"github.com/jaypipes/ghw/pkg/context"
+)
+
+func biosFillInfo(ctx *context.Context, info *BIOSInfo) error {
+	info.Vendor = dmiItem(ctx, "bios_vendor")
+	info.Version = dmiItem(ctx, "bios_version")
+	info.Date = dmiItem(ctx, "bios_date")
 
 	return nil
 }

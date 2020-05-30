@@ -6,7 +6,11 @@
 
 package ghw
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
 // ProductInfo defines product information
 type ProductInfo struct {
@@ -65,12 +69,9 @@ func (i *ProductInfo) String() string {
 // Product returns a pointer to a ProductInfo struct containing information
 // about the host's product
 func Product(opts ...*WithOption) (*ProductInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &ProductInfo{}
-	if err := ctx.productFillInfo(info); err != nil {
+	if err := productFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

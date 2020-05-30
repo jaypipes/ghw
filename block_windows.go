@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
@@ -73,7 +75,7 @@ type win32LogicalDisk struct {
 	SystemName        *string
 }
 
-func (ctx *context) blockFillInfo(info *BlockInfo) error {
+func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
 	win32DiskDriveDescriptions, err := getDiskDrives()
 	if err != nil {
 		return err

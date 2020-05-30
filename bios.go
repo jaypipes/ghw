@@ -6,7 +6,11 @@
 
 package ghw
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
 // BIOSInfo defines BIOS release information
 type BIOSInfo struct {
@@ -42,12 +46,9 @@ func (i *BIOSInfo) String() string {
 // BIOS returns a pointer to a BIOSInfo struct containing information
 // about the host's BIOS
 func BIOS(opts ...*WithOption) (*BIOSInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &BIOSInfo{}
-	if err := ctx.biosFillInfo(info); err != nil {
+	if err := biosFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

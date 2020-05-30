@@ -10,8 +10,10 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) memFillInfo(info *MemoryInfo) error {
+func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
 	return errors.New("memFillInfo not implemented on " + runtime.GOOS)
 }

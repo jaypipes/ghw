@@ -10,8 +10,10 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) biosFillInfo(info *BIOSInfo) error {
+func biosFillInfo(ctx *context.Context, info *BIOSInfo) error {
 	return errors.New("biosFillInfo not implemented on " + runtime.GOOS)
 }

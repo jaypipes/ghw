@@ -8,6 +8,8 @@ package ghw
 
 import (
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wmqlProcessor = "SELECT Manufacturer, Name, NumberOfLogicalProcessors, NumberOfCores FROM Win32_Processor"
@@ -19,14 +21,14 @@ type win32Processor struct {
 	NumberOfCores             uint32
 }
 
-func (ctx *context) cpuFillInfo(info *CPUInfo) error {
+func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
 	// Getting info from WMI
 	var win32descriptions []win32Processor
 	if err := wmi.Query(wmqlProcessor, &win32descriptions); err != nil {
 		return err
 	}
 	// Converting into standard structures
-	info.Processors = ctx.processorsGet(win32descriptions)
+	info.Processors = processorsGet(win32descriptions)
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range info.Processors {
@@ -38,7 +40,7 @@ func (ctx *context) cpuFillInfo(info *CPUInfo) error {
 	return nil
 }
 
-func (ctx *context) processorsGet(win32descriptions []win32Processor) []*Processor {
+func processorsGet(win32descriptions []win32Processor) []*Processor {
 	var procs []*Processor
 	// Converting into standard structures
 	for index, description := range win32descriptions {

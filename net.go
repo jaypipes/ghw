@@ -8,6 +8,8 @@ package ghw
 
 import (
 	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 type NICCapability struct {
@@ -42,12 +44,9 @@ type NetworkInfo struct {
 }
 
 func Network(opts ...*WithOption) (*NetworkInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &NetworkInfo{}
-	if err := ctx.netFillInfo(info); err != nil {
+	if err := netFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

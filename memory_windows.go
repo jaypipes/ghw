@@ -8,6 +8,8 @@ package ghw
 
 import (
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlOperatingSystem = "SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem"
@@ -35,7 +37,7 @@ type win32PhysicalMemory struct {
 	TotalWidth    *uint16
 }
 
-func (ctx *context) memFillInfo(info *MemoryInfo) error {
+func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
 	// Getting info from WMI
 	var win32OSDescriptions []win32OperatingSystem
 	if err := wmi.Query(wqlOperatingSystem, &win32OSDescriptions); err != nil {

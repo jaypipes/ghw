@@ -10,8 +10,10 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func (ctx *context) productFillInfo(info *ProductInfo) error {
+func productFillInfo(ctx *context.Context, info *ProductInfo) error {
 	return errors.New("productFillInfo not implemented on " + runtime.GOOS)
 }

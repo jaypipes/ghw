@@ -5,7 +5,11 @@
 
 package ghw
 
-import "github.com/StackExchange/wmi"
+import (
+	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
 const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version FROM Win32_BaseBoard"
 
@@ -16,7 +20,7 @@ type win32Baseboard struct {
 	Version      *string
 }
 
-func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
+func baseboardFillInfo(ctx *context.Context, info *BaseboardInfo) error {
 	// Getting data from WMI
 	var win32BaseboardDescriptions []win32Baseboard
 	if err := wmi.Query(wqlBaseboard, &win32BaseboardDescriptions); err != nil {

@@ -6,7 +6,11 @@
 
 package ghw
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw/pkg/context"
+)
 
 var (
 	chassisTypeDescriptions = map[string]string{
@@ -87,12 +91,9 @@ func (i *ChassisInfo) String() string {
 // Chassis returns a pointer to a ChassisInfo struct containing information
 // about the host's chassis
 func Chassis(opts ...*WithOption) (*ChassisInfo, error) {
-	mergeOpts := mergeOptions(opts...)
-	ctx := &context{
-		chroot: *mergeOpts.Chroot,
-	}
+	ctx := context.New(opts...)
 	info := &ChassisInfo{}
-	if err := ctx.chassisFillInfo(info); err != nil {
+	if err := chassisFillInfo(ctx, info); err != nil {
 		return nil, err
 	}
 	return info, nil

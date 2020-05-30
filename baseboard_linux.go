@@ -5,11 +5,15 @@
 
 package ghw
 
-func (ctx *context) baseboardFillInfo(info *BaseboardInfo) error {
-	info.AssetTag = ctx.dmiItem("board_asset_tag")
-	info.SerialNumber = ctx.dmiItem("board_serial")
-	info.Vendor = ctx.dmiItem("board_vendor")
-	info.Version = ctx.dmiItem("board_version")
+import (
+	"github.com/jaypipes/ghw/pkg/context"
+)
+
+func baseboardFillInfo(ctx *context.Context, info *BaseboardInfo) error {
+	info.AssetTag = dmiItem(ctx, "board_asset_tag")
+	info.SerialNumber = dmiItem(ctx, "board_serial")
+	info.Vendor = dmiItem(ctx, "board_vendor")
+	info.Version = dmiItem(ctx, "board_version")
 
 	return nil
 }
