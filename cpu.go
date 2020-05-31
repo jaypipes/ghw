@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // ProcessorCore describes a physical host processor core. A processor core is
@@ -156,11 +157,11 @@ type cpuPrinter struct {
 // YAMLString returns a string with the cpu information formatted as YAML
 // under a top-level "cpu:" key
 func (i *CPUInfo) YAMLString() string {
-	return safeYAML(cpuPrinter{i})
+	return marshal.SafeYAML(cpuPrinter{i})
 }
 
 // JSONString returns a string with the cpu information formatted as JSON
 // under a top-level "cpu:" key
 func (i *CPUInfo) JSONString(indent bool) string {
-	return safeJSON(cpuPrinter{i}, indent)
+	return marshal.SafeJSON(cpuPrinter{i}, indent)
 }

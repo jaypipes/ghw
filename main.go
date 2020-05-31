@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 const (
@@ -110,11 +111,11 @@ func (info *HostInfo) String() string {
 // YAMLString returns a string with the host information formatted as YAML
 // under a top-level "host:" key
 func (i *HostInfo) YAMLString() string {
-	return safeYAML(i)
+	return marshal.SafeYAML(i)
 }
 
 // JSONString returns a string with the host information formatted as JSON
 // under a top-level "host:" key
 func (i *HostInfo) JSONString(indent bool) string {
-	return safeJSON(i, indent)
+	return marshal.SafeJSON(i, indent)
 }

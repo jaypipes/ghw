@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // ProductInfo defines product information
@@ -86,11 +87,11 @@ type productPrinter struct {
 // YAMLString returns a string with the product information formatted as YAML
 // under a top-level "dmi:" key
 func (info *ProductInfo) YAMLString() string {
-	return safeYAML(productPrinter{info})
+	return marshal.SafeYAML(productPrinter{info})
 }
 
 // JSONString returns a string with the product information formatted as JSON
 // under a top-level "product:" key
 func (info *ProductInfo) JSONString(indent bool) string {
-	return safeJSON(productPrinter{info}, indent)
+	return marshal.SafeJSON(productPrinter{info}, indent)
 }

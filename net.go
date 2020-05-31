@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 type NICCapability struct {
@@ -68,11 +69,11 @@ type netPrinter struct {
 // YAMLString returns a string with the net information formatted as YAML
 // under a top-level "net:" key
 func (i *NetworkInfo) YAMLString() string {
-	return safeYAML(netPrinter{i})
+	return marshal.SafeYAML(netPrinter{i})
 }
 
 // JSONString returns a string with the net information formatted as JSON
 // under a top-level "net:" key
 func (i *NetworkInfo) JSONString(indent bool) string {
-	return safeJSON(netPrinter{i}, indent)
+	return marshal.SafeJSON(netPrinter{i}, indent)
 }

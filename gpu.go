@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 type GraphicsCard struct {
@@ -78,11 +79,11 @@ type gpuPrinter struct {
 // YAMLString returns a string with the gpu information formatted as YAML
 // under a top-level "gpu:" key
 func (i *GPUInfo) YAMLString() string {
-	return safeYAML(gpuPrinter{i})
+	return marshal.SafeYAML(gpuPrinter{i})
 }
 
 // JSONString returns a string with the gpu information formatted as JSON
 // under a top-level "gpu:" key
 func (i *GPUInfo) JSONString(indent bool) string {
-	return safeJSON(gpuPrinter{i}, indent)
+	return marshal.SafeJSON(gpuPrinter{i}, indent)
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // DriveType describes the general category of drive device
@@ -234,11 +235,11 @@ type blockPrinter struct {
 // YAMLString returns a string with the block information formatted as YAML
 // under a top-level "block:" key
 func (i *BlockInfo) YAMLString() string {
-	return safeYAML(blockPrinter{i})
+	return marshal.SafeYAML(blockPrinter{i})
 }
 
 // JSONString returns a string with the block information formatted as JSON
 // under a top-level "block:" key
 func (i *BlockInfo) JSONString(indent bool) string {
-	return safeJSON(blockPrinter{i}, indent)
+	return marshal.SafeJSON(blockPrinter{i}, indent)
 }

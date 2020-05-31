@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package marshal
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 )
 
 // safeYAML returns a string after marshalling the supplied parameter into YAML
-func safeYAML(p interface{}) string {
+func SafeYAML(p interface{}) string {
 	b, err := json.Marshal(p)
 	if err != nil {
 		util.Warn("error marshalling JSON: %s", err)
@@ -31,7 +31,7 @@ func safeYAML(p interface{}) string {
 // safeJSON returns a string after marshalling the supplied parameter into
 // JSON. Accepts an optional argument to trigger pretty/indented formatting of
 // the JSON string
-func safeJSON(p interface{}, indent bool) string {
+func SafeJSON(p interface{}, indent bool) string {
 	var b []byte
 	var err error
 	if !indent {

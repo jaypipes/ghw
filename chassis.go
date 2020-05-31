@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 var (
@@ -108,11 +109,11 @@ type chassisPrinter struct {
 // YAMLString returns a string with the chassis information formatted as YAML
 // under a top-level "dmi:" key
 func (info *ChassisInfo) YAMLString() string {
-	return safeYAML(chassisPrinter{info})
+	return marshal.SafeYAML(chassisPrinter{info})
 }
 
 // JSONString returns a string with the chassis information formatted as JSON
 // under a top-level "chassis:" key
 func (info *ChassisInfo) JSONString(indent bool) string {
-	return safeJSON(chassisPrinter{info}, indent)
+	return marshal.SafeJSON(chassisPrinter{info}, indent)
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // BaseboardInfo defines baseboard release information
@@ -64,11 +65,11 @@ type baseboardPrinter struct {
 // YAMLString returns a string with the baseboard information formatted as YAML
 // under a top-level "dmi:" key
 func (info *BaseboardInfo) YAMLString() string {
-	return safeYAML(baseboardPrinter{info})
+	return marshal.SafeYAML(baseboardPrinter{info})
 }
 
 // JSONString returns a string with the baseboard information formatted as JSON
 // under a top-level "baseboard:" key
 func (info *BaseboardInfo) JSONString(indent bool) string {
-	return safeJSON(baseboardPrinter{info}, indent)
+	return marshal.SafeJSON(baseboardPrinter{info}, indent)
 }

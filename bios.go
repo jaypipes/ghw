@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // BIOSInfo defines BIOS release information
@@ -63,11 +64,11 @@ type biosPrinter struct {
 // YAMLString returns a string with the BIOS information formatted as YAML
 // under a top-level "dmi:" key
 func (info *BIOSInfo) YAMLString() string {
-	return safeYAML(biosPrinter{info})
+	return marshal.SafeYAML(biosPrinter{info})
 }
 
 // JSONString returns a string with the BIOS information formatted as JSON
 // under a top-level "bios:" key
 func (info *BIOSInfo) JSONString(indent bool) string {
-	return safeJSON(biosPrinter{info}, indent)
+	return marshal.SafeJSON(biosPrinter{info}, indent)
 }

@@ -11,6 +11,7 @@ import (
 	"sort"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // TopologyNode is an abstract construct representing a collection of
@@ -78,11 +79,11 @@ type topologyPrinter struct {
 // YAMLString returns a string with the topology information formatted as YAML
 // under a top-level "topology:" key
 func (i *TopologyInfo) YAMLString() string {
-	return safeYAML(topologyPrinter{i})
+	return marshal.SafeYAML(topologyPrinter{i})
 }
 
 // JSONString returns a string with the topology information formatted as JSON
 // under a top-level "topology:" key
 func (i *TopologyInfo) JSONString(indent bool) string {
-	return safeJSON(topologyPrinter{i}, indent)
+	return marshal.SafeJSON(topologyPrinter{i}, indent)
 }

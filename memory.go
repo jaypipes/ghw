@@ -11,6 +11,7 @@ import (
 	"math"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 type MemoryModule struct {
@@ -65,11 +66,11 @@ type memoryPrinter struct {
 // YAMLString returns a string with the memory information formatted as YAML
 // under a top-level "memory:" key
 func (i *MemoryInfo) YAMLString() string {
-	return safeYAML(memoryPrinter{i})
+	return marshal.SafeYAML(memoryPrinter{i})
 }
 
 // JSONString returns a string with the memory information formatted as JSON
 // under a top-level "memory:" key
 func (i *MemoryInfo) JSONString(indent bool) string {
-	return safeJSON(memoryPrinter{i}, indent)
+	return marshal.SafeJSON(memoryPrinter{i}, indent)
 }
