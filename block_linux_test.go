@@ -98,7 +98,6 @@ func TestDiskTypes(t *testing.T) {
 	type entry struct {
 		driveType         DriveType
 		storageController StorageController
-		busType           BusType
 	}
 
 	tests := []struct {
@@ -110,7 +109,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_HDD,
 				storageController: STORAGE_CONTROLLER_SCSI,
-				busType:           BUS_TYPE_SCSI,
 			},
 		},
 		{
@@ -118,7 +116,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_SSD,
 				storageController: STORAGE_CONTROLLER_NVME,
-				busType:           BUS_TYPE_NVME,
 			},
 		},
 		{
@@ -126,7 +123,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_HDD,
 				storageController: STORAGE_CONTROLLER_VIRTIO,
-				busType:           BUS_TYPE_VIRTIO,
 			},
 		},
 		{
@@ -134,7 +130,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_HDD,
 				storageController: STORAGE_CONTROLLER_SCSI,
-				busType:           BUS_TYPE_SCSI,
 			},
 		},
 		{
@@ -142,7 +137,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_FDD,
 				storageController: STORAGE_CONTROLLER_UNKNOWN,
-				busType:           BUS_TYPE_UNKNOWN,
 			},
 		},
 		{
@@ -150,7 +144,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_ODD,
 				storageController: STORAGE_CONTROLLER_SCSI,
-				busType:           BUS_TYPE_SCSI,
 			},
 		},
 		{
@@ -158,7 +151,6 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_SSD,
 				storageController: STORAGE_CONTROLLER_MMC,
-				busType:           BUS_TYPE_UNKNOWN,
 			},
 		},
 		{
@@ -166,13 +158,12 @@ func TestDiskTypes(t *testing.T) {
 			expected: entry{
 				driveType:         DRIVE_TYPE_UNKNOWN,
 				storageController: STORAGE_CONTROLLER_UNKNOWN,
-				busType:           BUS_TYPE_UNKNOWN,
 			},
 		},
 	}
 
 	for _, test := range tests {
-		gotDriveType, gotStorageController, gotBusType := diskTypes(test.line)
+		gotDriveType, gotStorageController := diskTypes(test.line)
 		if test.expected.driveType != gotDriveType {
 			t.Fatalf(
 				"For %s, expected drive type %s, but got %s",
@@ -183,12 +174,6 @@ func TestDiskTypes(t *testing.T) {
 			t.Fatalf(
 				"For %s, expected storage controller %s, but got %s",
 				test.line, test.expected.storageController, gotStorageController,
-			)
-		}
-		if test.expected.busType != gotBusType {
-			t.Fatalf(
-				"For %s, expected bus type %s, but got %s",
-				test.line, test.expected.busType, gotBusType,
 			)
 		}
 	}

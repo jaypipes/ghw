@@ -17,19 +17,3 @@ import (
 func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
 	return errors.New("netFillInfo not implemented on " + runtime.GOOS)
 }
-
-// NICS has been deprecated in 0.2. Please use the NetworkInfo.NICs attribute.
-// TODO(jaypipes): Remove in 1.0.
-func NICs() []*NIC {
-	msg := `
-The NICs() function has been DEPRECATED and will be removed in the 1.0 release
-of ghw. Please use the NetworkInfo.NICs attribute.
-`
-	warn(msg)
-	ctx := context.FromEnv()
-	return nics(ctx)
-}
-
-func nics(ctx *context.Context) []*NIC {
-	return nil
-}

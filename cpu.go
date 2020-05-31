@@ -16,8 +16,6 @@ import (
 // a separate processing unit within some types of central processing units
 // (CPU).
 type ProcessorCore struct {
-	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id int `json:"-"`
 	// ID is the `uint32` identifier that the host gave this core. Note that
 	// this does *not* necessarily equate to a zero-based index of the core
 	// within a physical package. For example, the core IDs for an Intel Core
@@ -46,8 +44,6 @@ func (c *ProcessorCore) String() string {
 
 // Processor describes a physical host central processing unit (CPU).
 type Processor struct {
-	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id int `json:"-"`
 	// ID is the physical processor `uint32` ID according to the system
 	ID int `json:"id"`
 	// NumCores is the number of physical cores in the processor package

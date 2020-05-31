@@ -23,19 +23,6 @@ func topologyFillInfo(ctx *context.Context, info *TopologyInfo) error {
 	return nil
 }
 
-// TopologyNodes has been deprecated in 0.2. Please use the TopologyInfo.Nodes
-// attribute.
-// TODO(jaypipes): Remove in 1.0.
-func TopologyNodes() ([]*TopologyNode, error) {
-	msg := `
-The TopologyNodes() function has been DEPRECATED and will be removed in the 1.0
-release of ghw. Please use the TopologyInfo.Nodes attribute.
-`
-	warn(msg)
-	ctx := context.FromEnv()
-	return topologyNodes(ctx), nil
-}
-
 func topologyNodes(ctx *context.Context) []*TopologyNode {
 	nodes := make([]*TopologyNode, 0)
 

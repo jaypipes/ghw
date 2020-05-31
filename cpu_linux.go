@@ -30,14 +30,6 @@ func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
 	return nil
 }
 
-// Processors has been DEPRECATED in 0.2 and will be REMOVED in 1.0. Please use
-// the CPUInfo.Processors attribute.
-// TODO(jaypipes): Remove in 1.0
-func Processors() []*Processor {
-	ctx := context.FromEnv()
-	return processorsGet(ctx)
-}
-
 func processorsGet(ctx *context.Context) []*Processor {
 	procs := make([]*Processor, 0)
 
@@ -82,7 +74,7 @@ func processorsGet(ctx *context.Context) []*Processor {
 
 	for pid := range setPhysicalIDs {
 		p := &Processor{
-			Id: pid,
+			ID: pid,
 		}
 		// The indexes into the array of attribute maps for each logical
 		// processor within the physical processor
@@ -166,14 +158,12 @@ func coresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 
 	findCoreByID := func(coreID int) *ProcessorCore {
 		for _, c := range cores {
-			if c.Id == coreID {
+			if c.ID == coreID {
 				return c
 			}
 		}
 
 		c := &ProcessorCore{
-			// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-			Id:                coreID,
 			ID:                coreID,
 			Index:             len(cores),
 			LogicalProcessors: make([]int, 0),

@@ -207,14 +207,6 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 	return sc
 }
 
-// busTypeFromPlist looks at the supplied property list struct and attempts to
-// determine the bus type in use for the device
-func busTypeFromPlist(infoPlist *diskUtilInfoPlist) BusType {
-	// TODO(jaypipes): Find out if Macs support any bus other than
-	// PCIe... it doesn't seem like they do
-	return BUS_TYPE_PCI
-}
-
 func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
 	listPlist, err := getDiskUtilListPlist()
 	if err != nil {
@@ -257,7 +249,6 @@ func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
 			DriveType:              driveTypeFromPlist(infoPlist),
 			IsRemovable:            infoPlist.Removable,
 			StorageController:      storageControllerFromPlist(infoPlist),
-			BusType:                busTypeFromPlist(infoPlist),
 			BusPath:                busPath,
 			NUMANodeID:             -1,
 			Vendor:                 ioregPlist.VendorName,

@@ -81,7 +81,7 @@ func (c *MemoryCache) String() string {
 	} else if c.Type == MEMORY_CACHE_TYPE_DATA {
 		typeStr = "d"
 	}
-	cacheIdStr := fmt.Sprintf("L%d%s", c.Level, typeStr)
+	cacheIDStr := fmt.Sprintf("L%d%s", c.Level, typeStr)
 	processorMapStr := ""
 	if c.LogicalProcessors != nil {
 		lpStrings := make([]string, len(c.LogicalProcessors))
@@ -92,7 +92,7 @@ func (c *MemoryCache) String() string {
 	}
 	return fmt.Sprintf(
 		"%s cache (%d KB)%s",
-		cacheIdStr,
+		cacheIDStr,
 		sizeKb,
 		processorMapStr,
 	)
