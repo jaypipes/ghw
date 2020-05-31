@@ -10,18 +10,19 @@ import (
 	"encoding/json"
 
 	"github.com/ghodss/yaml"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 // safeYAML returns a string after marshalling the supplied parameter into YAML
 func safeYAML(p interface{}) string {
 	b, err := json.Marshal(p)
 	if err != nil {
-		warn("error marshalling JSON: %s", err)
+		util.Warn("error marshalling JSON: %s", err)
 		return ""
 	}
 	yb, err := yaml.JSONToYAML(b)
 	if err != nil {
-		warn("error converting JSON to YAML: %s", err)
+		util.Warn("error converting JSON to YAML: %s", err)
 		return ""
 	}
 	return string(yb)
@@ -39,7 +40,7 @@ func safeJSON(p interface{}, indent bool) string {
 		b, err = json.MarshalIndent(&p, "", "  ")
 	}
 	if err != nil {
-		warn("error marshalling JSON: %s", err)
+		util.Warn("error marshalling JSON: %s", err)
 		return ""
 	}
 	return string(b)

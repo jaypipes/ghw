@@ -14,6 +14,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -54,7 +55,7 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 	paths := linuxpath.New(ctx)
 	links, err := ioutil.ReadDir(paths.SysClassDRM)
 	if err != nil {
-		warn(_WARN_NO_SYS_CLASS_DRM)
+		util.Warn(_WARN_NO_SYS_CLASS_DRM)
 		return nil
 	}
 	cards := make([]*GraphicsCard, 0)
@@ -134,7 +135,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 			"device",
 			"numa_node",
 		)
-		nodeIdx := safeIntFromFile(fpath)
+		nodeIdx := util.SafeIntFromFile(fpath)
 		if nodeIdx == -1 {
 			continue
 		}

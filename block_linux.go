@@ -16,6 +16,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -179,7 +180,7 @@ func diskPartitions(paths *linuxpath.Paths, disk string) []*Partition {
 	path := filepath.Join(paths.SysBlock, disk)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		warn("failed to read disk partitions: %s\n", err)
+		util.Warn("failed to read disk partitions: %s\n", err)
 		return out
 	}
 	for _, file := range files {
@@ -314,7 +315,7 @@ func diskTypes(dname string) (
 
 func diskIsRotational(paths *linuxpath.Paths, devName string) bool {
 	path := filepath.Join(paths.SysBlock, devName, "queue", "rotational")
-	contents := safeIntFromFile(path)
+	contents := util.SafeIntFromFile(path)
 	return contents == 1
 }
 
@@ -351,7 +352,7 @@ func partitionInfo(paths *linuxpath.Paths, part string) (string, string, bool) {
 	if err != nil {
 		return "", "", true
 	}
-	defer safeClose(r)
+	defer util.SafeClose(r)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {

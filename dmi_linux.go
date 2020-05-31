@@ -12,6 +12,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 func dmiItem(ctx *context.Context, value string) string {
@@ -20,7 +21,7 @@ func dmiItem(ctx *context.Context, value string) string {
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		warn("Unable to read %s: %s\n", value, err)
+		util.Warn("Unable to read %s: %s\n", value, err)
 		return UNKNOWN
 	}
 

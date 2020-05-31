@@ -17,6 +17,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -39,7 +40,7 @@ func nics(ctx *context.Context) []*NIC {
 
 	etInstalled := ethtoolInstalled()
 	if !etInstalled {
-		warn(_WARN_ETHTOOL_NOT_INSTALLED)
+		util.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
 	}
 	for _, file := range files {
 		filename := file.Name()
@@ -107,7 +108,7 @@ func netDeviceCapabilities(dev string) []*NICCapability {
 	err := cmd.Run()
 	if err != nil {
 		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
-		warn(msg)
+		util.Warn(msg)
 		return caps
 	}
 

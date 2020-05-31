@@ -16,6 +16,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
@@ -39,7 +40,7 @@ func processorsGet(ctx *context.Context) []*Processor {
 	if err != nil {
 		return nil
 	}
-	defer safeClose(r)
+	defer util.SafeClose(r)
 
 	// An array of maps of attributes describing the logical processor
 	procAttrs := make([]map[string]string, 0)
@@ -203,7 +204,7 @@ func coresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 			continue
 		}
 		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
-		coreID := safeIntFromFile(coreIDPath)
+		coreID := util.SafeIntFromFile(coreIDPath)
 		core := findCoreByID(coreID)
 		core.LogicalProcessors = append(
 			core.LogicalProcessors,

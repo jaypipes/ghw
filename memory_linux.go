@@ -19,6 +19,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -47,7 +48,7 @@ func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
 	tpb := memTotalPhysicalBytes(paths)
 	info.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
+		util.Warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
 		info.TotalPhysicalBytes = tub
 	}
 	info.SupportedPageSizes = memSupportedPageSizes(paths)
@@ -89,7 +90,7 @@ func memTotalPhysicalBytes(paths *linuxpath.Paths) int64 {
 			if err != nil {
 				return -1
 			}
-			defer safeClose(r)
+			defer util.SafeClose(r)
 			if unzip {
 				r, err = gzip.NewReader(r)
 				if err != nil {
@@ -138,7 +139,7 @@ func memTotalUsableBytes(paths *linuxpath.Paths) int64 {
 	if err != nil {
 		return -1
 	}
-	defer safeClose(r)
+	defer util.SafeClose(r)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {

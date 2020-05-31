@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package util
 
 import (
 	"fmt"
@@ -22,14 +22,14 @@ type closer interface {
 	Close() error
 }
 
-func safeClose(c closer) {
+func SafeClose(c closer) {
 	err := c.Close()
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to close: %s", err)
 	}
 }
 
-func warn(msg string, args ...interface{}) {
+func Warn(msg string, args ...interface{}) {
 	if _, ok := os.LookupEnv(disableWarningsEnv); ok {
 		return
 	}
@@ -41,17 +41,17 @@ func warn(msg string, args ...interface{}) {
 // -1 if there were file permissions or existence errors or if the contents
 // could not be successfully converted to an integer. In any error, a warning
 // message is printed to STDERR and -1 is returned.
-func safeIntFromFile(path string) int {
+func SafeIntFromFile(path string) int {
 	msg := "failed to read int from file: %s\n"
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
-		warn(msg, err)
+		Warn(msg, err)
 		return -1
 	}
 	contents := strings.TrimSpace(string(buf))
 	res, err := strconv.Atoi(contents)
 	if err != nil {
-		warn(msg, err)
+		Warn(msg, err)
 		return -1
 	}
 	return res
