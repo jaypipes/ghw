@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 const (
@@ -22,7 +23,8 @@ const (
 )
 
 func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
-	info.Disks = disks(ctx)
+	paths := linuxpath.New(ctx)
+	info.Disks = disks(paths)
 	var tpb uint64
 	for _, d := range info.Disks {
 		tpb += d.SizeBytes
@@ -31,10 +33,10 @@ func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
 	return nil
 }
 
-func diskPhysicalBlockSizeBytes(ctx *context.Context, disk string) uint64 {
+func diskPhysicalBlockSizeBytes(paths *linuxpath.Paths, disk string) uint64 {
 	// We can find the sector size in Linux by looking at the
 	// /sys/block/$DEVICE/queue/physical_block_size file in sysfs
-	path := filepath.Join(pathSysBlock(ctx), disk, "queue", "physical_block_size")
+	path := filepath.Join(paths.SysBlock, disk, "queue", "physical_block_size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -46,10 +48,10 @@ func diskPhysicalBlockSizeBytes(ctx *context.Context, disk string) uint64 {
 	return size
 }
 
-func diskSizeBytes(ctx *context.Context, disk string) uint64 {
+func diskSizeBytes(paths *linuxpath.Paths, disk string) uint64 {
 	// We can find the number of 512-byte sectors by examining the contents of
 	// /sys/block/$DEVICE/size and calculate the physical bytes accordingly.
-	path := filepath.Join(pathSysBlock(ctx), disk, "size")
+	path := filepath.Join(paths.SysBlock, disk, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -61,13 +63,13 @@ func diskSizeBytes(ctx *context.Context, disk string) uint64 {
 	return size * sectorSize
 }
 
-func diskNUMANodeID(ctx *context.Context, disk string) int {
-	link, err := os.Readlink(filepath.Join(pathSysBlock(ctx), disk))
+func diskNUMANodeID(paths *linuxpath.Paths, disk string) int {
+	link, err := os.Readlink(filepath.Join(paths.SysBlock, disk))
 	if err != nil {
 		return -1
 	}
 	for partial := link; strings.HasPrefix(partial, "../devices/"); partial = filepath.Base(partial) {
-		if nodeContents, err := ioutil.ReadFile(filepath.Join(pathSysBlock(ctx), partial, "numa_node")); err != nil {
+		if nodeContents, err := ioutil.ReadFile(filepath.Join(paths.SysBlock, partial, "numa_node")); err != nil {
 			if nodeInt, err := strconv.Atoi(string(nodeContents)); err != nil {
 				return nodeInt
 			}
@@ -76,10 +78,10 @@ func diskNUMANodeID(ctx *context.Context, disk string) int {
 	return -1
 }
 
-func diskVendor(ctx *context.Context, disk string) string {
+func diskVendor(paths *linuxpath.Paths, disk string) string {
 	// In Linux, the vendor for a disk device is found in the
 	// /sys/block/$DEVICE/device/vendor file in sysfs
-	path := filepath.Join(pathSysBlock(ctx), disk, "device", "vendor")
+	path := filepath.Join(paths.SysBlock, disk, "device", "vendor")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return UNKNOWN
@@ -87,16 +89,16 @@ func diskVendor(ctx *context.Context, disk string) string {
 	return strings.TrimSpace(string(contents))
 }
 
-func udevInfo(ctx *context.Context, disk string) (map[string]string, error) {
+func udevInfo(paths *linuxpath.Paths, disk string) (map[string]string, error) {
 	// Get device major:minor numbers
-	devNo, err := ioutil.ReadFile(filepath.Join(pathSysBlock(ctx), disk, "dev"))
+	devNo, err := ioutil.ReadFile(filepath.Join(paths.SysBlock, disk, "dev"))
 	if err != nil {
 		return nil, err
 	}
 
 	// Look up block device in udev runtime database
 	udevID := "b" + strings.TrimSpace(string(devNo))
-	udevBytes, err := ioutil.ReadFile(filepath.Join(pathRunUdevData(ctx), udevID))
+	udevBytes, err := ioutil.ReadFile(filepath.Join(paths.RunUdevData, udevID))
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +114,8 @@ func udevInfo(ctx *context.Context, disk string) (map[string]string, error) {
 	return udevInfo, nil
 }
 
-func diskModel(ctx *context.Context, disk string) string {
-	info, err := udevInfo(ctx, disk)
+func diskModel(paths *linuxpath.Paths, disk string) string {
+	info, err := udevInfo(paths, disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -124,8 +126,8 @@ func diskModel(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
-func diskSerialNumber(ctx *context.Context, disk string) string {
-	info, err := udevInfo(ctx, disk)
+func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
+	info, err := udevInfo(paths, disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -138,8 +140,8 @@ func diskSerialNumber(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
-func diskBusPath(ctx *context.Context, disk string) string {
-	info, err := udevInfo(ctx, disk)
+func diskBusPath(paths *linuxpath.Paths, disk string) string {
+	info, err := udevInfo(paths, disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -152,8 +154,8 @@ func diskBusPath(ctx *context.Context, disk string) string {
 	return UNKNOWN
 }
 
-func diskWWN(ctx *context.Context, disk string) string {
-	info, err := udevInfo(ctx, disk)
+func diskWWN(paths *linuxpath.Paths, disk string) string {
+	info, err := udevInfo(paths, disk)
 	if err != nil {
 		return UNKNOWN
 	}
@@ -172,9 +174,9 @@ func diskWWN(ctx *context.Context, disk string) string {
 // but just the name. In other words, "sda", not "/dev/sda" and "nvme0n1" not
 // "/dev/nvme0n1") and returns a slice of pointers to Partition structs
 // representing the partitions in that disk
-func diskPartitions(ctx *context.Context, disk string) []*Partition {
+func diskPartitions(paths *linuxpath.Paths, disk string) []*Partition {
 	out := make([]*Partition, 0)
-	path := filepath.Join(pathSysBlock(ctx), disk)
+	path := filepath.Join(paths.SysBlock, disk)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		warn("failed to read disk partitions: %s\n", err)
@@ -185,8 +187,8 @@ func diskPartitions(ctx *context.Context, disk string) []*Partition {
 		if !strings.HasPrefix(fname, disk) {
 			continue
 		}
-		size := partitionSizeBytes(ctx, disk, fname)
-		mp, pt, ro := partitionInfo(ctx, fname)
+		size := partitionSizeBytes(paths, disk, fname)
+		mp, pt, ro := partitionInfo(paths, fname)
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
@@ -199,8 +201,8 @@ func diskPartitions(ctx *context.Context, disk string) []*Partition {
 	return out
 }
 
-func diskIsRemovable(ctx *context.Context, disk string) bool {
-	path := filepath.Join(pathSysBlock(ctx), disk, "removable")
+func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
+	path := filepath.Join(paths.SysBlock, disk, "removable")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return false
@@ -212,13 +214,13 @@ func diskIsRemovable(ctx *context.Context, disk string) bool {
 	return false
 }
 
-func disks(ctx *context.Context) []*Disk {
+func disks(paths *linuxpath.Paths) []*Disk {
 	// In Linux, we could use the fdisk, lshw or blockdev commands to list disk
 	// information, however all of these utilities require root privileges to
 	// run. We can get all of this information by examining the /sys/block
 	// and /sys/class/block files
 	disks := make([]*Disk, 0)
-	files, err := ioutil.ReadDir(pathSysBlock(ctx))
+	files, err := ioutil.ReadDir(paths.SysBlock)
 	if err != nil {
 		return nil
 	}
@@ -231,18 +233,18 @@ func disks(ctx *context.Context) []*Disk {
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
 		// diskIsRotational for ease of unit testing
-		if !diskIsRotational(ctx, dname) {
+		if !diskIsRotational(paths, dname) {
 			driveType = DRIVE_TYPE_SSD
 		}
-		size := diskSizeBytes(ctx, dname)
-		pbs := diskPhysicalBlockSizeBytes(ctx, dname)
-		busPath := diskBusPath(ctx, dname)
-		node := diskNUMANodeID(ctx, dname)
-		vendor := diskVendor(ctx, dname)
-		model := diskModel(ctx, dname)
-		serialNo := diskSerialNumber(ctx, dname)
-		wwn := diskWWN(ctx, dname)
-		removable := diskIsRemovable(ctx, dname)
+		size := diskSizeBytes(paths, dname)
+		pbs := diskPhysicalBlockSizeBytes(paths, dname)
+		busPath := diskBusPath(paths, dname)
+		node := diskNUMANodeID(paths, dname)
+		vendor := diskVendor(paths, dname)
+		model := diskModel(paths, dname)
+		serialNo := diskSerialNumber(paths, dname)
+		wwn := diskWWN(paths, dname)
+		removable := diskIsRemovable(paths, dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -259,7 +261,7 @@ func disks(ctx *context.Context) []*Disk {
 			WWN:                    wwn,
 		}
 
-		parts := diskPartitions(ctx, dname)
+		parts := diskPartitions(paths, dname)
 		// Map this Disk object into the Partition...
 		for _, part := range parts {
 			part.Disk = d
@@ -310,8 +312,8 @@ func diskTypes(dname string) (
 	return driveType, storageController
 }
 
-func diskIsRotational(ctx *context.Context, devName string) bool {
-	path := filepath.Join(pathSysBlock(ctx), devName, "queue", "rotational")
+func diskIsRotational(paths *linuxpath.Paths, devName string) bool {
+	path := filepath.Join(paths.SysBlock, devName, "queue", "rotational")
 	contents := safeIntFromFile(path)
 	return contents == 1
 }
@@ -320,8 +322,8 @@ func diskIsRotational(ctx *context.Context, devName string) bool {
 // name and a partition name. Note: disk name and partition name do *not*
 // contain any leading "/dev" parts. In other words, they are *names*, not
 // paths.
-func partitionSizeBytes(ctx *context.Context, disk string, part string) uint64 {
-	path := filepath.Join(pathSysBlock(ctx), disk, part, "size")
+func partitionSizeBytes(paths *linuxpath.Paths, disk string, part string) uint64 {
+	path := filepath.Join(paths.SysBlock, disk, part, "size")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return 0
@@ -335,7 +337,7 @@ func partitionSizeBytes(ctx *context.Context, disk string, part string) uint64 {
 
 // Given a full or short partition name, returns the mount point, the type of
 // the partition and whether it's readonly
-func partitionInfo(ctx *context.Context, part string) (string, string, bool) {
+func partitionInfo(paths *linuxpath.Paths, part string) (string, string, bool) {
 	// Allow calling PartitionInfo with either the full partition name
 	// "/dev/sda1" or just "sda1"
 	if !strings.HasPrefix(part, "/dev") {
@@ -345,7 +347,7 @@ func partitionInfo(ctx *context.Context, part string) (string, string, bool) {
 	// /etc/mtab entries for mounted partitions look like this:
 	// /dev/sda6 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
 	var r io.ReadCloser
-	r, err := os.Open(pathEtcMtab(ctx))
+	r, err := os.Open(paths.EtcMtab)
 	if err != nil {
 		return "", "", true
 	}
@@ -415,17 +417,17 @@ func parseMtabEntry(line string) *mtabEntry {
 	return res
 }
 
-func partitionMountPoint(ctx *context.Context, part string) string {
-	mp, _, _ := partitionInfo(ctx, part)
+func partitionMountPoint(paths *linuxpath.Paths, part string) string {
+	mp, _, _ := partitionInfo(paths, part)
 	return mp
 }
 
-func partitionType(ctx *context.Context, part string) string {
-	_, pt, _ := partitionInfo(ctx, part)
+func partitionType(paths *linuxpath.Paths, part string) string {
+	_, pt, _ := partitionInfo(paths, part)
 	return pt
 }
 
-func partitionIsReadOnly(ctx *context.Context, part string) bool {
-	_, _, ro := partitionInfo(ctx, part)
+func partitionIsReadOnly(paths *linuxpath.Paths, part string) bool {
+	_, _, ro := partitionInfo(paths, part)
 	return ro
 }

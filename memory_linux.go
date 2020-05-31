@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 const (
@@ -37,22 +38,23 @@ var (
 )
 
 func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
-	tub := memTotalUsableBytes(ctx)
+	paths := linuxpath.New(ctx)
+	tub := memTotalUsableBytes(paths)
 	if tub < 1 {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
 	}
 	info.TotalUsableBytes = tub
-	tpb := memTotalPhysicalBytes(ctx)
+	tpb := memTotalPhysicalBytes(paths)
 	info.TotalPhysicalBytes = tpb
 	if tpb < 1 {
 		warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
 		info.TotalPhysicalBytes = tub
 	}
-	info.SupportedPageSizes = memSupportedPageSizes(ctx)
+	info.SupportedPageSizes = memSupportedPageSizes(paths)
 	return nil
 }
 
-func memTotalPhysicalBytes(ctx *context.Context) int64 {
+func memTotalPhysicalBytes(paths *linuxpath.Paths) int64 {
 	// In Linux, the total physical memory can be determined by looking at the
 	// output of dmidecode, however dmidecode requires root privileges to run,
 	// so instead we examine the system logs for startup information containing
@@ -73,7 +75,7 @@ func memTotalPhysicalBytes(ctx *context.Context) int64 {
 	// syslog.$NUMBER or syslog.$NUMBER.gz containing system log records. We
 	// search each, stopping when we match a system log record line that
 	// contains physical memory information.
-	logDir := pathVarLog(ctx)
+	logDir := paths.VarLog
 	logFiles, err := ioutil.ReadDir(logDir)
 	if err != nil {
 		return -1
@@ -108,7 +110,7 @@ func memTotalPhysicalBytes(ctx *context.Context) int64 {
 	return -1
 }
 
-func memTotalUsableBytes(ctx *context.Context) int64 {
+func memTotalUsableBytes(paths *linuxpath.Paths) int64 {
 	// In Linux, /proc/meminfo contains a set of memory-related amounts, with
 	// lines looking like the following:
 	//
@@ -131,7 +133,7 @@ func memTotalUsableBytes(ctx *context.Context) int64 {
 	// information, see:
 	//
 	//  https://www.kernel.org/doc/Documentation/filesystems/proc.txt
-	filePath := pathProcMeminfo(ctx)
+	filePath := paths.ProcMeminfo
 	r, err := os.Open(filePath)
 	if err != nil {
 		return -1
@@ -159,11 +161,11 @@ func memTotalUsableBytes(ctx *context.Context) int64 {
 	return -1
 }
 
-func memSupportedPageSizes(ctx *context.Context) []uint64 {
+func memSupportedPageSizes(paths *linuxpath.Paths) []uint64 {
 	// In Linux, /sys/kernel/mm/hugepages contains a directory per page size
 	// supported by the kernel. The directory name corresponds to the pattern
 	// 'hugepages-{pagesize}kb'
-	dir := pathSysKernelMMHugepages(ctx)
+	dir := paths.SysKernelMMHugepages
 	out := make([]uint64, 0)
 
 	files, err := ioutil.ReadDir(dir)

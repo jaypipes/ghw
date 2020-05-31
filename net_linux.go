@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 const (
@@ -30,7 +31,8 @@ func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
 func nics(ctx *context.Context) []*NIC {
 	nics := make([]*NIC, 0)
 
-	files, err := ioutil.ReadDir(pathSysClassNet(ctx))
+	paths := linuxpath.New(ctx)
+	files, err := ioutil.ReadDir(paths.SysClassNet)
 	if err != nil {
 		return nics
 	}
@@ -46,7 +48,7 @@ func nics(ctx *context.Context) []*NIC {
 			continue
 		}
 
-		netPath := filepath.Join(pathSysClassNet(ctx), filename)
+		netPath := filepath.Join(paths.SysClassNet, filename)
 		dest, _ := os.Readlink(netPath)
 		isVirtual := false
 		if strings.Contains(dest, "devices/virtual/net") {
@@ -58,7 +60,7 @@ func nics(ctx *context.Context) []*NIC {
 			IsVirtual: isVirtual,
 		}
 
-		mac := netDeviceMacAddress(ctx, filename)
+		mac := netDeviceMacAddress(paths, filename)
 		nic.MacAddress = mac
 		if etInstalled {
 			nic.Capabilities = netDeviceCapabilities(filename)
@@ -70,12 +72,12 @@ func nics(ctx *context.Context) []*NIC {
 	return nics
 }
 
-func netDeviceMacAddress(ctx *context.Context, dev string) string {
+func netDeviceMacAddress(paths *linuxpath.Paths, dev string) string {
 	// Instead of use udevadm, we can get the device's MAC address by examing
 	// the /sys/class/net/$DEVICE/address file in sysfs. However, for devices
 	// that have addr_assign_type != 0, return None since the MAC address is
 	// random.
-	aatPath := filepath.Join(pathSysClassNet(ctx), dev, "addr_assign_type")
+	aatPath := filepath.Join(paths.SysClassNet, dev, "addr_assign_type")
 	contents, err := ioutil.ReadFile(aatPath)
 	if err != nil {
 		return ""
@@ -83,7 +85,7 @@ func netDeviceMacAddress(ctx *context.Context, dev string) string {
 	if strings.TrimSpace(string(contents)) != "0" {
 		return ""
 	}
-	addrPath := filepath.Join(pathSysClassNet(ctx), dev, "address")
+	addrPath := filepath.Join(paths.SysClassNet, dev, "address")
 	contents, err = ioutil.ReadFile(addrPath)
 	if err != nil {
 		return ""

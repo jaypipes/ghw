@@ -15,6 +15,7 @@ import (
 	"github.com/jaypipes/pcidb"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 func pciFillInfo(ctx *context.Context, info *PCIInfo) error {
@@ -30,12 +31,13 @@ func pciFillInfo(ctx *context.Context, info *PCIInfo) error {
 }
 
 func getPCIDeviceModaliasPath(ctx *context.Context, address string) string {
+	paths := linuxpath.New(ctx)
 	pciAddr := PCIAddressFromString(address)
 	if pciAddr == nil {
 		return ""
 	}
 	return filepath.Join(
-		pathSysBusPciDevices(ctx),
+		paths.SysBusPciDevices,
 		pciAddr.Domain+":"+pciAddr.Bus+":"+pciAddr.Slot+"."+pciAddr.Function,
 		"modalias",
 	)
@@ -271,12 +273,13 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 // ListDevices returns a list of pointers to PCIDevice structs present on the
 // host system
 func (info *PCIInfo) ListDevices() []*PCIDevice {
+	paths := linuxpath.New(info.ctx)
 	devs := make([]*PCIDevice, 0)
 	// We scan the /sys/bus/pci/devices directory which contains a collection
 	// of symlinks. The names of the symlinks are all the known PCI addresses
 	// for the host. For each address, we grab a *PCIDevice matching the
 	// address and append to the returned array.
-	links, err := ioutil.ReadDir(pathSysBusPciDevices(info.ctx))
+	links, err := ioutil.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
 		return nil

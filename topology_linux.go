@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 func topologyFillInfo(ctx *context.Context, info *TopologyInfo) error {
@@ -24,9 +25,10 @@ func topologyFillInfo(ctx *context.Context, info *TopologyInfo) error {
 }
 
 func topologyNodes(ctx *context.Context) []*TopologyNode {
+	paths := linuxpath.New(ctx)
 	nodes := make([]*TopologyNode, 0)
 
-	files, err := ioutil.ReadDir(pathSysDevicesSystemNode(ctx))
+	files, err := ioutil.ReadDir(paths.SysDevicesSystemNode)
 	if err != nil {
 		warn("failed to determine nodes: %s\n", err)
 		return nodes

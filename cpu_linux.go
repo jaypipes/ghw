@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
@@ -32,8 +33,9 @@ func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
 
 func processorsGet(ctx *context.Context) []*Processor {
 	procs := make([]*Processor, 0)
+	paths := linuxpath.New(ctx)
 
-	r, err := os.Open(pathProcCpuinfo(ctx))
+	r, err := os.Open(paths.ProcCpuinfo)
 	if err != nil {
 		return nil
 	}
@@ -150,8 +152,9 @@ func coresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 	// those subdirectories contains a topology subdirectory which has a
 	// core_id file that indicates the 0-based identifier of the physical core
 	// the logical processor (hardware thread) is on.
+	paths := linuxpath.New(ctx)
 	path := filepath.Join(
-		pathSysDevicesSystemNode(ctx),
+		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),
 	)
 	cores := make([]*ProcessorCore, 0)

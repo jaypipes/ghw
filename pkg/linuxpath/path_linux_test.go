@@ -6,7 +6,7 @@
 
 // +build linux
 
-package ghw
+package linuxpath_test
 
 import (
 	"os"
@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 func TestPathRoot(t *testing.T) {
@@ -28,10 +29,11 @@ func TestPathRoot(t *testing.T) {
 	}
 
 	ctx := context.FromEnv()
+	paths := linuxpath.New(ctx)
 
 	// No environment variable is set for GHW_CHROOT, so pathProcCpuinfo() should
 	// return the default "/proc/cpuinfo"
-	path := pathProcCpuinfo(ctx)
+	path := paths.ProcCpuinfo
 	if path != "/proc/cpuinfo" {
 		t.Fatalf("Expected pathProcCpuInfo() to return '/proc/cpuinfo' but got %s", path)
 	}
@@ -41,8 +43,9 @@ func TestPathRoot(t *testing.T) {
 	os.Setenv("GHW_CHROOT", "/host")
 
 	ctx = context.FromEnv()
+	paths = linuxpath.New(ctx)
 
-	path = pathProcCpuinfo(ctx)
+	path = paths.ProcCpuinfo
 	if path != "/host/proc/cpuinfo" {
 		t.Fatalf("Expected pathProcCpuinfo() to return '/host/proc/cpuinfo' but got %s", path)
 	}

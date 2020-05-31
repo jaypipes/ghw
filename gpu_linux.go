@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 const (
@@ -50,7 +51,8 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 	// we follow to gather information about the actual device from the PCI
 	// subsystem (we query the modalias file of the PCI device's sysfs
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
-	links, err := ioutil.ReadDir(pathSysClassDrm(ctx))
+	paths := linuxpath.New(ctx)
+	links, err := ioutil.ReadDir(paths.SysClassDRM)
 	if err != nil {
 		warn(_WARN_NO_SYS_CLASS_DRM)
 		return nil
@@ -73,7 +75,7 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 
 		// Calculate the card's PCI address by looking at the symbolic link's
 		// target
-		lpath := filepath.Join(pathSysClassDrm(ctx), lname)
+		lpath := filepath.Join(paths.SysClassDRM, lname)
 		dest, err := os.Readlink(lpath)
 		if err != nil {
 			continue
@@ -88,14 +90,14 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 		cards = append(cards, card)
 	}
 	gpuFillNUMANodes(ctx, cards)
-	gpuFillPCIDevice(ctx, cards)
+	gpuFillPCIDevice(cards)
 	info.GraphicsCards = cards
 	return nil
 }
 
 // Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
 // attribute with PCI device information
-func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
+func gpuFillPCIDevice(cards []*GraphicsCard) {
 	pci, err := PCI()
 	if err != nil {
 		return
@@ -111,6 +113,7 @@ func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
 // affined to, setting the GraphicsCard.Node field accordingly. If the host
 // system is not a NUMA system, the Node field will be set to nil.
 func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
+	paths := linuxpath.New(ctx)
 	topo := &TopologyInfo{}
 	if err := topologyFillInfo(ctx, topo); err != nil {
 		for _, card := range cards {
@@ -126,7 +129,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 		// contains the NUMA node that the card is affined to
 		cardIndexStr := strconv.Itoa(card.Index)
 		fpath := filepath.Join(
-			pathSysClassDrm(ctx),
+			paths.SysClassDRM,
 			"card"+cardIndexStr,
 			"device",
 			"numa_node",

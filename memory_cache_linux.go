@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
@@ -25,8 +26,9 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 	// internal 0-based identifier. Those subdirectories contain a number of
 	// files, including 'shared_cpu_list', 'size', and 'type' which we use to
 	// determine cache characteristics.
+	paths := linuxpath.New(ctx)
 	path := filepath.Join(
-		pathSysDevicesSystemNode(ctx),
+		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),
 	)
 	caches := make(map[string]*MemoryCache)
@@ -76,14 +78,14 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 			// The cache information is repeated for each node, so here, we
 			// just ensure that we only have a one MemoryCache object for each
 			// unique combination of level, type and processor map
-			level := memoryCacheLevel(ctx, nodeID, lpID, cacheIndex)
-			cacheType := memoryCacheType(ctx, nodeID, lpID, cacheIndex)
-			sharedCpuMap := memoryCacheSharedCPUMap(ctx, nodeID, lpID, cacheIndex)
+			level := memoryCacheLevel(paths, nodeID, lpID, cacheIndex)
+			cacheType := memoryCacheType(paths, nodeID, lpID, cacheIndex)
+			sharedCpuMap := memoryCacheSharedCPUMap(paths, nodeID, lpID, cacheIndex)
 			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
 
 			cache, exists := caches[cacheKey]
 			if !exists {
-				size := memoryCacheSize(ctx, nodeID, lpID, level)
+				size := memoryCacheSize(paths, nodeID, lpID, level)
 				cache = &MemoryCache{
 					Level:             uint8(level),
 					Type:              cacheType,
@@ -111,31 +113,9 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 	return cacheVals, nil
 }
 
-func pathNodeCPU(ctx *context.Context, nodeID int, lpID int) string {
-	return filepath.Join(
-		pathSysDevicesSystemNode(ctx),
-		fmt.Sprintf("node%d", nodeID),
-		fmt.Sprintf("cpu%d", lpID),
-	)
-}
-
-func pathNodeCPUCache(ctx *context.Context, nodeID int, lpID int) string {
-	return filepath.Join(
-		pathNodeCPU(ctx, nodeID, lpID),
-		"cache",
-	)
-}
-
-func pathNodeCPUCacheIndex(ctx *context.Context, nodeID int, lpID int, cacheIndex int) string {
-	return filepath.Join(
-		pathNodeCPUCache(ctx, nodeID, lpID),
-		fmt.Sprintf("index%d", cacheIndex),
-	)
-}
-
-func memoryCacheLevel(ctx *context.Context, nodeID int, lpID int, cacheIndex int) int {
+func memoryCacheLevel(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex int) int {
 	levelPath := filepath.Join(
-		pathNodeCPUCacheIndex(ctx, nodeID, lpID, cacheIndex),
+		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"level",
 	)
 	levelContents, err := ioutil.ReadFile(levelPath)
@@ -153,9 +133,9 @@ func memoryCacheLevel(ctx *context.Context, nodeID int, lpID int, cacheIndex int
 	return level
 }
 
-func memoryCacheSize(ctx *context.Context, nodeID int, lpID int, cacheIndex int) int {
+func memoryCacheSize(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex int) int {
 	sizePath := filepath.Join(
-		pathNodeCPUCacheIndex(ctx, nodeID, lpID, cacheIndex),
+		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"size",
 	)
 	sizeContents, err := ioutil.ReadFile(sizePath)
@@ -172,9 +152,9 @@ func memoryCacheSize(ctx *context.Context, nodeID int, lpID int, cacheIndex int)
 	return size
 }
 
-func memoryCacheType(ctx *context.Context, nodeID int, lpID int, cacheIndex int) MemoryCacheType {
+func memoryCacheType(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex int) MemoryCacheType {
 	typePath := filepath.Join(
-		pathNodeCPUCacheIndex(ctx, nodeID, lpID, cacheIndex),
+		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"type",
 	)
 	cacheTypeContents, err := ioutil.ReadFile(typePath)
@@ -192,9 +172,9 @@ func memoryCacheType(ctx *context.Context, nodeID int, lpID int, cacheIndex int)
 	}
 }
 
-func memoryCacheSharedCPUMap(ctx *context.Context, nodeID int, lpID int, cacheIndex int) string {
+func memoryCacheSharedCPUMap(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex int) string {
 	scpuPath := filepath.Join(
-		pathNodeCPUCacheIndex(ctx, nodeID, lpID, cacheIndex),
+		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"shared_cpu_map",
 	)
 	sharedCpuMap, err := ioutil.ReadFile(scpuPath)

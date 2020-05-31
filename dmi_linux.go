@@ -11,10 +11,12 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxpath"
 )
 
 func dmiItem(ctx *context.Context, value string) string {
-	path := filepath.Join(pathSysClassDMI(ctx), "id", value)
+	paths := linuxpath.New(ctx)
+	path := filepath.Join(paths.SysClassDMI, "id", value)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
