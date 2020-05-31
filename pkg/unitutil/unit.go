@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package unitutil
 
 var (
 	KB int64 = 1024
@@ -15,7 +15,11 @@ var (
 	EB       = PB * 1024
 )
 
-func unitWithString(size int64) (int64, string) {
+// AmountString returns a string representation of the amount with an amount
+// suffix corresponding to the nearest kibibit.
+//
+// For example, AmountString(1022) == "1022). AmountString(1024) == "1KB", etc
+func AmountString(size int64) (int64, string) {
 	switch {
 	case size < MB:
 		return KB, "KB"

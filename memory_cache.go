@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
 type MemoryCacheType int
@@ -74,7 +76,7 @@ type MemoryCache struct {
 }
 
 func (c *MemoryCache) String() string {
-	sizeKb := c.SizeBytes / uint64(KB)
+	sizeKb := c.SizeBytes / uint64(unitutil.KB)
 	typeStr := ""
 	if c.Type == MEMORY_CACHE_TYPE_INSTRUCTION {
 		typeStr = "i"

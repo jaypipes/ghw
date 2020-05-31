@@ -13,6 +13,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
 // DriveType describes the general category of drive device
@@ -141,7 +142,7 @@ func (i *BlockInfo) String() string {
 	tpbs := UNKNOWN
 	if i.TotalPhysicalBytes > 0 {
 		tpb := i.TotalPhysicalBytes
-		unit, unitStr := unitWithString(int64(tpb))
+		unit, unitStr := unitutil.AmountString(int64(tpb))
 		tpb = uint64(math.Ceil(float64(tpb) / float64(unit)))
 		tpbs = fmt.Sprintf("%d%s", tpb, unitStr)
 	}
@@ -157,7 +158,7 @@ func (d *Disk) String() string {
 	sizeStr := UNKNOWN
 	if d.SizeBytes > 0 {
 		size := d.SizeBytes
-		unit, unitStr := unitWithString(int64(size))
+		unit, unitStr := unitutil.AmountString(int64(size))
 		size = uint64(math.Ceil(float64(size) / float64(unit)))
 		sizeStr = fmt.Sprintf("%d%s", size, unitStr)
 	}
@@ -213,7 +214,7 @@ func (p *Partition) String() string {
 	sizeStr := UNKNOWN
 	if p.SizeBytes > 0 {
 		size := p.SizeBytes
-		unit, unitStr := unitWithString(int64(size))
+		unit, unitStr := unitutil.AmountString(int64(size))
 		size = uint64(math.Ceil(float64(size) / float64(unit)))
 		sizeStr = fmt.Sprintf("%d%s", size, unitStr)
 	}

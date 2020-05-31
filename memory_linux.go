@@ -19,6 +19,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -155,7 +156,7 @@ func memTotalUsableBytes(paths *linuxpath.Paths) int64 {
 		}
 		inKb := (len(parts) == 3 && strings.TrimSpace(parts[2]) == "kB")
 		if inKb {
-			value = value * int(KB)
+			value = value * int(unitutil.KB)
 		}
 		return int64(value)
 	}
@@ -182,7 +183,7 @@ func memSupportedPageSizes(paths *linuxpath.Paths) []uint64 {
 		if err != nil {
 			return out
 		}
-		out = append(out, uint64(size*int(KB)))
+		out = append(out, uint64(size*int(unitutil.KB)))
 	}
 	return out
 }

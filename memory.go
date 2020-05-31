@@ -12,6 +12,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
 type MemoryModule struct {
@@ -43,14 +44,14 @@ func (i *MemoryInfo) String() string {
 	tpbs := UNKNOWN
 	if i.TotalPhysicalBytes > 0 {
 		tpb := i.TotalPhysicalBytes
-		unit, unitStr := unitWithString(tpb)
+		unit, unitStr := unitutil.AmountString(tpb)
 		tpb = int64(math.Ceil(float64(i.TotalPhysicalBytes) / float64(unit)))
 		tpbs = fmt.Sprintf("%d%s", tpb, unitStr)
 	}
 	tubs := UNKNOWN
 	if i.TotalUsableBytes > 0 {
 		tub := i.TotalUsableBytes
-		unit, unitStr := unitWithString(tub)
+		unit, unitStr := unitutil.AmountString(tub)
 		tub = int64(math.Ceil(float64(i.TotalUsableBytes) / float64(unit)))
 		tubs = fmt.Sprintf("%d%s", tub, unitStr)
 	}

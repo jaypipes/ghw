@@ -16,6 +16,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
 func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
@@ -89,7 +90,7 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 				cache = &MemoryCache{
 					Level:             uint8(level),
 					Type:              cacheType,
-					SizeBytes:         uint64(size) * uint64(KB),
+					SizeBytes:         uint64(size) * uint64(unitutil.KB),
 					LogicalProcessors: make([]uint32, 0),
 				}
 				caches[cacheKey] = cache
