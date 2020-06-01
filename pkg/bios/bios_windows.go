@@ -3,12 +3,10 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package bios
 
 import (
 	"github.com/StackExchange/wmi"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlBIOS = "SELECT InstallDate, Manufacturer, Version FROM CIM_BIOSElement"
@@ -19,16 +17,16 @@ type win32BIOS struct {
 	Version      *string
 }
 
-func biosFillInfo(ctx *context.Context, info *BIOSInfo) error {
+func (i *Info) load() error {
 	// Getting data from WMI
 	var win32BIOSDescriptions []win32BIOS
 	if err := wmi.Query(wqlBIOS, &win32BIOSDescriptions); err != nil {
 		return err
 	}
 	if len(win32BIOSDescriptions) > 0 {
-		info.Vendor = *win32BIOSDescriptions[0].Manufacturer
-		info.Version = *win32BIOSDescriptions[0].Version
-		info.Date = *win32BIOSDescriptions[0].InstallDate
+		i.Vendor = *win32BIOSDescriptions[0].Manufacturer
+		i.Version = *win32BIOSDescriptions[0].Version
+		i.Date = *win32BIOSDescriptions[0].InstallDate
 	}
 	return nil
 }

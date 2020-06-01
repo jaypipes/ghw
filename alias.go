@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/memory"
@@ -75,4 +76,10 @@ type NICCapability = net.NICCapability
 
 var (
 	Network = net.New
+)
+
+type BIOSInfo = bios.Info
+
+var (
+	BIOS = bios.New
 )

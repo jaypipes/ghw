@@ -4,23 +4,26 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package bios
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
-// BIOSInfo defines BIOS release information
-type BIOSInfo struct {
+// Info defines BIOS release information
+type Info struct {
+	ctx     *context.Context
 	Vendor  string `json:"vendor"`
 	Version string `json:"version"`
 	Date    string `json:"date"`
 }
 
-func (i *BIOSInfo) String() string {
+func (i *Info) String() string {
 
 	vendorStr := ""
 	if i.Vendor != "" {
@@ -31,7 +34,7 @@ func (i *BIOSInfo) String() string {
 		versionStr = " version=" + i.Version
 	}
 	dateStr := ""
-	if i.Date != "" && i.Date != UNKNOWN {
+	if i.Date != "" && i.Date != util.UNKNOWN {
 		dateStr = " date=" + i.Date
 	}
 
@@ -44,12 +47,12 @@ func (i *BIOSInfo) String() string {
 	return res
 }
 
-// BIOS returns a pointer to a BIOSInfo struct containing information
+// New returns a pointer to a Info struct containing information
 // about the host's BIOS
-func BIOS(opts ...*WithOption) (*BIOSInfo, error) {
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &BIOSInfo{}
-	if err := biosFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -58,17 +61,17 @@ func BIOS(opts ...*WithOption) (*BIOSInfo, error) {
 // simple private struct used to encapsulate BIOS information in a top-level
 // "bios" YAML/JSON map/object key
 type biosPrinter struct {
-	Info *BIOSInfo `json:"bios"`
+	Info *Info `json:"bios"`
 }
 
 // YAMLString returns a string with the BIOS information formatted as YAML
 // under a top-level "dmi:" key
-func (info *BIOSInfo) YAMLString() string {
+func (info *Info) YAMLString() string {
 	return marshal.SafeYAML(biosPrinter{info})
 }
 
 // JSONString returns a string with the BIOS information formatted as JSON
 // under a top-level "bios:" key
-func (info *BIOSInfo) JSONString(indent bool) string {
+func (info *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(biosPrinter{info}, indent)
 }

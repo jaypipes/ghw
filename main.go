@@ -9,6 +9,7 @@ package ghw
 import (
 	"fmt"
 
+	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
@@ -31,7 +32,7 @@ type HostInfo struct {
 	Network   *NetworkInfo   `json:"network"`
 	GPU       *GPUInfo       `json:"gpu"`
 	Chassis   *ChassisInfo   `json:"chassis"`
-	BIOS      *BIOSInfo      `json:"bios"`
+	BIOS      *bios.Info     `json:"bios"`
 	Baseboard *BaseboardInfo `json:"baseboard"`
 	Product   *ProductInfo   `json:"product"`
 }
@@ -68,8 +69,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err := chassisFillInfo(ctx, chassis); err != nil {
 		return nil, err
 	}
-	bios := &BIOSInfo{}
-	if err := biosFillInfo(ctx, bios); err != nil {
+	biosInfo, err := bios.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	baseboard := &BaseboardInfo{}
@@ -88,7 +89,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Network:   netInfo,
 		GPU:       gpu,
 		Chassis:   chassis,
-		BIOS:      bios,
+		BIOS:      biosInfo,
 		Baseboard: baseboard,
 		Product:   product,
 	}, nil
