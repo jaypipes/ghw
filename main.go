@@ -9,6 +9,7 @@ package ghw
 import (
 	"fmt"
 
+	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
@@ -26,16 +27,16 @@ const (
 // HostInfo is a wrapper struct containing information about the host system's
 // memory, block storage, CPU, etc
 type HostInfo struct {
-	Memory    *memory.Info   `json:"memory"`
-	Block     *block.Info    `json:"block"`
-	CPU       *cpu.Info      `json:"cpu"`
-	Topology  *TopologyInfo  `json:"topology"`
-	Network   *NetworkInfo   `json:"network"`
-	GPU       *GPUInfo       `json:"gpu"`
-	Chassis   *ChassisInfo   `json:"chassis"`
-	BIOS      *bios.Info     `json:"bios"`
-	Baseboard *BaseboardInfo `json:"baseboard"`
-	Product   *ProductInfo   `json:"product"`
+	Memory    *memory.Info    `json:"memory"`
+	Block     *block.Info     `json:"block"`
+	CPU       *cpu.Info       `json:"cpu"`
+	Topology  *TopologyInfo   `json:"topology"`
+	Network   *net.Info       `json:"network"`
+	GPU       *GPUInfo        `json:"gpu"`
+	Chassis   *chassis.Info   `json:"chassis"`
+	BIOS      *bios.Info      `json:"bios"`
+	Baseboard *baseboard.Info `json:"baseboard"`
+	Product   *ProductInfo    `json:"product"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -74,8 +75,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	baseboard := &BaseboardInfo{}
-	if err := baseboardFillInfo(ctx, baseboard); err != nil {
+	baseboardInfo, err := baseboard.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	product := &ProductInfo{}
@@ -91,7 +92,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		GPU:       gpu,
 		Chassis:   chassisInfo,
 		BIOS:      biosInfo,
-		Baseboard: baseboard,
+		Baseboard: baseboardInfo,
 		Product:   product,
 	}, nil
 }

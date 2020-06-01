@@ -4,31 +4,33 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package baseboard
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
-// BaseboardInfo defines baseboard release information
-type BaseboardInfo struct {
+// Info defines baseboard release information
+type Info struct {
+	ctx          *context.Context
 	AssetTag     string `json:"asset_tag"`
 	SerialNumber string `json:"serial_number"`
 	Vendor       string `json:"vendor"`
 	Version      string `json:"version"`
 }
 
-func (i *BaseboardInfo) String() string {
-
+func (i *Info) String() string {
 	vendorStr := ""
 	if i.Vendor != "" {
 		vendorStr = " vendor=" + i.Vendor
 	}
 	serialStr := ""
-	if i.SerialNumber != "" && i.SerialNumber != UNKNOWN {
+	if i.SerialNumber != "" && i.SerialNumber != util.UNKNOWN {
 		serialStr = " serial=" + i.SerialNumber
 	}
 	versionStr := ""
@@ -45,12 +47,12 @@ func (i *BaseboardInfo) String() string {
 	return res
 }
 
-// Baseboard returns a pointer to a BaseboardInfo struct containing information
-// about the host's baseboard
-func Baseboard(opts ...*WithOption) (*BaseboardInfo, error) {
+// New returns a pointer to an Info struct containing information about the
+// host's baseboard
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &BaseboardInfo{}
-	if err := baseboardFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -59,17 +61,17 @@ func Baseboard(opts ...*WithOption) (*BaseboardInfo, error) {
 // simple private struct used to encapsulate baseboard information in a top-level
 // "baseboard" YAML/JSON map/object key
 type baseboardPrinter struct {
-	Info *BaseboardInfo `json:"baseboard"`
+	Info *Info `json:"baseboard"`
 }
 
 // YAMLString returns a string with the baseboard information formatted as YAML
 // under a top-level "dmi:" key
-func (info *BaseboardInfo) YAMLString() string {
+func (info *Info) YAMLString() string {
 	return marshal.SafeYAML(baseboardPrinter{info})
 }
 
 // JSONString returns a string with the baseboard information formatted as JSON
 // under a top-level "baseboard:" key
-func (info *BaseboardInfo) JSONString(indent bool) string {
+func (info *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(baseboardPrinter{info}, indent)
 }

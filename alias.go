@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
@@ -89,4 +90,10 @@ type ChassisInfo = chassis.Info
 
 var (
 	Chassis = chassis.New
+)
+
+type BaseboardInfo = baseboard.Info
+
+var (
+	Baseboard = baseboard.New
 )
