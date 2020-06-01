@@ -6,7 +6,7 @@
 
 // +build linux
 
-package ghw
+package net
 
 import (
 	"os"

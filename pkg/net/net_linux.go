@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package net
 
 import (
 	"bufio"
@@ -24,8 +24,8 @@ const (
 	_WARN_ETHTOOL_NOT_INSTALLED = `ethtool not installed. Cannot grab NIC capabilities`
 )
 
-func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
-	info.NICs = nics(ctx)
+func (i *Info) load() error {
+	i.NICs = nics(i.ctx)
 	return nil
 }
 

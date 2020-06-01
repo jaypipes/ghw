@@ -3,14 +3,12 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package net
 
 import (
 	"strings"
 
 	"github.com/StackExchange/wmi"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName  FROM Win32_NetworkAdapter"
@@ -28,14 +26,14 @@ type win32NetworkAdapter struct {
 	ServiceName     *string
 }
 
-func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
+func (i *Info) load() error {
 	// Getting info from WMI
 	var win32NetDescriptions []win32NetworkAdapter
 	if err := wmi.Query(wqlNetworkAdapter, &win32NetDescriptions); err != nil {
 		return err
 	}
 
-	info.NICs = nics(win32NetDescriptions)
+	i.NICs = nics(win32NetDescriptions)
 	return nil
 }
 

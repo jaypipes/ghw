@@ -4,16 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package net
 
 import (
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func netFillInfo(ctx *context.Context, info *NetworkInfo) error {
+func (i *Info) load() error {
 	return errors.New("netFillInfo not implemented on " + runtime.GOOS)
 }

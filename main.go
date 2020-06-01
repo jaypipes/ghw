@@ -14,6 +14,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/memory"
+	"github.com/jaypipes/ghw/pkg/net"
 )
 
 const (
@@ -55,8 +56,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err := topologyFillInfo(ctx, topology); err != nil {
 		return nil, err
 	}
-	net := &NetworkInfo{}
-	if err := netFillInfo(ctx, net); err != nil {
+	netInfo, err := net.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	gpu := &GPUInfo{}
@@ -84,7 +85,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Memory:    memInfo,
 		Block:     blockInfo,
 		Topology:  topology,
-		Network:   net,
+		Network:   netInfo,
 		GPU:       gpu,
 		Chassis:   chassis,
 		BIOS:      bios,

@@ -10,6 +10,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/memory"
+	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/option"
 )
 
@@ -66,4 +67,12 @@ const (
 	STORAGE_CONTROLLER_NVME    = block.STORAGE_CONTROLLER_NVME
 	STORAGE_CONTROLLER_VIRTIO  = block.STORAGE_CONTROLLER_VIRTIO
 	STORAGE_CONTROLLER_MMC     = block.STORAGE_CONTROLLER_MMC
+)
+
+type NetworkInfo = net.Info
+type NIC = net.NIC
+type NICCapability = net.NICCapability
+
+var (
+	Network = net.New
 )

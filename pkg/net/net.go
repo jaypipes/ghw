@@ -4,13 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package net
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
 type NICCapability struct {
@@ -40,20 +41,23 @@ func (n *NIC) String() string {
 	)
 }
 
-type NetworkInfo struct {
+type Info struct {
+	ctx  *context.Context
 	NICs []*NIC `json:"nics"`
 }
 
-func Network(opts ...*WithOption) (*NetworkInfo, error) {
+// New returns a pointer to an Info struct that contains information about the
+// network interface controllers (NICs) on the host system
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &NetworkInfo{}
-	if err := netFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
 }
 
-func (i *NetworkInfo) String() string {
+func (i *Info) String() string {
 	return fmt.Sprintf(
 		"net (%d NICs)",
 		len(i.NICs),
@@ -63,17 +67,17 @@ func (i *NetworkInfo) String() string {
 // simple private struct used to encapsulate net information in a
 // top-level "net" YAML/JSON map/object key
 type netPrinter struct {
-	Info *NetworkInfo `json:"network"`
+	Info *Info `json:"network"`
 }
 
 // YAMLString returns a string with the net information formatted as YAML
 // under a top-level "net:" key
-func (i *NetworkInfo) YAMLString() string {
+func (i *Info) YAMLString() string {
 	return marshal.SafeYAML(netPrinter{i})
 }
 
 // JSONString returns a string with the net information formatted as JSON
 // under a top-level "net:" key
-func (i *NetworkInfo) JSONString(indent bool) string {
+func (i *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(netPrinter{i}, indent)
 }

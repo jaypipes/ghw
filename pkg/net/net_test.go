@@ -4,14 +4,16 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package net_test
 
 import (
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/net"
 )
 
 func TestNet(t *testing.T) {
-	info, err := Network()
+	info, err := net.New()
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
