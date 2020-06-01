@@ -10,23 +10,21 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func pciFillInfo(ctx *context.Context, info *PCIInfo) error {
+func (i *Info) load() error {
 	return errors.New("pciFillInfo not implemented on " + runtime.GOOS)
 }
 
-// GetDevice returns a pointer to a PCIDevice struct that describes the PCI
+// GetDevice returns a pointer to a Device struct that describes the PCI
 // device at the requested address. If no such device could be found, returns
 // nil
-func (info *PCIInfo) GetDevice(address string) *PCIDevice {
+func (info *Info) GetDevice(address string) *Device {
 	return nil
 }
 
-// ListDevices returns a list of pointers to PCIDevice structs present on the
+// ListDevices returns a list of pointers to Device structs present on the
 // host system
-func (info *PCIInfo) ListDevices() []*PCIDevice {
+func (info *Info) ListDevices() []*Device {
 	return nil
 }

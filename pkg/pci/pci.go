@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package pci
 
 import (
 	"bytes"
@@ -15,15 +15,17 @@ import (
 	"github.com/jaypipes/pcidb"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 var (
-	regexPCIAddress *regexp.Regexp = regexp.MustCompile(
+	regexAddress *regexp.Regexp = regexp.MustCompile(
 		`^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
 	)
 )
 
-type PCIDevice struct {
+type Device struct {
 	// The PCI address of the device
 	Address   string         `json:"address"`
 	Vendor    *pcidb.Vendor  `json:"vendor"`
@@ -37,19 +39,19 @@ type PCIDevice struct {
 	ProgrammingInterface *pcidb.ProgrammingInterface `json:"programming_interface"`
 }
 
-// NOTE(jaypipes) PCIDevice has a custom JSON marshaller because we don't want
+// NOTE(jaypipes) Device has a custom JSON marshaller because we don't want
 // to serialize the entire PCIDB information for the Vendor (which includes all
 // of the vendor's products, etc). Instead, we simply serialize the ID and
 // human-readable name of the vendor, product, class, etc.
-func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
+func (d *Device) MarshalJSON() ([]byte, error) {
 	b := bytes.NewBufferString("{")
-	b.WriteString(fmt.Sprintf("\"address\":\"%s\"", pd.Address))
+	b.WriteString(fmt.Sprintf("\"address\":\"%s\"", d.Address))
 	b.WriteString(",\"vendor\": {")
 	b.WriteString(
 		fmt.Sprintf(
 			"\"id\":\"%s\",\"name\":\"%s\"",
-			pd.Vendor.ID,
-			pd.Vendor.Name,
+			d.Vendor.ID,
+			d.Vendor.Name,
 		),
 	)
 	b.WriteString("},")
@@ -57,8 +59,8 @@ func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
 	b.WriteString(
 		fmt.Sprintf(
 			"\"id\":\"%s\",\"name\":\"%s\"",
-			pd.Product.ID,
-			pd.Product.Name,
+			d.Product.ID,
+			d.Product.Name,
 		),
 	)
 	b.WriteString("},")
@@ -66,8 +68,8 @@ func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
 	b.WriteString(
 		fmt.Sprintf(
 			"\"id\":\"%s\",\"name\":\"%s\"",
-			pd.Subsystem.ID,
-			pd.Subsystem.Name,
+			d.Subsystem.ID,
+			d.Subsystem.Name,
 		),
 	)
 	b.WriteString("},")
@@ -75,8 +77,8 @@ func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
 	b.WriteString(
 		fmt.Sprintf(
 			"\"id\":\"%s\",\"name\":\"%s\"",
-			pd.Class.ID,
-			pd.Class.Name,
+			d.Class.ID,
+			d.Class.Name,
 		),
 	)
 	b.WriteString("},")
@@ -84,8 +86,8 @@ func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
 	b.WriteString(
 		fmt.Sprintf(
 			"\"id\":\"%s\",\"name\":\"%s\"",
-			pd.Subclass.ID,
-			pd.Subclass.Name,
+			d.Subclass.ID,
+			d.Subclass.Name,
 		),
 	)
 	b.WriteString("},")
@@ -93,8 +95,8 @@ func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
 	b.WriteString(
 		fmt.Sprintf(
 			"\"id\":\"%s\",\"name\":\"%s\"",
-			pd.ProgrammingInterface.ID,
-			pd.ProgrammingInterface.Name,
+			d.ProgrammingInterface.ID,
+			d.ProgrammingInterface.Name,
 		),
 	)
 	b.WriteString("}")
@@ -102,29 +104,29 @@ func (pd *PCIDevice) MarshalJSON() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (di *PCIDevice) String() string {
-	vendorName := UNKNOWN
-	if di.Vendor != nil {
-		vendorName = di.Vendor.Name
+func (d *Device) String() string {
+	vendorName := util.UNKNOWN
+	if d.Vendor != nil {
+		vendorName = d.Vendor.Name
 	}
-	productName := UNKNOWN
-	if di.Product != nil {
-		productName = di.Product.Name
+	productName := util.UNKNOWN
+	if d.Product != nil {
+		productName = d.Product.Name
 	}
-	className := UNKNOWN
-	if di.Class != nil {
-		className = di.Class.Name
+	className := util.UNKNOWN
+	if d.Class != nil {
+		className = d.Class.Name
 	}
 	return fmt.Sprintf(
 		"%s -> class: '%s' vendor: '%s' product: '%s'",
-		di.Address,
+		d.Address,
 		className,
 		vendorName,
 		productName,
 	)
 }
 
-type PCIInfo struct {
+type Info struct {
 	ctx *context.Context
 	// hash of class ID -> class information
 	Classes map[string]*pcidb.Class
@@ -134,29 +136,29 @@ type PCIInfo struct {
 	Products map[string]*pcidb.Product
 }
 
-type PCIAddress struct {
+type Address struct {
 	Domain   string
 	Bus      string
 	Slot     string
 	Function string
 }
 
-// Given a string address, returns a complete PCIAddress struct, filled in with
+// Given a string address, returns a complete Address struct, filled in with
 // domain, bus, slot and function components. The address string may either
 // be in $BUS:$SLOT.$FUNCTION (BSF) format or it can be a full PCI address
 // that includes the 4-digit $DOMAIN information as well:
 // $DOMAIN:$BUS:$SLOT.$FUNCTION.
 //
 // Returns "" if the address string wasn't a valid PCI address.
-func PCIAddressFromString(address string) *PCIAddress {
+func AddressFromString(address string) *Address {
 	addrLowered := strings.ToLower(address)
-	matches := regexPCIAddress.FindStringSubmatch(addrLowered)
+	matches := regexAddress.FindStringSubmatch(addrLowered)
 	if len(matches) == 6 {
 		dom := "0000"
 		if matches[1] != "" {
 			dom = matches[2]
 		}
-		return &PCIAddress{
+		return &Address{
 			Domain:   dom,
 			Bus:      matches[3],
 			Slot:     matches[4],
@@ -166,10 +168,12 @@ func PCIAddressFromString(address string) *PCIAddress {
 	return nil
 }
 
-func PCI(opts ...*WithOption) (*PCIInfo, error) {
+// New returns a pointer to an Info struct that contains information about the
+// PCI devices on the host system
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &PCIInfo{}
-	if err := pciFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil

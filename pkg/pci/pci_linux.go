@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package pci
 
 import (
 	"fmt"
@@ -16,23 +16,23 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
-func pciFillInfo(ctx *context.Context, info *PCIInfo) error {
-	db, err := pcidb.New(pcidb.WithChroot(ctx.Chroot))
+func (i *Info) load() error {
+	db, err := pcidb.New(pcidb.WithChroot(i.ctx.Chroot))
 	if err != nil {
 		return err
 	}
-	info.ctx = ctx
-	info.Classes = db.Classes
-	info.Vendors = db.Vendors
-	info.Products = db.Products
+	i.Classes = db.Classes
+	i.Vendors = db.Vendors
+	i.Products = db.Products
 	return nil
 }
 
-func getPCIDeviceModaliasPath(ctx *context.Context, address string) string {
+func getDeviceModaliasPath(ctx *context.Context, address string) string {
 	paths := linuxpath.New(ctx)
-	pciAddr := PCIAddressFromString(address)
+	pciAddr := AddressFromString(address)
 	if pciAddr == nil {
 		return ""
 	}
@@ -98,12 +98,12 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 // ID string. If no such vendor ID string could be found, returns the
 // pcidb.Vendor struct populated with "unknown" vendor Name attribute and
 // empty Products attribute.
-func findPCIVendor(info *PCIInfo, vendorID string) *pcidb.Vendor {
+func findPCIVendor(info *Info, vendorID string) *pcidb.Vendor {
 	vendor := info.Vendors[vendorID]
 	if vendor == nil {
 		return &pcidb.Vendor{
 			ID:       vendorID,
-			Name:     UNKNOWN,
+			Name:     util.UNKNOWN,
 			Products: []*pcidb.Product{},
 		}
 	}
@@ -115,7 +115,7 @@ func findPCIVendor(info *PCIInfo, vendorID string) *pcidb.Vendor {
 // pcidb.Product struct populated with "unknown" product Name attribute and
 // empty Subsystems attribute.
 func findPCIProduct(
-	info *PCIInfo,
+	info *Info,
 	vendorID string,
 	productID string,
 ) *pcidb.Product {
@@ -123,7 +123,7 @@ func findPCIProduct(
 	if product == nil {
 		return &pcidb.Product{
 			ID:         productID,
-			Name:       UNKNOWN,
+			Name:       util.UNKNOWN,
 			Subsystems: []*pcidb.Product{},
 		}
 	}
@@ -135,7 +135,7 @@ func findPCIProduct(
 // found, returns the pcidb.Product struct populated with "unknown" product
 // Name attribute and empty Subsystems attribute.
 func findPCISubsystem(
-	info *PCIInfo,
+	info *Info,
 	vendorID string,
 	productID string,
 	subvendorID string,
@@ -153,7 +153,7 @@ func findPCISubsystem(
 	return &pcidb.Product{
 		VendorID: subvendorID,
 		ID:       subproductID,
-		Name:     UNKNOWN,
+		Name:     util.UNKNOWN,
 	}
 }
 
@@ -161,12 +161,12 @@ func findPCISubsystem(
 // string. If no such class ID string could be found, returns the
 // pcidb.Class struct populated with "unknown" class Name attribute and
 // empty Subclasses attribute.
-func findPCIClass(info *PCIInfo, classID string) *pcidb.Class {
+func findPCIClass(info *Info, classID string) *pcidb.Class {
 	class := info.Classes[classID]
 	if class == nil {
 		return &pcidb.Class{
 			ID:         classID,
-			Name:       UNKNOWN,
+			Name:       util.UNKNOWN,
 			Subclasses: []*pcidb.Subclass{},
 		}
 	}
@@ -178,7 +178,7 @@ func findPCIClass(info *PCIInfo, classID string) *pcidb.Class {
 // pcidb.Subclass struct populated with "unknown" subclass Name attribute
 // and empty ProgrammingInterfaces attribute.
 func findPCISubclass(
-	info *PCIInfo,
+	info *Info,
 	classID string,
 	subclassID string,
 ) *pcidb.Subclass {
@@ -192,7 +192,7 @@ func findPCISubclass(
 	}
 	return &pcidb.Subclass{
 		ID:                    subclassID,
-		Name:                  UNKNOWN,
+		Name:                  util.UNKNOWN,
 		ProgrammingInterfaces: []*pcidb.ProgrammingInterface{},
 	}
 }
@@ -202,7 +202,7 @@ func findPCISubclass(
 // programming interface could be found, returns the
 // pcidb.ProgrammingInterface struct populated with "unknown" Name attribute
 func findPCIProgrammingInterface(
-	info *PCIInfo,
+	info *Info,
 	classID string,
 	subclassID string,
 	progIfaceID string,
@@ -215,15 +215,15 @@ func findPCIProgrammingInterface(
 	}
 	return &pcidb.ProgrammingInterface{
 		ID:   progIfaceID,
-		Name: UNKNOWN,
+		Name: util.UNKNOWN,
 	}
 }
 
-// GetDevice returns a pointer to a PCIDevice struct that describes the PCI
+// GetDevice returns a pointer to a Device struct that describes the PCI
 // device at the requested address. If no such device could be found, returns
 // nil
-func (info *PCIInfo) GetDevice(address string) *PCIDevice {
-	fp := getPCIDeviceModaliasPath(info.ctx, address)
+func (info *Info) GetDevice(address string) *Device {
+	fp := getDeviceModaliasPath(info.ctx, address)
 	if fp == "" {
 		return nil
 	}
@@ -259,7 +259,7 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 		modaliasInfo.progIfaceID,
 	)
 
-	return &PCIDevice{
+	return &Device{
 		Address:              address,
 		Vendor:               vendor,
 		Subsystem:            subsystem,
@@ -270,21 +270,21 @@ func (info *PCIInfo) GetDevice(address string) *PCIDevice {
 	}
 }
 
-// ListDevices returns a list of pointers to PCIDevice structs present on the
+// ListDevices returns a list of pointers to Device structs present on the
 // host system
-func (info *PCIInfo) ListDevices() []*PCIDevice {
+func (info *Info) ListDevices() []*Device {
 	paths := linuxpath.New(info.ctx)
-	devs := make([]*PCIDevice, 0)
+	devs := make([]*Device, 0)
 	// We scan the /sys/bus/pci/devices directory which contains a collection
 	// of symlinks. The names of the symlinks are all the known PCI addresses
-	// for the host. For each address, we grab a *PCIDevice matching the
+	// for the host. For each address, we grab a *Device matching the
 	// address and append to the returned array.
 	links, err := ioutil.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
 		return nil
 	}
-	var dev *PCIDevice
+	var dev *Device
 	for _, link := range links {
 		addr := link.Name()
 		dev = info.GetDevice(addr)

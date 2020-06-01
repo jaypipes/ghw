@@ -15,6 +15,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
 
@@ -111,4 +112,13 @@ type Architecture = topology.Architecture
 const (
 	ARCHITECTURE_SMP  = topology.ARCHITECTURE_SMP
 	ARCHITECTURE_NUMA = topology.ARCHITECTURE_NUMA
+)
+
+type PCIInfo = pci.Info
+type PCIAddress = pci.Address
+type PCIDevice = pci.Device
+
+var (
+	PCI                  = pci.New
+	PCIAddressFromString = pci.AddressFromString
 )

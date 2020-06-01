@@ -4,23 +4,25 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package pci_test
 
 import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/pci"
 )
 
 func TestPCIAddressFromString(t *testing.T) {
 
 	tests := []struct {
 		addrStr  string
-		expected *PCIAddress
+		expected *pci.Address
 	}{
 		{
 			addrStr: "00:00.0",
-			expected: &PCIAddress{
+			expected: &pci.Address{
 				Domain:   "0000",
 				Bus:      "00",
 				Slot:     "00",
@@ -29,7 +31,7 @@ func TestPCIAddressFromString(t *testing.T) {
 		},
 		{
 			addrStr: "0000:00:00.0",
-			expected: &PCIAddress{
+			expected: &pci.Address{
 				Domain:   "0000",
 				Bus:      "00",
 				Slot:     "00",
@@ -38,7 +40,7 @@ func TestPCIAddressFromString(t *testing.T) {
 		},
 		{
 			addrStr: "0000:03:00.0",
-			expected: &PCIAddress{
+			expected: &pci.Address{
 				Domain:   "0000",
 				Bus:      "03",
 				Slot:     "00",
@@ -47,7 +49,7 @@ func TestPCIAddressFromString(t *testing.T) {
 		},
 		{
 			addrStr: "0000:03:00.A",
-			expected: &PCIAddress{
+			expected: &pci.Address{
 				Domain:   "0000",
 				Bus:      "03",
 				Slot:     "00",
@@ -56,7 +58,7 @@ func TestPCIAddressFromString(t *testing.T) {
 		},
 	}
 	for x, test := range tests {
-		got := PCIAddressFromString(test.addrStr)
+		got := pci.AddressFromString(test.addrStr)
 		if !reflect.DeepEqual(got, test.expected) {
 			t.Fatalf("Test #%d failed. Expected %v but got %v", x, test.expected, got)
 		}
@@ -67,7 +69,7 @@ func TestPCI(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
 		t.Skip("Skipping PCI tests.")
 	}
-	info, err := PCI()
+	info, err := pci.New()
 	if err != nil {
 		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
 	}
