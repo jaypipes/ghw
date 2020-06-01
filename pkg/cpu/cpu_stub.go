@@ -10,10 +10,8 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
-	return errors.New("cpuFillInfo not implemented on " + runtime.GOOS)
+func (i *Info) load() error {
+	return errors.New("cpu.Info.load not implemented on " + runtime.GOOS)
 }

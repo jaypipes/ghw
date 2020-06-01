@@ -11,6 +11,7 @@ import (
 	"sort"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
@@ -23,10 +24,10 @@ import (
 // physical processor package's physical processor cores
 type TopologyNode struct {
 	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id     int              `json:"-"`
-	ID     int              `json:"id"`
-	Cores  []*ProcessorCore `json:"cores"`
-	Caches []*MemoryCache   `json:"caches"`
+	Id     int                  `json:"-"`
+	ID     int                  `json:"id"`
+	Cores  []*cpu.ProcessorCore `json:"cores"`
+	Caches []*MemoryCache       `json:"caches"`
 }
 
 func (n *TopologyNode) String() string {

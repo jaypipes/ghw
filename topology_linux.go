@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -46,7 +47,7 @@ func topologyNodes(ctx *context.Context) []*TopologyNode {
 			return nodes
 		}
 		node.ID = nodeID
-		cores, err := coresForNode(ctx, nodeID)
+		cores, err := cpu.CoresForNode(ctx, nodeID)
 		if err != nil {
 			util.Warn("failed to determine cores for node: %s\n", err)
 			return nodes

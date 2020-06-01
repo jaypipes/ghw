@@ -4,13 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package cpu
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
 // ProcessorCore describes a physical host processor core. A processor core is
@@ -98,9 +99,10 @@ func (p *Processor) String() string {
 	)
 }
 
-// CPUInfo describes all central processing unit (CPU) functionality on a host.
+// Info describes all central processing unit (CPU) functionality on a host.
 // Returned by the `ghw.CPU()` function.
-type CPUInfo struct {
+type Info struct {
+	ctx *context.Context
 	// TotalCores is the total number of physical cores the host system
 	// contains
 	TotalCores uint32 `json:"total_cores"`
@@ -112,19 +114,19 @@ type CPUInfo struct {
 	Processors []*Processor `json:"processors"`
 }
 
-// CPU returns a CPUInfo struct that contains information about the CPUs on the
-// host system
-func CPU(opts ...*WithOption) (*CPUInfo, error) {
+// New returns a pointer to an Info struct that contains information about the
+// CPUs on the host system
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &CPUInfo{}
-	if err := cpuFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
 }
 
 // String returns a short string indicating a summary of CPU information
-func (i *CPUInfo) String() string {
+func (i *Info) String() string {
 	nps := "packages"
 	if len(i.Processors) == 1 {
 		nps = "package"
@@ -151,17 +153,17 @@ func (i *CPUInfo) String() string {
 // simple private struct used to encapsulate cpu information in a top-level
 // "cpu" YAML/JSON map/object key
 type cpuPrinter struct {
-	Info *CPUInfo `json:"cpu"`
+	Info *Info `json:"cpu"`
 }
 
 // YAMLString returns a string with the cpu information formatted as YAML
 // under a top-level "cpu:" key
-func (i *CPUInfo) YAMLString() string {
+func (i *Info) YAMLString() string {
 	return marshal.SafeYAML(cpuPrinter{i})
 }
 
 // JSONString returns a string with the cpu information formatted as JSON
 // under a top-level "cpu:" key
-func (i *CPUInfo) JSONString(indent bool) string {
+func (i *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(cpuPrinter{i}, indent)
 }

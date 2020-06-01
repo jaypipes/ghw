@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package cpu
 
 import (
 	"bufio"
@@ -19,16 +19,16 @@ import (
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
-func cpuFillInfo(ctx *context.Context, info *CPUInfo) error {
-	info.Processors = processorsGet(ctx)
+func (i *Info) load() error {
+	i.Processors = processorsGet(i.ctx)
 	var totCores uint32
 	var totThreads uint32
-	for _, p := range info.Processors {
+	for _, p := range i.Processors {
 		totCores += p.NumCores
 		totThreads += p.NumThreads
 	}
-	info.TotalCores = totCores
-	info.TotalThreads = totThreads
+	i.TotalCores = totCores
+	i.TotalThreads = totThreads
 	return nil
 }
 
@@ -147,7 +147,7 @@ func processorsGet(ctx *context.Context) []*Processor {
 	return procs
 }
 
-func coresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
+func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a

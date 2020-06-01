@@ -4,15 +4,17 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package cpu_test
 
 import (
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/cpu"
 )
 
 // nolint: gocyclo
 func TestCPU(t *testing.T) {
-	info, err := CPU()
+	info, err := cpu.New()
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
