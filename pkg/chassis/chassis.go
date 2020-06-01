@@ -4,13 +4,15 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package chassis
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 var (
@@ -54,8 +56,9 @@ var (
 	}
 )
 
-// ChassisInfo defines chassis release information
-type ChassisInfo struct {
+// Info defines chassis release information
+type Info struct {
+	ctx             *context.Context
 	AssetTag        string `json:"asset_tag"`
 	SerialNumber    string `json:"serial_number"`
 	Type            string `json:"type"`
@@ -64,14 +67,13 @@ type ChassisInfo struct {
 	Version         string `json:"version"`
 }
 
-func (i *ChassisInfo) String() string {
-
+func (i *Info) String() string {
 	vendorStr := ""
 	if i.Vendor != "" {
 		vendorStr = " vendor=" + i.Vendor
 	}
 	serialStr := ""
-	if i.SerialNumber != "" && i.SerialNumber != UNKNOWN {
+	if i.SerialNumber != "" && i.SerialNumber != util.UNKNOWN {
 		serialStr = " serial=" + i.SerialNumber
 	}
 	versionStr := ""
@@ -89,12 +91,12 @@ func (i *ChassisInfo) String() string {
 	return res
 }
 
-// Chassis returns a pointer to a ChassisInfo struct containing information
+// New returns a pointer to a Info struct containing information
 // about the host's chassis
-func Chassis(opts ...*WithOption) (*ChassisInfo, error) {
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &ChassisInfo{}
-	if err := chassisFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -103,17 +105,17 @@ func Chassis(opts ...*WithOption) (*ChassisInfo, error) {
 // simple private struct used to encapsulate chassis information in a top-level
 // "chassis" YAML/JSON map/object key
 type chassisPrinter struct {
-	Info *ChassisInfo `json:"chassis"`
+	Info *Info `json:"chassis"`
 }
 
 // YAMLString returns a string with the chassis information formatted as YAML
 // under a top-level "dmi:" key
-func (info *ChassisInfo) YAMLString() string {
+func (info *Info) YAMLString() string {
 	return marshal.SafeYAML(chassisPrinter{info})
 }
 
 // JSONString returns a string with the chassis information formatted as JSON
 // under a top-level "chassis:" key
-func (info *ChassisInfo) JSONString(indent bool) string {
+func (info *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(chassisPrinter{info}, indent)
 }

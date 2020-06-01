@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package chassis
 
 import (
 	"runtime"
@@ -12,6 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (ctx *context) chassisFillInfo(info *ChassisInfo) error {
+func (i *Info) load() error {
 	return errors.New("chassisFillInfo not implemented on " + runtime.GOOS)
 }

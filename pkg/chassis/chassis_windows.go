@@ -3,12 +3,12 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package chassis
 
 import (
 	"github.com/StackExchange/wmi"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const wqlChassis = "SELECT Caption, Description, Name, Manufacturer, Model, SerialNumber, Tag, TypeDescriptions, Version FROM CIM_Chassis"
@@ -25,19 +25,19 @@ type win32Chassis struct {
 	Version          *string
 }
 
-func chassisFillInfo(ctx *context.Context, info *ChassisInfo) error {
+func (i *Info) load() error {
 	// Getting data from WMI
 	var win32ChassisDescriptions []win32Chassis
 	if err := wmi.Query(wqlChassis, &win32ChassisDescriptions); err != nil {
 		return err
 	}
 	if len(win32ChassisDescriptions) > 0 {
-		info.AssetTag = *win32ChassisDescriptions[0].Tag
-		info.SerialNumber = *win32ChassisDescriptions[0].SerialNumber
-		info.Type = UNKNOWN // TODO:
-		info.TypeDescription = *win32ChassisDescriptions[0].Model
-		info.Vendor = *win32ChassisDescriptions[0].Manufacturer
-		info.Version = *win32ChassisDescriptions[0].Version
+		i.AssetTag = *win32ChassisDescriptions[0].Tag
+		i.SerialNumber = *win32ChassisDescriptions[0].SerialNumber
+		i.Type = util.UNKNOWN // TODO:
+		i.TypeDescription = *win32ChassisDescriptions[0].Model
+		i.Vendor = *win32ChassisDescriptions[0].Manufacturer
+		i.Version = *win32ChassisDescriptions[0].Version
 	}
 	return nil
 }

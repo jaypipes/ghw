@@ -9,6 +9,7 @@ package ghw
 import (
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
+	"github.com/jaypipes/ghw/pkg/chassis"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/net"
@@ -82,4 +83,10 @@ type BIOSInfo = bios.Info
 
 var (
 	BIOS = bios.New
+)
+
+type ChassisInfo = chassis.Info
+
+var (
+	Chassis = chassis.New
 )

@@ -11,6 +11,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
+	"github.com/jaypipes/ghw/pkg/chassis"
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
@@ -65,8 +66,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err := gpuFillInfo(ctx, gpu); err != nil {
 		return nil, err
 	}
-	chassis := &ChassisInfo{}
-	if err := chassisFillInfo(ctx, chassis); err != nil {
+	chassisInfo, err := chassis.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	biosInfo, err := bios.New(opts...)
@@ -88,7 +89,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Topology:  topology,
 		Network:   netInfo,
 		GPU:       gpu,
-		Chassis:   chassis,
+		Chassis:   chassisInfo,
 		BIOS:      biosInfo,
 		Baseboard: baseboard,
 		Product:   product,
