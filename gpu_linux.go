@@ -14,6 +14,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -115,8 +116,10 @@ func gpuFillPCIDevice(cards []*GraphicsCard) {
 // system is not a NUMA system, the Node field will be set to nil.
 func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 	paths := linuxpath.New(ctx)
-	topo := &TopologyInfo{}
-	if err := topologyFillInfo(ctx, topo); err != nil {
+	topo, err := topology.New()
+	if err != nil {
+		// Problem getting topology information so just set the graphics card's
+		// node to nil
 		for _, card := range cards {
 			if topo.Architecture != ARCHITECTURE_NUMA {
 				card.Node = nil

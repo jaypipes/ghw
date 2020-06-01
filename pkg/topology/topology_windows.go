@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package topology
 
 import (
 	"encoding/binary"
@@ -13,27 +13,27 @@ import (
 )
 
 const (
-	rcFailure = 0
-	sizeofLogicalProcessorInfo = 32
-	errInsufficientBuffer syscall.Errno = 122
+	rcFailure                                = 0
+	sizeofLogicalProcessorInfo               = 32
+	errInsufficientBuffer      syscall.Errno = 122
 
-	relationProcessorCore = 0
-	relationNUMANode = 1
-	relationCache = 2
+	relationProcessorCore    = 0
+	relationNUMANode         = 1
+	relationCache            = 2
 	relationProcessorPackage = 3
-	relationGroup = 4
+	relationGroup            = 4
 )
 
-func (ctx *context) topologyFillInfo(info *TopologyInfo) error {
+func (i *Info) load() error {
 	nodes, err := topologyNodes()
 	if err != nil {
 		return err
 	}
-	info.Nodes = nodes
+	i.Nodes = nodes
 	if len(nodes) == 1 {
-		info.Architecture = ARCHITECTURE_SMP
+		i.Architecture = ARCHITECTURE_SMP
 	} else {
-		info.Architecture = ARCHITECTURE_NUMA
+		i.Architecture = ARCHITECTURE_NUMA
 	}
 	return nil
 }
@@ -46,18 +46,18 @@ func topologyNodes() ([]*TopologyNode, error) {
 	}
 	for _, lpi := range lpis {
 		switch lpi.relationship {
-			case relationNUMANode:
-				nodes = append(nodes, &TopologyNode{
-					ID: lpi.numaNodeID(),
-				})
-			case relationProcessorCore:
-				// TODO(jaypipes): associated LP to processor core
-			case relationProcessorPackage:
-				// ignore
-			case relationCache:
-				// TODO(jaypipes) handle cache layers
-			default:
-				return nil, fmt.Errorf("Unknown LOGICAL_PROCESSOR_RELATIONSHIP value: %d", lpi.relationship)
+		case relationNUMANode:
+			nodes = append(nodes, &TopologyNode{
+				ID: lpi.numaNodeID(),
+			})
+		case relationProcessorCore:
+			// TODO(jaypipes): associated LP to processor core
+		case relationProcessorPackage:
+			// ignore
+		case relationCache:
+			// TODO(jaypipes) handle cache layers
+		default:
+			return nil, fmt.Errorf("Unknown LOGICAL_PROCESSOR_RELATIONSHIP value: %d", lpi.relationship)
 
 		}
 	}
@@ -66,17 +66,17 @@ func topologyNodes() ([]*TopologyNode, error) {
 
 // This is the CACHE_DESCRIPTOR struct in the Win32 API
 type cacheDescriptor struct {
-	level		uint8
-	associativity	uint8
-	lineSize	uint16
-	size		uint32
-	cacheType	uint32
+	level         uint8
+	associativity uint8
+	lineSize      uint16
+	size          uint32
+	cacheType     uint32
 }
 
 // This is the SYSTEM_LOGICAL_PROCESSOR_INFORMATION struct in the Win32 API
 type logicalProcessorInfo struct {
-	processorMask	uint64
-	relationship	uint64
+	processorMask uint64
+	relationship  uint64
 	// The following dummyunion member is a representation of this part of
 	// the SYSTEM_LOGICAL_PROCESSOR_INFORMATION struct:
 	//
@@ -90,7 +90,7 @@ type logicalProcessorInfo struct {
 	//    CACHE_DESCRIPTOR Cache;
 	//    ULONGLONG        Reserved[2];
 	//  } DUMMYUNIONNAME;
-	dummyunion		[16]byte
+	dummyunion [16]byte
 }
 
 // numaNodeID returns the NUMA node's identifier from the logical processor
@@ -144,10 +144,10 @@ func getWin32LogicalProcessorInfos() (
 	}
 
 	for x := uint32(0); x < toAllocate; x += sizeofLogicalProcessorInfo {
-		lpiraw := b[x:x+sizeofLogicalProcessorInfo]
+		lpiraw := b[x : x+sizeofLogicalProcessorInfo]
 		lpi := &logicalProcessorInfo{
 			processorMask: binary.LittleEndian.Uint64(lpiraw[0:]),
-			relationship: binary.LittleEndian.Uint64(lpiraw[8:]),
+			relationship:  binary.LittleEndian.Uint64(lpiraw[8:]),
 		}
 		copy(lpi.dummyunion[0:16], lpiraw[16:32])
 		lpis = append(lpis, lpi)

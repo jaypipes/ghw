@@ -15,6 +15,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/topology"
 )
 
 type WithOption = option.Option
@@ -96,4 +97,18 @@ type BaseboardInfo = baseboard.Info
 
 var (
 	Baseboard = baseboard.New
+)
+
+type TopologyInfo = topology.Info
+type TopologyNode = topology.Node
+
+var (
+	Topology = topology.New
+)
+
+type Architecture = topology.Architecture
+
+const (
+	ARCHITECTURE_SMP  = topology.ARCHITECTURE_SMP
+	ARCHITECTURE_NUMA = topology.ARCHITECTURE_NUMA
 )

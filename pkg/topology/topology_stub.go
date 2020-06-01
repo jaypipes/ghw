@@ -4,16 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package topology
 
 import (
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func topologyFillInfo(ctx *context.Context, info *TopologyInfo) error {
+func (i *Info) load() error {
 	return errors.New("topologyFillInfo not implemented on " + runtime.GOOS)
 }

@@ -4,15 +4,17 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package topology_test
 
 import (
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/topology"
 )
 
 // nolint: gocyclo
 func TestTopology(t *testing.T) {
-	info, err := Topology()
+	info, err := topology.New()
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -25,7 +27,7 @@ func TestTopology(t *testing.T) {
 		t.Fatalf("Expected >0 nodes but got 0.")
 	}
 
-	if info.Architecture == ARCHITECTURE_NUMA && len(info.Nodes) == 1 {
+	if info.Architecture == topology.ARCHITECTURE_NUMA && len(info.Nodes) == 1 {
 		t.Fatalf("Got NUMA architecture but only 1 node.")
 	}
 
