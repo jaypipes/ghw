@@ -4,11 +4,13 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package gpu_test
 
 import (
 	"os"
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/gpu"
 )
 
 func TestGPU(t *testing.T) {
@@ -18,7 +20,7 @@ func TestGPU(t *testing.T) {
 	if _, err := os.Stat("/sys/class/drm"); os.IsNotExist(err) {
 		t.Skip("Skipping GPU tests. The environment has no /sys/class/drm directory.")
 	}
-	info, err := GPU()
+	info, err := gpu.New()
 	if err != nil {
 		t.Fatalf("Expected no error creating GPUInfo, but got %v", err)
 	}

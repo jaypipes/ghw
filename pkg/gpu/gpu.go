@@ -4,13 +4,16 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package gpu
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/topology"
 )
 
 type GraphicsCard struct {
@@ -22,10 +25,10 @@ type GraphicsCard struct {
 	// pointer to a PCIDevice struct that describes the vendor and product
 	// model, etc
 	// TODO(jaypipes): Rename this field to PCI, instead of DeviceInfo
-	DeviceInfo *PCIDevice `json:"pci"`
+	DeviceInfo *pci.Device `json:"pci"`
 	// Topology node that the graphics card is affined to. Will be nil if the
 	// architecture is not NUMA.
-	Node *TopologyNode `json:"node,omitempty"`
+	Node *topology.Node `json:"node,omitempty"`
 }
 
 func (card *GraphicsCard) String() string {
@@ -45,20 +48,23 @@ func (card *GraphicsCard) String() string {
 	)
 }
 
-type GPUInfo struct {
+type Info struct {
+	ctx           *context.Context
 	GraphicsCards []*GraphicsCard `json:"cards"`
 }
 
-func GPU(opts ...*WithOption) (*GPUInfo, error) {
+// New returns a pointer to an Info struct that contains information about the
+// graphics cards on the host system
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &GPUInfo{}
-	if err := gpuFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
 }
 
-func (i *GPUInfo) String() string {
+func (i *Info) String() string {
 	numCardsStr := "cards"
 	if len(i.GraphicsCards) == 1 {
 		numCardsStr = "card"
@@ -73,17 +79,17 @@ func (i *GPUInfo) String() string {
 // simple private struct used to encapsulate gpu information in a top-level
 // "gpu" YAML/JSON map/object key
 type gpuPrinter struct {
-	Info *GPUInfo `json:"gpu"`
+	Info *Info `json:"gpu"`
 }
 
 // YAMLString returns a string with the gpu information formatted as YAML
 // under a top-level "gpu:" key
-func (i *GPUInfo) YAMLString() string {
+func (i *Info) YAMLString() string {
 	return marshal.SafeYAML(gpuPrinter{i})
 }
 
 // JSONString returns a string with the gpu information formatted as JSON
 // under a top-level "gpu:" key
-func (i *GPUInfo) JSONString(indent bool) string {
+func (i *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(gpuPrinter{i}, indent)
 }

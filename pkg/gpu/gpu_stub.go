@@ -4,16 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package gpu
 
 import (
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
+func (i *Info) load() error {
 	return errors.New("gpuFillInfo not implemented on " + runtime.GOOS)
 }

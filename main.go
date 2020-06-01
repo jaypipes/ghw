@@ -13,17 +13,13 @@ import (
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
+	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/product"
 	"github.com/jaypipes/ghw/pkg/topology"
-)
-
-const (
-	UNKNOWN = "unknown"
 )
 
 // HostInfo is a wrapper struct containing information about the host system's
@@ -34,7 +30,7 @@ type HostInfo struct {
 	CPU       *cpu.Info       `json:"cpu"`
 	Topology  *topology.Info  `json:"topology"`
 	Network   *net.Info       `json:"network"`
-	GPU       *GPUInfo        `json:"gpu"`
+	GPU       *gpu.Info       `json:"gpu"`
 	Chassis   *chassis.Info   `json:"chassis"`
 	BIOS      *bios.Info      `json:"bios"`
 	Baseboard *baseboard.Info `json:"baseboard"`
@@ -44,7 +40,6 @@ type HostInfo struct {
 // Host returns a pointer to a HostInfo struct that contains fields with
 // information about the host system's CPU, memory, network devices, etc
 func Host(opts ...*WithOption) (*HostInfo, error) {
-	ctx := context.New(opts...)
 	memInfo, err := memory.New(opts...)
 	if err != nil {
 		return nil, err
@@ -65,8 +60,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	gpu := &GPUInfo{}
-	if err := gpuFillInfo(ctx, gpu); err != nil {
+	gpuInfo, err := gpu.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	chassisInfo, err := chassis.New(opts...)
@@ -91,7 +86,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Block:     blockInfo,
 		Topology:  topologyInfo,
 		Network:   netInfo,
-		GPU:       gpu,
+		GPU:       gpuInfo,
 		Chassis:   chassisInfo,
 		BIOS:      biosInfo,
 		Baseboard: baseboardInfo,

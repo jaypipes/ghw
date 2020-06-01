@@ -3,15 +3,13 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package gpu
 
 import (
 	"strings"
 
 	"github.com/StackExchange/wmi"
 	"github.com/jaypipes/pcidb"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlVideoController = "SELECT Caption, CreationClassName, Description, DeviceID, Name, PNPDeviceID, SystemCreationClassName, SystemName, VideoArchitecture, VideoMemoryType, VideoModeDescription, VideoProcessor FROM Win32_VideoController"
@@ -44,7 +42,7 @@ type win32PnPEntity struct {
 	PNPDeviceID       string
 }
 
-func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
+func (i *Info) load() error {
 	// Getting data from WMI
 	var win32VideoControllerDescriptions []win32VideoController
 	if err := wmi.Query(wqlVideoController, &win32VideoControllerDescriptions); err != nil {
@@ -76,7 +74,7 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 		}
 		cards = append(cards, card)
 	}
-	info.GraphicsCards = cards
+	i.GraphicsCards = cards
 	return nil
 }
 

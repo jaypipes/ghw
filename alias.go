@@ -12,6 +12,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
 	"github.com/jaypipes/ghw/pkg/cpu"
+	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/option"
@@ -128,4 +129,11 @@ type ProductInfo = product.Info
 
 var (
 	Product = product.New
+)
+
+type GPUInfo = gpu.Info
+type GraphicsCard = gpu.GraphicsCard
+
+var (
+	GPU = gpu.New
 )

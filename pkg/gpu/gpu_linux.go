@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package gpu
 
 import (
 	"io/ioutil"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -26,7 +27,7 @@ GPUInfo.GraphicsCards will be an empty array.
 `
 )
 
-func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
+func (i *Info) load() error {
 	// In Linux, each graphics card is listed under the /sys/class/drm
 	// directory as a symbolic link named "cardN", where N is a zero-based
 	// index of the card in the system. "DRM" stands for Direct Rendering
@@ -53,7 +54,7 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 	// we follow to gather information about the actual device from the PCI
 	// subsystem (we query the modalias file of the PCI device's sysfs
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
-	paths := linuxpath.New(ctx)
+	paths := linuxpath.New(i.ctx)
 	links, err := ioutil.ReadDir(paths.SysClassDRM)
 	if err != nil {
 		util.Warn(_WARN_NO_SYS_CLASS_DRM)
@@ -91,16 +92,16 @@ func gpuFillInfo(ctx *context.Context, info *GPUInfo) error {
 		}
 		cards = append(cards, card)
 	}
-	gpuFillNUMANodes(ctx, cards)
+	gpuFillNUMANodes(i.ctx, cards)
 	gpuFillPCIDevice(cards)
-	info.GraphicsCards = cards
+	i.GraphicsCards = cards
 	return nil
 }
 
 // Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
 // attribute with PCI device information
 func gpuFillPCIDevice(cards []*GraphicsCard) {
-	pci, err := PCI()
+	pci, err := pci.New()
 	if err != nil {
 		return
 	}
@@ -121,7 +122,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 		// Problem getting topology information so just set the graphics card's
 		// node to nil
 		for _, card := range cards {
-			if topo.Architecture != ARCHITECTURE_NUMA {
+			if topo.Architecture != topology.ARCHITECTURE_NUMA {
 				card.Node = nil
 			}
 		}
