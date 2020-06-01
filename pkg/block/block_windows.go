@@ -3,14 +3,12 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package block
 
 import (
 	"strings"
 
 	"github.com/StackExchange/wmi"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
@@ -75,7 +73,7 @@ type win32LogicalDisk struct {
 	SystemName        *string
 }
 
-func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
+func (i *Info) load() error {
 	win32DiskDriveDescriptions, err := getDiskDrives()
 	if err != nil {
 		return err

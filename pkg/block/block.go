@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package block
 
 import (
 	"fmt"
@@ -13,7 +13,9 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/unitutil"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 // DriveType describes the general category of drive device
@@ -119,27 +121,28 @@ type Partition struct {
 	IsReadOnly bool   `json:"read_only"`
 }
 
-// BlockInfo describes all disk drives and partitions in the host system.
-type BlockInfo struct {
+// Info describes all disk drives and partitions in the host system.
+type Info struct {
+	ctx *context.Context
 	// TODO(jaypipes): Deprecate this field and replace with TotalSizeBytes
 	TotalPhysicalBytes uint64       `json:"total_size_bytes"`
 	Disks              []*Disk      `json:"disks"`
 	Partitions         []*Partition `json:"-"`
 }
 
-// Block returns a BlockInfo struct that describes the block storage resources
-// of the host system.
-func Block(opts ...*WithOption) (*BlockInfo, error) {
+// New returns a pointer to an Info struct that describes the block storage
+// resources of the host system.
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &BlockInfo{}
-	if err := blockFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
 }
 
-func (i *BlockInfo) String() string {
-	tpbs := UNKNOWN
+func (i *Info) String() string {
+	tpbs := util.UNKNOWN
 	if i.TotalPhysicalBytes > 0 {
 		tpb := i.TotalPhysicalBytes
 		unit, unitStr := unitutil.AmountString(int64(tpb))
@@ -155,7 +158,7 @@ func (i *BlockInfo) String() string {
 }
 
 func (d *Disk) String() string {
-	sizeStr := UNKNOWN
+	sizeStr := util.UNKNOWN
 	if d.SizeBytes > 0 {
 		size := d.SizeBytes
 		unit, unitStr := unitutil.AmountString(int64(size))
@@ -171,15 +174,15 @@ func (d *Disk) String() string {
 		vendor = " vendor=" + d.Vendor
 	}
 	model := ""
-	if d.Model != UNKNOWN {
+	if d.Model != util.UNKNOWN {
 		model = " model=" + d.Model
 	}
 	serial := ""
-	if d.SerialNumber != UNKNOWN {
+	if d.SerialNumber != util.UNKNOWN {
 		serial = " serial=" + d.SerialNumber
 	}
 	wwn := ""
-	if d.WWN != UNKNOWN {
+	if d.WWN != util.UNKNOWN {
 		wwn = " WWN=" + d.WWN
 	}
 	removable := ""
@@ -211,7 +214,7 @@ func (p *Partition) String() string {
 	if p.MountPoint != "" {
 		mountStr = fmt.Sprintf(" mounted@%s", p.MountPoint)
 	}
-	sizeStr := UNKNOWN
+	sizeStr := util.UNKNOWN
 	if p.SizeBytes > 0 {
 		size := p.SizeBytes
 		unit, unitStr := unitutil.AmountString(int64(size))
@@ -230,17 +233,17 @@ func (p *Partition) String() string {
 // simple private struct used to encapsulate block information in a top-level
 // "block" YAML/JSON map/object key
 type blockPrinter struct {
-	Info *BlockInfo `json:"block" yaml:"block"`
+	Info *Info `json:"block" yaml:"block"`
 }
 
 // YAMLString returns a string with the block information formatted as YAML
 // under a top-level "block:" key
-func (i *BlockInfo) YAMLString() string {
+func (i *Info) YAMLString() string {
 	return marshal.SafeYAML(blockPrinter{i})
 }
 
 // JSONString returns a string with the block information formatted as JSON
 // under a top-level "block:" key
-func (i *BlockInfo) JSONString(indent bool) string {
+func (i *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(blockPrinter{i}, indent)
 }

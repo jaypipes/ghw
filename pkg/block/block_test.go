@@ -4,14 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package block_test
 
 import (
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/block"
 )
 
 // nolint: gocyclo
@@ -20,11 +20,9 @@ func TestBlock(t *testing.T) {
 		t.Skip("Skipping block tests.")
 	}
 
-	ctx := context.FromEnv()
+	info, err := block.New()
 
-	info := &BlockInfo{}
-
-	if err := blockFillInfo(ctx, info); err != nil {
+	if err != nil {
 		t.Fatalf("Expected no error creating BlockInfo, but got %v", err)
 	}
 	tpb := info.TotalPhysicalBytes

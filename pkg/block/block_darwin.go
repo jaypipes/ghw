@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package block
 
 import (
 	"fmt"
@@ -207,7 +207,8 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 	return sc
 }
 
-func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
+
+func (i *Info) load() error {
 	listPlist, err := getDiskUtilListPlist()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())

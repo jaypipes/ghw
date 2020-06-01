@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/option"
@@ -36,4 +37,33 @@ const (
 
 var (
 	Memory = memory.New
+)
+
+type BlockInfo = block.Info
+type Disk = block.Disk
+type Partition = block.Partition
+
+var (
+	Block = block.New
+)
+
+type DriveType = block.DriveType
+
+const (
+	DRIVE_TYPE_UNKNOWN = block.DRIVE_TYPE_UNKNOWN
+	DRIVE_TYPE_HDD     = block.DRIVE_TYPE_HDD
+	DRIVE_TYPE_FDD     = block.DRIVE_TYPE_FDD
+	DRIVE_TYPE_ODD     = block.DRIVE_TYPE_ODD
+	DRIVE_TYPE_SSD     = block.DRIVE_TYPE_SSD
+)
+
+type StorageController = block.StorageController
+
+const (
+	STORAGE_CONTROLLER_UNKNOWN = block.STORAGE_CONTROLLER_UNKNOWN
+	STORAGE_CONTROLLER_IDE     = block.STORAGE_CONTROLLER_IDE
+	STORAGE_CONTROLLER_SCSI    = block.STORAGE_CONTROLLER_SCSI
+	STORAGE_CONTROLLER_NVME    = block.STORAGE_CONTROLLER_NVME
+	STORAGE_CONTROLLER_VIRTIO  = block.STORAGE_CONTROLLER_VIRTIO
+	STORAGE_CONTROLLER_MMC     = block.STORAGE_CONTROLLER_MMC
 )

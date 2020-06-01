@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package block
 
 import (
 	"bufio"
@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -23,14 +22,14 @@ const (
 	sectorSize = 512
 )
 
-func blockFillInfo(ctx *context.Context, info *BlockInfo) error {
-	paths := linuxpath.New(ctx)
-	info.Disks = disks(paths)
+func (i *Info) load() error {
+	paths := linuxpath.New(i.ctx)
+	i.Disks = disks(paths)
 	var tpb uint64
-	for _, d := range info.Disks {
+	for _, d := range i.Disks {
 		tpb += d.SizeBytes
 	}
-	info.TotalPhysicalBytes = tpb
+	i.TotalPhysicalBytes = tpb
 	return nil
 }
 
@@ -85,7 +84,7 @@ func diskVendor(paths *linuxpath.Paths, disk string) string {
 	path := filepath.Join(paths.SysBlock, disk, "device", "vendor")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
-		return UNKNOWN
+		return util.UNKNOWN
 	}
 	return strings.TrimSpace(string(contents))
 }
@@ -118,19 +117,19 @@ func udevInfo(paths *linuxpath.Paths, disk string) (map[string]string, error) {
 func diskModel(paths *linuxpath.Paths, disk string) string {
 	info, err := udevInfo(paths, disk)
 	if err != nil {
-		return UNKNOWN
+		return util.UNKNOWN
 	}
 
 	if model, ok := info["ID_MODEL"]; ok {
 		return model
 	}
-	return UNKNOWN
+	return util.UNKNOWN
 }
 
 func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
 	info, err := udevInfo(paths, disk)
 	if err != nil {
-		return UNKNOWN
+		return util.UNKNOWN
 	}
 
 	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT
@@ -138,13 +137,13 @@ func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
 	if serial, ok := info["ID_SERIAL_SHORT"]; ok {
 		return serial
 	}
-	return UNKNOWN
+	return util.UNKNOWN
 }
 
 func diskBusPath(paths *linuxpath.Paths, disk string) string {
 	info, err := udevInfo(paths, disk)
 	if err != nil {
-		return UNKNOWN
+		return util.UNKNOWN
 	}
 
 	// There are two path keys, ID_PATH and ID_PATH_TAG.
@@ -152,13 +151,13 @@ func diskBusPath(paths *linuxpath.Paths, disk string) string {
 	if path, ok := info["ID_PATH"]; ok {
 		return path
 	}
-	return UNKNOWN
+	return util.UNKNOWN
 }
 
 func diskWWN(paths *linuxpath.Paths, disk string) string {
 	info, err := udevInfo(paths, disk)
 	if err != nil {
-		return UNKNOWN
+		return util.UNKNOWN
 	}
 
 	// Trying ID_WWN_WITH_EXTENSION and falling back to ID_WWN is the same logic lsblk uses
@@ -168,7 +167,7 @@ func diskWWN(paths *linuxpath.Paths, disk string) string {
 	if wwn, ok := info["ID_WWN"]; ok {
 		return wwn
 	}
-	return UNKNOWN
+	return util.UNKNOWN
 }
 
 // diskPartitions takes the name of a disk (note: *not* the path of the disk,

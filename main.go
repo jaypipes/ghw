@@ -9,6 +9,7 @@ package ghw
 import (
 	"fmt"
 
+	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
@@ -23,7 +24,7 @@ const (
 // memory, block storage, CPU, etc
 type HostInfo struct {
 	Memory    *memory.Info   `json:"memory"`
-	Block     *BlockInfo     `json:"block"`
+	Block     *block.Info    `json:"block"`
 	CPU       *cpu.Info      `json:"cpu"`
 	Topology  *TopologyInfo  `json:"topology"`
 	Network   *NetworkInfo   `json:"network"`
@@ -42,8 +43,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	block := &BlockInfo{}
-	if err := blockFillInfo(ctx, block); err != nil {
+	blockInfo, err := block.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	cpuInfo, err := cpu.New(opts...)
@@ -81,7 +82,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	return &HostInfo{
 		CPU:       cpuInfo,
 		Memory:    memInfo,
-		Block:     block,
+		Block:     blockInfo,
 		Topology:  topology,
 		Network:   net,
 		GPU:       gpu,
