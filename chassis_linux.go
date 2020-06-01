@@ -7,19 +7,20 @@ package ghw
 
 import (
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxdmi"
 )
 
 func chassisFillInfo(ctx *context.Context, info *ChassisInfo) error {
-	info.AssetTag = dmiItem(ctx, "chassis_asset_tag")
-	info.SerialNumber = dmiItem(ctx, "chassis_serial")
-	info.Type = dmiItem(ctx, "chassis_type")
+	info.AssetTag = linuxdmi.Item(ctx, "chassis_asset_tag")
+	info.SerialNumber = linuxdmi.Item(ctx, "chassis_serial")
+	info.Type = linuxdmi.Item(ctx, "chassis_type")
 	typeDesc, found := chassisTypeDescriptions[info.Type]
 	if !found {
 		typeDesc = UNKNOWN
 	}
 	info.TypeDescription = typeDesc
-	info.Vendor = dmiItem(ctx, "chassis_vendor")
-	info.Version = dmiItem(ctx, "chassis_version")
+	info.Vendor = linuxdmi.Item(ctx, "chassis_vendor")
+	info.Version = linuxdmi.Item(ctx, "chassis_version")
 
 	return nil
 }

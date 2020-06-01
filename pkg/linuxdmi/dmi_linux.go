@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package linuxdmi
 
 import (
 	"io/ioutil"
@@ -15,14 +15,14 @@ import (
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
-func dmiItem(ctx *context.Context, value string) string {
+func Item(ctx *context.Context, value string) string {
 	paths := linuxpath.New(ctx)
 	path := filepath.Join(paths.SysClassDMI, "id", value)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		util.Warn("Unable to read %s: %s\n", value, err)
-		return UNKNOWN
+		return util.UNKNOWN
 	}
 
 	return strings.TrimSpace(string(b))

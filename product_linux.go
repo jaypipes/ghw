@@ -7,17 +7,18 @@ package ghw
 
 import (
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxdmi"
 )
 
 func productFillInfo(ctx *context.Context, info *ProductInfo) error {
 
-	info.Family = dmiItem(ctx, "product_family")
-	info.Name = dmiItem(ctx, "product_name")
-	info.Vendor = dmiItem(ctx, "sys_vendor")
-	info.SerialNumber = dmiItem(ctx, "product_serial")
-	info.UUID = dmiItem(ctx, "product_uuid")
-	info.SKU = dmiItem(ctx, "product_sku")
-	info.Version = dmiItem(ctx, "product_version")
+	info.Family = linuxdmi.Item(ctx, "product_family")
+	info.Name = linuxdmi.Item(ctx, "product_name")
+	info.Vendor = linuxdmi.Item(ctx, "sys_vendor")
+	info.SerialNumber = linuxdmi.Item(ctx, "product_serial")
+	info.UUID = linuxdmi.Item(ctx, "product_uuid")
+	info.SKU = linuxdmi.Item(ctx, "product_sku")
+	info.Version = linuxdmi.Item(ctx, "product_version")
 
 	return nil
 }

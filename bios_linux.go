@@ -7,12 +7,13 @@ package ghw
 
 import (
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/linuxdmi"
 )
 
 func biosFillInfo(ctx *context.Context, info *BIOSInfo) error {
-	info.Vendor = dmiItem(ctx, "bios_vendor")
-	info.Version = dmiItem(ctx, "bios_version")
-	info.Date = dmiItem(ctx, "bios_date")
+	info.Vendor = linuxdmi.Item(ctx, "bios_vendor")
+	info.Version = linuxdmi.Item(ctx, "bios_version")
+	info.Date = linuxdmi.Item(ctx, "bios_date")
 
 	return nil
 }
