@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
-func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
+func CachesForNode(ctx *context.Context, nodeID int) ([]*Cache, error) {
 	// The /sys/devices/node/nodeX directory contains a subdirectory called
 	// 'cpuX' for each logical processor assigned to the node. Each of those
 	// subdirectories containers a 'cache' subdirectory which contains a number
@@ -32,7 +32,7 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),
 	)
-	caches := make(map[string]*MemoryCache)
+	caches := make(map[string]*Cache)
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -77,7 +77,7 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 			cacheIndex, _ := strconv.Atoi(cacheDirFileName[5:])
 
 			// The cache information is repeated for each node, so here, we
-			// just ensure that we only have a one MemoryCache object for each
+			// just ensure that we only have a one Cache object for each
 			// unique combination of level, type and processor map
 			level := memoryCacheLevel(paths, nodeID, lpID, cacheIndex)
 			cacheType := memoryCacheType(paths, nodeID, lpID, cacheIndex)
@@ -87,7 +87,7 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 			cache, exists := caches[cacheKey]
 			if !exists {
 				size := memoryCacheSize(paths, nodeID, lpID, level)
-				cache = &MemoryCache{
+				cache = &Cache{
 					Level:             uint8(level),
 					Type:              cacheType,
 					SizeBytes:         uint64(size) * uint64(unitutil.KB),
@@ -102,7 +102,7 @@ func cachesForNode(ctx *context.Context, nodeID int) ([]*MemoryCache, error) {
 		}
 	}
 
-	cacheVals := make([]*MemoryCache, len(caches))
+	cacheVals := make([]*Cache, len(caches))
 	x := 0
 	for _, c := range caches {
 		// ensure the cache's processor set is sorted by logical process ID
@@ -153,7 +153,7 @@ func memoryCacheSize(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex in
 	return size
 }
 
-func memoryCacheType(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex int) MemoryCacheType {
+func memoryCacheType(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex int) CacheType {
 	typePath := filepath.Join(
 		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"type",
@@ -161,15 +161,15 @@ func memoryCacheType(paths *linuxpath.Paths, nodeID int, lpID int, cacheIndex in
 	cacheTypeContents, err := ioutil.ReadFile(typePath)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
-		return MEMORY_CACHE_TYPE_UNIFIED
+		return CACHE_TYPE_UNIFIED
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
 	case "Data":
-		return MEMORY_CACHE_TYPE_DATA
+		return CACHE_TYPE_DATA
 	case "Instruction":
-		return MEMORY_CACHE_TYPE_INSTRUCTION
+		return CACHE_TYPE_INSTRUCTION
 	default:
-		return MEMORY_CACHE_TYPE_UNIFIED
+		return CACHE_TYPE_UNIFIED
 	}
 }
 

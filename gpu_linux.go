@@ -140,7 +140,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 			continue
 		}
 		for _, node := range topo.Nodes {
-			if nodeIdx == int(node.Id) {
+			if nodeIdx == int(node.ID) {
 				card.Node = node
 			}
 		}

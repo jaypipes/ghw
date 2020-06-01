@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory
 
 import (
 	"fmt"
@@ -12,10 +12,12 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/unitutil"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
-type MemoryModule struct {
+type Module struct {
 	Label        string `json:"label"`
 	Location     string `json:"location"`
 	SerialNumber string `json:"serial_number"`
@@ -23,32 +25,33 @@ type MemoryModule struct {
 	Vendor       string `json:"vendor"`
 }
 
-type MemoryInfo struct {
+type Info struct {
+	ctx                *context.Context
 	TotalPhysicalBytes int64 `json:"total_physical_bytes"`
 	TotalUsableBytes   int64 `json:"total_usable_bytes"`
 	// An array of sizes, in bytes, of memory pages supported by the host
-	SupportedPageSizes []uint64        `json:"supported_page_sizes"`
-	Modules            []*MemoryModule `json:"modules"`
+	SupportedPageSizes []uint64  `json:"supported_page_sizes"`
+	Modules            []*Module `json:"modules"`
 }
 
-func Memory(opts ...*WithOption) (*MemoryInfo, error) {
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &MemoryInfo{}
-	if err := memFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
 }
 
-func (i *MemoryInfo) String() string {
-	tpbs := UNKNOWN
+func (i *Info) String() string {
+	tpbs := util.UNKNOWN
 	if i.TotalPhysicalBytes > 0 {
 		tpb := i.TotalPhysicalBytes
 		unit, unitStr := unitutil.AmountString(tpb)
 		tpb = int64(math.Ceil(float64(i.TotalPhysicalBytes) / float64(unit)))
 		tpbs = fmt.Sprintf("%d%s", tpb, unitStr)
 	}
-	tubs := UNKNOWN
+	tubs := util.UNKNOWN
 	if i.TotalUsableBytes > 0 {
 		tub := i.TotalUsableBytes
 		unit, unitStr := unitutil.AmountString(tub)
@@ -61,17 +64,17 @@ func (i *MemoryInfo) String() string {
 // simple private struct used to encapsulate memory information in a top-level
 // "memory" YAML/JSON map/object key
 type memoryPrinter struct {
-	Info *MemoryInfo `json:"memory"`
+	Info *Info `json:"memory"`
 }
 
 // YAMLString returns a string with the memory information formatted as YAML
 // under a top-level "memory:" key
-func (i *MemoryInfo) YAMLString() string {
+func (i *Info) YAMLString() string {
 	return marshal.SafeYAML(memoryPrinter{i})
 }
 
 // JSONString returns a string with the memory information formatted as JSON
 // under a top-level "memory:" key
-func (i *MemoryInfo) JSONString(indent bool) string {
+func (i *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(memoryPrinter{i}, indent)
 }

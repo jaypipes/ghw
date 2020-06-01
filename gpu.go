@@ -35,7 +35,7 @@ func (card *GraphicsCard) String() string {
 	}
 	nodeStr := ""
 	if card.Node != nil {
-		nodeStr = fmt.Sprintf(" [affined to NUMA node %d]", card.Node.Id)
+		nodeStr = fmt.Sprintf(" [affined to NUMA node %d]", card.Node.ID)
 	}
 	return fmt.Sprintf(
 		"card #%d %s@%s",

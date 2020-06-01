@@ -4,15 +4,17 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory_test
 
 import (
 	"testing"
+
+	"github.com/jaypipes/ghw/pkg/memory"
 )
 
 // nolint: gocyclo
 func TestMemory(t *testing.T) {
-	mem, err := Memory()
+	mem, err := memory.New()
 	if err != nil {
 		t.Fatalf("Expected nil error, but got %v", err)
 	}

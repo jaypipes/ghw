@@ -3,7 +3,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory
 
 import (
 	"bufio"
@@ -17,7 +17,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -39,20 +38,20 @@ var (
 	_REGEX_SYSLOG_MEMLINE = regexp.MustCompile(`Memory:\s+\d+K\/(\d+)K`)
 )
 
-func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
-	paths := linuxpath.New(ctx)
+func (i *Info) load() error {
+	paths := linuxpath.New(i.ctx)
 	tub := memTotalUsableBytes(paths)
 	if tub < 1 {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
 	}
-	info.TotalUsableBytes = tub
+	i.TotalUsableBytes = tub
 	tpb := memTotalPhysicalBytes(paths)
-	info.TotalPhysicalBytes = tpb
+	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
 		util.Warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
-		info.TotalPhysicalBytes = tub
+		i.TotalPhysicalBytes = tub
 	}
-	info.SupportedPageSizes = memSupportedPageSizes(paths)
+	i.SupportedPageSizes = memSupportedPageSizes(paths)
 	return nil
 }
 

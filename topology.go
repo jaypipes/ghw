@@ -13,6 +13,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/memory"
 )
 
 // TopologyNode is an abstract construct representing a collection of
@@ -23,11 +24,9 @@ import (
 // used to describe the levels of memory caching available to the single
 // physical processor package's physical processor cores
 type TopologyNode struct {
-	// TODO(jaypipes): Deprecated in 0.2, remove in 1.0
-	Id     int                  `json:"-"`
 	ID     int                  `json:"id"`
 	Cores  []*cpu.ProcessorCore `json:"cores"`
-	Caches []*MemoryCache       `json:"caches"`
+	Caches []*memory.Cache      `json:"caches"`
 }
 
 func (n *TopologyNode) String() string {
@@ -53,7 +52,7 @@ func Topology(opts ...*WithOption) (*TopologyInfo, error) {
 		return nil, err
 	}
 	for _, node := range info.Nodes {
-		sort.Sort(SortByMemoryCacheLevelTypeFirstProcessor(node.Caches))
+		sort.Sort(memory.SortByCacheLevelTypeFirstProcessor(node.Caches))
 	}
 	return info, nil
 }

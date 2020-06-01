@@ -13,6 +13,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -53,7 +54,7 @@ func topologyNodes(ctx *context.Context) []*TopologyNode {
 			return nodes
 		}
 		node.Cores = cores
-		caches, err := cachesForNode(ctx, nodeID)
+		caches, err := memory.CachesForNode(ctx, nodeID)
 		if err != nil {
 			util.Warn("failed to determine caches for node: %s\n", err)
 			return nodes

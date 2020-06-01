@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory
 
 import (
 	"fmt"
@@ -14,38 +14,38 @@ import (
 	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
-type MemoryCacheType int
+type CacheType int
 
 const (
-	MEMORY_CACHE_TYPE_UNIFIED MemoryCacheType = iota
-	MEMORY_CACHE_TYPE_INSTRUCTION
-	MEMORY_CACHE_TYPE_DATA
+	CACHE_TYPE_UNIFIED CacheType = iota
+	CACHE_TYPE_INSTRUCTION
+	CACHE_TYPE_DATA
 )
 
 var (
-	memoryCacheTypeString = map[MemoryCacheType]string{
-		MEMORY_CACHE_TYPE_UNIFIED:     "Unified",
-		MEMORY_CACHE_TYPE_INSTRUCTION: "Instruction",
-		MEMORY_CACHE_TYPE_DATA:        "Data",
+	memoryCacheTypeString = map[CacheType]string{
+		CACHE_TYPE_UNIFIED:     "Unified",
+		CACHE_TYPE_INSTRUCTION: "Instruction",
+		CACHE_TYPE_DATA:        "Data",
 	}
 )
 
-func (a MemoryCacheType) String() string {
+func (a CacheType) String() string {
 	return memoryCacheTypeString[a]
 }
 
 // NOTE(jaypipes): since serialized output is as "official" as we're going to
 // get, let's lowercase the string output when serializing, in order to
 // "normalize" the expected serialized output
-func (a MemoryCacheType) MarshalJSON() ([]byte, error) {
+func (a CacheType) MarshalJSON() ([]byte, error) {
 	return []byte("\"" + strings.ToLower(a.String()) + "\""), nil
 }
 
-type SortByMemoryCacheLevelTypeFirstProcessor []*MemoryCache
+type SortByCacheLevelTypeFirstProcessor []*Cache
 
-func (a SortByMemoryCacheLevelTypeFirstProcessor) Len() int      { return len(a) }
-func (a SortByMemoryCacheLevelTypeFirstProcessor) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a SortByMemoryCacheLevelTypeFirstProcessor) Less(i, j int) bool {
+func (a SortByCacheLevelTypeFirstProcessor) Len() int      { return len(a) }
+func (a SortByCacheLevelTypeFirstProcessor) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a SortByCacheLevelTypeFirstProcessor) Less(i, j int) bool {
 	if a[i].Level < a[j].Level {
 		return true
 	} else if a[i].Level == a[j].Level {
@@ -66,21 +66,21 @@ func (a SortByLogicalProcessorId) Len() int           { return len(a) }
 func (a SortByLogicalProcessorId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a SortByLogicalProcessorId) Less(i, j int) bool { return a[i] < a[j] }
 
-type MemoryCache struct {
-	Level     uint8           `json:"level"`
-	Type      MemoryCacheType `json:"type"`
-	SizeBytes uint64          `json:"size_bytes"`
+type Cache struct {
+	Level     uint8     `json:"level"`
+	Type      CacheType `json:"type"`
+	SizeBytes uint64    `json:"size_bytes"`
 	// The set of logical processors (hardware threads) that have access to the
 	// cache
 	LogicalProcessors []uint32 `json:"logical_processors"`
 }
 
-func (c *MemoryCache) String() string {
+func (c *Cache) String() string {
 	sizeKb := c.SizeBytes / uint64(unitutil.KB)
 	typeStr := ""
-	if c.Type == MEMORY_CACHE_TYPE_INSTRUCTION {
+	if c.Type == CACHE_TYPE_INSTRUCTION {
 		typeStr = "i"
-	} else if c.Type == MEMORY_CACHE_TYPE_DATA {
+	} else if c.Type == CACHE_TYPE_DATA {
 		typeStr = "d"
 	}
 	cacheIDStr := fmt.Sprintf("L%d%s", c.Level, typeStr)

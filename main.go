@@ -12,6 +12,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/memory"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 // HostInfo is a wrapper struct containing information about the host system's
 // memory, block storage, CPU, etc
 type HostInfo struct {
-	Memory    *MemoryInfo    `json:"memory"`
+	Memory    *memory.Info   `json:"memory"`
 	Block     *BlockInfo     `json:"block"`
 	CPU       *cpu.Info      `json:"cpu"`
 	Topology  *TopologyInfo  `json:"topology"`
@@ -37,8 +38,8 @@ type HostInfo struct {
 // information about the host system's CPU, memory, network devices, etc
 func Host(opts ...*WithOption) (*HostInfo, error) {
 	ctx := context.New(opts...)
-	mem := &MemoryInfo{}
-	if err := memFillInfo(ctx, mem); err != nil {
+	memInfo, err := memory.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	block := &BlockInfo{}
@@ -79,7 +80,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	}
 	return &HostInfo{
 		CPU:       cpuInfo,
-		Memory:    mem,
+		Memory:    memInfo,
 		Block:     block,
 		Topology:  topology,
 		Network:   net,
