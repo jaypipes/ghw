@@ -3,12 +3,12 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package product
 
 import (
 	"github.com/StackExchange/wmi"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const wqlProduct = "SELECT Caption, Description, IdentifyingNumber, Name, SKUNumber, Vendor, Version, UUID FROM Win32_ComputerSystemProduct"
@@ -24,7 +24,7 @@ type win32Product struct {
 	UUID              *string
 }
 
-func productFillInfo(ctx *context.Context, info *ProductInfo) error {
+func (i *Info) load() error {
 	// Getting data from WMI
 	var win32ProductDescriptions []win32Product
 	// Assuming the first product is the host...
@@ -32,13 +32,13 @@ func productFillInfo(ctx *context.Context, info *ProductInfo) error {
 		return err
 	}
 	if len(win32ProductDescriptions) > 0 {
-		info.Family = UNKNOWN
-		info.Name = *win32ProductDescriptions[0].Name
-		info.Vendor = *win32ProductDescriptions[0].Vendor
-		info.SerialNumber = *win32ProductDescriptions[0].IdentifyingNumber
-		info.UUID = *win32ProductDescriptions[0].UUID
-		info.SKU = *win32ProductDescriptions[0].SKUNumber
-		info.Version = *win32ProductDescriptions[0].Version
+		i.Family = util.UNKNOWN
+		i.Name = *win32ProductDescriptions[0].Name
+		i.Vendor = *win32ProductDescriptions[0].Vendor
+		i.SerialNumber = *win32ProductDescriptions[0].IdentifyingNumber
+		i.UUID = *win32ProductDescriptions[0].UUID
+		i.SKU = *win32ProductDescriptions[0].SKUNumber
+		i.Version = *win32ProductDescriptions[0].Version
 	}
 
 	return nil

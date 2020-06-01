@@ -4,17 +4,20 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package product
 
 import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
-// ProductInfo defines product information
-type ProductInfo struct {
+// Info defines product information
+type Info struct {
+	ctx          *context.Context
 	Family       string `json:"family"`
 	Name         string `json:"name"`
 	Vendor       string `json:"vendor"`
@@ -24,7 +27,7 @@ type ProductInfo struct {
 	Version      string `json:"version"`
 }
 
-func (i *ProductInfo) String() string {
+func (i *Info) String() string {
 	familyStr := ""
 	if i.Family != "" {
 		familyStr = " family=" + i.Family
@@ -38,11 +41,11 @@ func (i *ProductInfo) String() string {
 		vendorStr = " vendor=" + i.Vendor
 	}
 	serialStr := ""
-	if i.SerialNumber != "" && i.SerialNumber != UNKNOWN {
+	if i.SerialNumber != "" && i.SerialNumber != util.UNKNOWN {
 		serialStr = " serial=" + i.SerialNumber
 	}
 	uuidStr := ""
-	if i.UUID != "" && i.UUID != UNKNOWN {
+	if i.UUID != "" && i.UUID != util.UNKNOWN {
 		uuidStr = " uuid=" + i.UUID
 	}
 	skuStr := ""
@@ -67,12 +70,12 @@ func (i *ProductInfo) String() string {
 	return res
 }
 
-// Product returns a pointer to a ProductInfo struct containing information
+// New returns a pointer to a Info struct containing information
 // about the host's product
-func Product(opts ...*WithOption) (*ProductInfo, error) {
+func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &ProductInfo{}
-	if err := productFillInfo(ctx, info); err != nil {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -81,17 +84,17 @@ func Product(opts ...*WithOption) (*ProductInfo, error) {
 // simple private struct used to encapsulate product information in a top-level
 // "product" YAML/JSON map/object key
 type productPrinter struct {
-	Info *ProductInfo `json:"product"`
+	Info *Info `json:"product"`
 }
 
 // YAMLString returns a string with the product information formatted as YAML
 // under a top-level "dmi:" key
-func (info *ProductInfo) YAMLString() string {
+func (info *Info) YAMLString() string {
 	return marshal.SafeYAML(productPrinter{info})
 }
 
 // JSONString returns a string with the product information formatted as JSON
 // under a top-level "product:" key
-func (info *ProductInfo) JSONString(indent bool) string {
+func (info *Info) JSONString(indent bool) string {
 	return marshal.SafeJSON(productPrinter{info}, indent)
 }

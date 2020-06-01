@@ -16,6 +16,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/product"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
 
@@ -121,4 +122,10 @@ type PCIDevice = pci.Device
 var (
 	PCI                  = pci.New
 	PCIAddressFromString = pci.AddressFromString
+)
+
+type ProductInfo = product.Info
+
+var (
+	Product = product.New
 )

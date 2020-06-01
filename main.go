@@ -18,6 +18,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/net"
+	"github.com/jaypipes/ghw/pkg/product"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
 
@@ -37,7 +38,7 @@ type HostInfo struct {
 	Chassis   *chassis.Info   `json:"chassis"`
 	BIOS      *bios.Info      `json:"bios"`
 	Baseboard *baseboard.Info `json:"baseboard"`
-	Product   *ProductInfo    `json:"product"`
+	Product   *product.Info   `json:"product"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -80,8 +81,8 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	product := &ProductInfo{}
-	if err := productFillInfo(ctx, product); err != nil {
+	productInfo, err := product.New(opts...)
+	if err != nil {
 		return nil, err
 	}
 	return &HostInfo{
@@ -94,7 +95,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Chassis:   chassisInfo,
 		BIOS:      biosInfo,
 		Baseboard: baseboardInfo,
-		Product:   product,
+		Product:   productInfo,
 	}, nil
 }
 
