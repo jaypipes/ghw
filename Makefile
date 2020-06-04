@@ -2,19 +2,11 @@ VENDOR := vendor
 PKGS := $(shell go list ./... | grep -v /$(VENDOR)/)
 SRC = $(shell find . -type f -name '*.go' -not -path "*/$(VENDOR)/*")
 BIN_DIR := $(GOPATH)/bin
-DEP := $(BIN_DIR)/dep
 GOMETALINTER := $(BIN_DIR)/gometalinter
 
 .PHONY: test
 test: vet
 	go test $(PKGS)
-
-$(DEP):
-	go get -u github.com/golang/dep/cmd/dep
-
-.PHONY: dep
-dep: $(DEP)
-	$(DEP) ensure
 
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
