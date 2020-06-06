@@ -38,8 +38,8 @@ func (i *Info) load() error {
 	return nil
 }
 
-func topologyNodes() ([]*TopologyNode, error) {
-	nodes := make([]*TopologyNode, 0)
+func topologyNodes() ([]*Node, error) {
+	nodes := make([]*Node, 0)
 	lpis, err := getWin32LogicalProcessorInfos()
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func topologyNodes() ([]*TopologyNode, error) {
 	for _, lpi := range lpis {
 		switch lpi.relationship {
 		case relationNUMANode:
-			nodes = append(nodes, &TopologyNode{
+			nodes = append(nodes, &Node{
 				ID: lpi.numaNodeID(),
 			})
 		case relationProcessorCore:

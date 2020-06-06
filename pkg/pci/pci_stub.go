@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package pci
 
 import (
 	"runtime"

@@ -4,12 +4,12 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory
 
 import (
 	"github.com/StackExchange/wmi"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
 const wqlOperatingSystem = "SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem"
@@ -37,7 +37,7 @@ type win32PhysicalMemory struct {
 	TotalWidth    *uint16
 }
 
-func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
+func (i *Info) load() error {
 	// Getting info from WMI
 	var win32OSDescriptions []win32OperatingSystem
 	if err := wmi.Query(wqlOperatingSystem, &win32OSDescriptions); err != nil {
@@ -49,10 +49,10 @@ func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
 	}
 	// We calculate total physical memory size by summing the DIMM sizes
 	var totalPhysicalBytes uint64
-	info.Modules = make([]*MemoryModule, 0, len(win32MemDescriptions))
+	i.Modules = make([]*Module, 0, len(win32MemDescriptions))
 	for _, description := range win32MemDescriptions {
 		totalPhysicalBytes += *description.Capacity
-		info.Modules = append(info.Modules, &MemoryModule{
+		i.Modules = append(i.Modules, &Module{
 			Label:        *description.BankLabel,
 			Location:     *description.DeviceLocator,
 			SerialNumber: *description.SerialNumber,
@@ -64,9 +64,9 @@ func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
 	for _, description := range win32OSDescriptions {
 		// TotalVisibleMemorySize is the amount of memory available for us by
 		// the operating system **in Kilobytes**
-		totalUsableBytes += *description.TotalVisibleMemorySize * uint64(KB)
+		totalUsableBytes += *description.TotalVisibleMemorySize * uint64(unitutil.KB)
 	}
-	info.TotalUsableBytes = int64(totalUsableBytes)
-	info.TotalPhysicalBytes = int64(totalPhysicalBytes)
+	i.TotalUsableBytes = int64(totalUsableBytes)
+	i.TotalPhysicalBytes = int64(totalPhysicalBytes)
 	return nil
 }
