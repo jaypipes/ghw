@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package cpu
 
 import (
 	"github.com/StackExchange/wmi"
@@ -26,15 +26,15 @@ func (i *Info) load() error {
 		return err
 	}
 	// Converting into standard structures
-	info.Processors = processorsGet(win32descriptions)
+	i.Processors = processorsGet(win32descriptions)
 	var totCores uint32
 	var totThreads uint32
-	for _, p := range info.Processors {
+	for _, p := range i.Processors {
 		totCores += p.NumCores
 		totThreads += p.NumThreads
 	}
-	info.TotalCores = totCores
-	info.TotalThreads = totThreads
+	i.TotalCores = totCores
+	i.TotalThreads = totThreads
 	return nil
 }
 
@@ -43,7 +43,7 @@ func processorsGet(win32descriptions []win32Processor) []*Processor {
 	// Converting into standard structures
 	for index, description := range win32descriptions {
 		p := &Processor{
-			Id:         index, // TODO: how to get a decent "Physical ID" to use ?
+			ID:         index,
 			Model:      *description.Name,
 			Vendor:     *description.Manufacturer,
 			NumCores:   description.NumberOfCores,

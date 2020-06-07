@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/StackExchange/wmi"
+
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
@@ -103,13 +105,12 @@ func (i *Info) load() error {
 			PhysicalBlockSizeBytes: *diskdrive.DefaultBlockSize,
 			DriveType:              toDriveType(*diskdrive.MediaType, *diskdrive.Caption),
 			StorageController:      toStorageController(*diskdrive.InterfaceType),
-			BusType:                toBusType(*diskdrive.InterfaceType),
-			BusPath:                UNKNOWN, // TODO: add information
+			BusPath:                util.UNKNOWN, // TODO: add information
 			NUMANodeID:             -1,
 			Vendor:                 strings.TrimSpace(*diskdrive.Manufacturer),
 			Model:                  strings.TrimSpace(*diskdrive.Caption),
 			SerialNumber:           strings.TrimSpace(*diskdrive.SerialNumber),
-			WWN:                    UNKNOWN, // TODO: add information
+			WWN:                    util.UNKNOWN, // TODO: add information
 			Partitions:             make([]*Partition, 0),
 		}
 		for _, diskpartition := range win32DiskPartitionDescriptions {
@@ -141,12 +142,12 @@ func (i *Info) load() error {
 		disks = append(disks, disk)
 	}
 
-	info.Disks = disks
+	i.Disks = disks
 	var tpb uint64
-	for _, d := range info.Disks {
+	for _, d := range i.Disks {
 		tpb += d.SizeBytes
 	}
-	info.TotalPhysicalBytes = tpb
+	i.TotalPhysicalBytes = tpb
 	return nil
 }
 
@@ -209,20 +210,6 @@ func toStorageController(interfaceType string) StorageController {
 		storageController = STORAGE_CONTROLLER_UNKNOWN
 	}
 	return storageController
-}
-
-// TODO: improve
-func toBusType(interfaceType string) BusType {
-	var busType BusType
-	switch interfaceType {
-	case "SCSI":
-		busType = BUS_TYPE_SCSI
-	case "IDE":
-		busType = BUS_TYPE_IDE
-	default:
-		busType = BUS_TYPE_UNKNOWN
-	}
-	return busType
 }
 
 // TODO: improve

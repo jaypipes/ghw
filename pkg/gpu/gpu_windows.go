@@ -10,6 +10,9 @@ import (
 
 	"github.com/StackExchange/wmi"
 	"github.com/jaypipes/pcidb"
+
+	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const wqlVideoController = "SELECT Caption, CreationClassName, Description, DeviceID, Name, PNPDeviceID, SystemCreationClassName, SystemName, VideoArchitecture, VideoMemoryType, VideoModeDescription, VideoProcessor FROM Win32_VideoController"
@@ -78,40 +81,40 @@ func (i *Info) load() error {
 	return nil
 }
 
-func GetDevice(id string, entities []win32PnPEntity) *PCIDevice {
+func GetDevice(id string, entities []win32PnPEntity) *pci.Device {
 	// Backslashing PnP address ID as requested by JSON and VMI query: https://docs.microsoft.com/en-us/windows/win32/wmisdk/where-clause
 	var queryAddress = strings.Replace(id, "\\", `\\`, -1)
 	// Preparing default structure
-	var device = &PCIDevice{
+	var device = &pci.Device{
 		Address: queryAddress,
 		Vendor: &pcidb.Vendor{
-			ID:       UNKNOWN,
-			Name:     UNKNOWN,
+			ID:       util.UNKNOWN,
+			Name:     util.UNKNOWN,
 			Products: []*pcidb.Product{},
 		},
 		Subsystem: &pcidb.Product{
-			ID:         UNKNOWN,
-			Name:       UNKNOWN,
+			ID:         util.UNKNOWN,
+			Name:       util.UNKNOWN,
 			Subsystems: []*pcidb.Product{},
 		},
 		Product: &pcidb.Product{
-			ID:         UNKNOWN,
-			Name:       UNKNOWN,
+			ID:         util.UNKNOWN,
+			Name:       util.UNKNOWN,
 			Subsystems: []*pcidb.Product{},
 		},
 		Class: &pcidb.Class{
-			ID:         UNKNOWN,
-			Name:       UNKNOWN,
+			ID:         util.UNKNOWN,
+			Name:       util.UNKNOWN,
 			Subclasses: []*pcidb.Subclass{},
 		},
 		Subclass: &pcidb.Subclass{
-			ID:                    UNKNOWN,
-			Name:                  UNKNOWN,
+			ID:                    util.UNKNOWN,
+			Name:                  util.UNKNOWN,
 			ProgrammingInterfaces: []*pcidb.ProgrammingInterface{},
 		},
 		ProgrammingInterface: &pcidb.ProgrammingInterface{
-			ID:   UNKNOWN,
-			Name: UNKNOWN,
+			ID:   util.UNKNOWN,
+			Name: util.UNKNOWN,
 		},
 	}
 	// If an entity is found we get its data inside the standard structure
