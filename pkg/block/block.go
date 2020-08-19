@@ -119,6 +119,7 @@ type Partition struct {
 	SizeBytes  uint64 `json:"size_bytes"`
 	Type       string `json:"type"`
 	IsReadOnly bool   `json:"read_only"`
+	UUID       string `json:"uuid"` // This would be volume UUID on macOS, PartUUID on linux, empty on Windows
 }
 
 // Info describes all disk drives and partitions in the host system.

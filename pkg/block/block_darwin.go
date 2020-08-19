@@ -14,8 +14,6 @@ import (
 
 	"github.com/pkg/errors"
 	"howett.net/plist"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
 type diskOrPartitionPlistNode struct {
@@ -97,7 +95,7 @@ type ioregPlist struct {
 	VendorName   string `plist:"Vendor Name"`
 }
 
-func getDiskUtilListPlist() (*diskUtilListPlist, error) 
+func getDiskUtilListPlist() (*diskUtilListPlist, error) {
 	out, err := exec.Command("diskutil", "list", "-plist").Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "diskutil list failed")
@@ -180,6 +178,7 @@ func makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, e
 		SizeBytes:  uint64(s.Size),
 		Type:       partType,
 		IsReadOnly: !info.WritableVolume,
+		UUID:       s.VolumeUUID,
 	}, nil
 }
 
@@ -207,8 +206,7 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 	return sc
 }
 
-
-func (i *Info) load() error {
+func (info *Info) load() error {
 	listPlist, err := getDiskUtilListPlist()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())

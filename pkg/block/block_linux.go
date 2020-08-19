@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -189,16 +190,47 @@ func diskPartitions(paths *linuxpath.Paths, disk string) []*Partition {
 		}
 		size := partitionSizeBytes(paths, disk, fname)
 		mp, pt, ro := partitionInfo(paths, fname)
+		du := diskPartUUID(fname)
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
 			MountPoint: mp,
 			Type:       pt,
 			IsReadOnly: ro,
+			UUID:       du,
 		}
 		out = append(out, p)
 	}
 	return out
+}
+
+func diskPartUUID(part string) string {
+	if !strings.HasPrefix(part, "/dev") {
+		part = "/dev/" + part
+	}
+	args := []string{
+		"blkid",
+		"-s",
+		"PARTUUID",
+		part,
+	}
+	out, err := exec.Command(args[0], args[1:]...).Output()
+	if err != nil {
+		util.Warn("failed to read disk partuuid of %s : %s\n", part, err.Error())
+		return ""
+	}
+
+	if out == nil || len(out) == 0 {
+		return ""
+	}
+
+	parts := strings.Split(string(out), "PARTUUID=")
+	if len(parts) != 2 {
+		util.Warn("failed to parse the partuuid of %s\n", part)
+		return ""
+	}
+
+	return strings.ReplaceAll(parts[1], `"`, "")
 }
 
 func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {

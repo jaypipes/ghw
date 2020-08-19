@@ -131,6 +131,7 @@ func (i *Info) load() error {
 								MountPoint: *logicaldisk.DeviceID,
 								Type:       *diskpartition.Type,
 								IsReadOnly: toReadOnly(*diskpartition.Access),
+								UUID:       "",
 							}
 							disk.Partitions = append(disk.Partitions, p)
 							break

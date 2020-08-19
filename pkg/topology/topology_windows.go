@@ -132,7 +132,7 @@ func getWin32LogicalProcessorInfos() (
 		}
 	} else {
 		// This shouldn't happen because buffer hasn't yet been allocated...
-		fmt.Errorf("GetLogicalProcessorInformation Win32 API initial call returned success instead of failure with ERROR_INSUFFICIENT_BUFFER")
+		return nil, fmt.Errorf("GetLogicalProcessorInformation Win32 API initial call returned success instead of failure with ERROR_INSUFFICIENT_BUFFER")
 	}
 
 	// OK, now we actually allocate a raw buffer to fill with some number
