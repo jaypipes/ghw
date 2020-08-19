@@ -230,7 +230,7 @@ func diskPartUUID(part string) string {
 		return ""
 	}
 
-	return strings.ReplaceAll(parts[1], `"`, "")
+	return strings.ReplaceAll(strings.TrimSpace(parts[1]), `"`, "")
 }
 
 func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
