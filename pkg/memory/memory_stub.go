@@ -4,16 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package ghw
+package memory
 
 import (
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/context"
 )
 
-func memFillInfo(ctx *context.Context, info *MemoryInfo) error {
-	return errors.New("memFillInfo not implemented on " + runtime.GOOS)
+func (i *Info) load() error {
+	return errors.New("mem.Info.load not implemented on " + runtime.GOOS)
 }
