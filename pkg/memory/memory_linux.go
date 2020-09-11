@@ -26,9 +26,10 @@ const (
 	_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY = `
 Could not determine total physical bytes of memory. This may
 be due to the host being a virtual machine or container with no
-/var/log/syslog file, or the current user may not have necessary
-privileges to read the syslog. We are falling back to setting the
-total physical amount of memory to the total usable amount of memory
+/var/log/syslog file or /sys/devices/system/memory directory, or
+the current user may not have necessary privileges to read the syslog.
+We are falling back to setting the total physical amount of memory to
+the total usable amount of memory
 `
 )
 
@@ -55,7 +56,55 @@ func (i *Info) load() error {
 	return nil
 }
 
-func memTotalPhysicalBytes(paths *linuxpath.Paths) int64 {
+func memTotalPhysicalBytes(paths *linuxpath.Paths) (total int64) {
+	defer func() {
+		// fallback to the syslog file approach in case of error
+		if total < 0 {
+			total = memTotalPhysicalBytesFromSyslog(paths)
+		}
+	}()
+
+	// detect physical memory from /sys/devices/system/memory
+	dir := paths.SysDevicesSystemMemory
+
+	// get the memory block size in byte in hexadecimal notation
+	blockSize := filepath.Join(dir, "block_size_bytes")
+
+	d, err := ioutil.ReadFile(blockSize)
+	if err != nil {
+		return -1
+	}
+	blockSizeBytes, err := strconv.ParseUint(strings.TrimSpace(string(d)), 16, 64)
+	if err != nil {
+		return -1
+	}
+
+	// iterate over memory's block /sys/devices/system/memory/memory*,
+	// if the memory block state is 'online' we increment the total
+	// with the memory block size to determine the amount of physical
+	// memory available on this system
+	sysMemory, err := filepath.Glob(filepath.Join(dir, "memory*"))
+	if err != nil {
+		return -1
+	} else if sysMemory == nil {
+		return -1
+	}
+
+	for _, path := range sysMemory {
+		s, err := ioutil.ReadFile(filepath.Join(path, "state"))
+		if err != nil {
+			return -1
+		}
+		if strings.TrimSpace(string(s)) != "online" {
+			continue
+		}
+		total += int64(blockSizeBytes)
+	}
+
+	return total
+}
+
+func memTotalPhysicalBytesFromSyslog(paths *linuxpath.Paths) int64 {
 	// In Linux, the total physical memory can be determined by looking at the
 	// output of dmidecode, however dmidecode requires root privileges to run,
 	// so instead we examine the system logs for startup information containing
