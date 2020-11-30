@@ -6,7 +6,9 @@
 package topology
 
 import (
+	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -60,7 +62,40 @@ func topologyNodes(ctx *context.Context) []*Node {
 			return nodes
 		}
 		node.Caches = caches
+
+		distances, err := distancesForNode(ctx, nodeID)
+		if err != nil {
+			util.Warn("failed to determine node distances for node: %s\n", err)
+			return nodes
+		}
+		node.Distances = distances
+
 		nodes = append(nodes, node)
 	}
 	return nodes
+}
+
+func distancesForNode(ctx *context.Context, nodeID int) ([]int, error) {
+	paths := linuxpath.New(ctx)
+	path := filepath.Join(
+		paths.SysDevicesSystemNode,
+		fmt.Sprintf("node%d", nodeID),
+		"distance",
+	)
+
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	items := strings.Fields(strings.TrimSpace(string(data)))
+	dists := make([]int, len(items), len(items)) // TODO: can a NUMA cell be offlined?
+	for idx, item := range items {
+		dist, err := strconv.Atoi(item)
+		if err != nil {
+			return dists, err
+		}
+		dists[idx] = dist
+	}
+	return dists, nil
 }

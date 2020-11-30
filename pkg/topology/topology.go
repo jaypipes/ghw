@@ -55,9 +55,10 @@ func (a Architecture) MarshalJSON() ([]byte, error) {
 // memory caching available to the single physical processor package's physical
 // processor cores
 type Node struct {
-	ID     int                  `json:"id"`
-	Cores  []*cpu.ProcessorCore `json:"cores"`
-	Caches []*memory.Cache      `json:"caches"`
+	ID        int                  `json:"id"`
+	Cores     []*cpu.ProcessorCore `json:"cores"`
+	Caches    []*memory.Cache      `json:"caches"`
+	Distances []int                `json:"distances"`
 }
 
 func (n *Node) String() string {

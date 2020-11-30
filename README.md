@@ -489,6 +489,8 @@ Each `ghw.TopologyNode` struct contains the following fields:
 * `ghw.TopologyNode.Caches` is an array of pointers to `ghw.MemoryCache` structs that
   represent the low-level caches associated with processors and cores on the
   system
+* `ghw.TopologyNode.Distance` is an array of distances between NUMA nodes as reported
+  by the system.
 
 See above in the [CPU](#cpu) section for information about the
 `ghw.ProcessorCore` struct and how to use and query it.
