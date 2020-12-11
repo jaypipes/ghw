@@ -75,7 +75,7 @@ func (i *Info) String() string {
 func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
 	info := &Info{ctx: ctx}
-	if err := info.load(); err != nil {
+	if err := ctx.Do(info.load); err != nil {
 		return nil, err
 	}
 	return info, nil
