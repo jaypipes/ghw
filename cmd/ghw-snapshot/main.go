@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -83,6 +84,9 @@ func execute(cmd *cobra.Command, args []string) error {
 		"proc",
 		"etc",
 		"sys/block",
+		"sys/devices/system/cpu",
+		"sys/devices/system/memory",
+		"sys/devices/system/node",
 	}
 
 	for _, path := range createPaths {
@@ -97,6 +101,15 @@ func execute(cmd *cobra.Command, args []string) error {
 	if err = createBlockDevices(scratchDir); err != nil {
 		return err
 	}
+	if err = createSysDevicesSystemCPU(scratchDir); err != nil {
+		return err
+	}
+	if err = createSysDevicesSystemMemory(scratchDir); err != nil {
+		return err
+	}
+	if err = createSysDevicesSystemNode(scratchDir); err != nil {
+		return err
+	}
 	return doSnapshot(scratchDir)
 }
 
@@ -108,21 +121,28 @@ func execute(cmd *cobra.Command, args []string) error {
 // create actual files with copies of the pseudofile contents
 func createPseudofiles(buildDir string) error {
 	for _, path := range createPseudofilePaths {
-		buf, err := ioutil.ReadFile(path)
+		err := copyPseudoFile(path, filepath.Join(buildDir, path))
 		if err != nil {
 			return err
 		}
-		targetPath := filepath.Join(buildDir, path)
-		trace("creating %s\n", targetPath)
-		f, err := os.Create(targetPath)
-		if err != nil {
-			return err
-		}
-		if _, err = f.Write(buf); err != nil {
-			return err
-		}
-		f.Close()
 	}
+	return nil
+}
+
+func copyPseudoFile(path, targetPath string) error {
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	trace("creating %s\n", targetPath)
+	f, err := os.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	if _, err = f.Write(buf); err != nil {
+		return err
+	}
+	f.Close()
 	return nil
 }
 
@@ -318,6 +338,200 @@ func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error 
 				return err
 			}
 			f.Close()
+		}
+	}
+	return nil
+}
+
+func isCPUEntry(cname string) bool {
+	if !strings.HasPrefix(cname, "cpu") {
+		return false
+	}
+
+	if _, err := strconv.Atoi(cname[3:]); err != nil {
+		// doesn't look like cpu0, cpu42... better skip it.
+		return false
+	}
+	return true
+}
+
+func createSysDevicesSystemCPU(buildDir string) error {
+	devSysCPU := "/sys/devices/system/cpu"
+	cpuEntries, err := ioutil.ReadDir(devSysCPU)
+	if err != nil {
+		return err
+	}
+	for _, cpuEntry := range cpuEntries {
+		cname := cpuEntry.Name()
+		if !isCPUEntry(cname) {
+			continue
+		}
+
+		trace("creating %s\n", cname)
+		cpuTopoDir := filepath.Join(devSysCPU, cpuEntry.Name(), "topology")
+		if err = os.MkdirAll(filepath.Join(buildDir, cpuTopoDir), os.ModePerm); err != nil {
+			return err
+		}
+
+		cpuTopoEntries, err := ioutil.ReadDir(cpuTopoDir)
+		if err != nil {
+			return err
+		}
+
+		for _, cpuTopoEntry := range cpuTopoEntries {
+			path := filepath.Join(cpuTopoDir, cpuTopoEntry.Name())
+			if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+				return err
+			}
+		}
+
+		cpuCacheDir := filepath.Join(devSysCPU, cpuEntry.Name(), "cache")
+		if err = os.MkdirAll(filepath.Join(buildDir, cpuCacheDir), os.ModePerm); err != nil {
+			return err
+		}
+
+		cpuCacheEntries, err := ioutil.ReadDir(cpuCacheDir)
+		if err != nil {
+			return err
+		}
+
+		for _, cpuCacheEntry := range cpuCacheEntries {
+			ccname := cpuCacheEntry.Name()
+
+			if !strings.HasPrefix(ccname, "index") {
+				continue
+			}
+
+			if _, err := strconv.Atoi(ccname[5:]); err != nil {
+				// doesn't look like index0, index42... better skip it.
+				continue
+			}
+
+			trace("creating %s\n", ccname)
+			cpuCacheEntryDir := filepath.Join(cpuCacheDir, ccname)
+
+			if err := os.MkdirAll(filepath.Join(buildDir, cpuCacheEntryDir), os.ModePerm); err != nil {
+				return err
+			}
+
+			cpuCacheIndexEntries, err := ioutil.ReadDir(cpuCacheEntryDir)
+			if err != nil {
+				return err
+			}
+
+			for _, cpuCacheIndexEntry := range cpuCacheIndexEntries {
+				path := filepath.Join(cpuCacheEntryDir, cpuCacheIndexEntry.Name())
+				if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+					return err
+				}
+			}
+		}
+
+	}
+	return nil
+}
+
+func createSysDevicesSystemMemory(buildDir string) error {
+	devSysMemory := "/sys/devices/system/memory"
+
+	for _, pseudoFile := range []string{"block_size_bytes"} {
+		path := filepath.Join(devSysMemory, pseudoFile)
+		if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+			return err
+		}
+	}
+
+	memoryEntries, err := ioutil.ReadDir(devSysMemory)
+	if err != nil {
+		return err
+	}
+
+	for _, memoryEntry := range memoryEntries {
+		mname := memoryEntry.Name()
+		if !strings.HasPrefix(mname, "memory") {
+			continue
+		}
+
+		if _, err := strconv.Atoi(mname[6:]); err != nil {
+			// doesn't look like memory0, memory42... better skip it.
+			continue
+		}
+
+		trace("creating %s\n", mname)
+		if err := os.MkdirAll(filepath.Join(buildDir, devSysMemory, mname), os.ModePerm); err != nil {
+			return err
+		}
+
+		for _, pseudoFile := range []string{"online", "state"} {
+			path := filepath.Join(devSysMemory, mname, pseudoFile)
+			if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func createSysDevicesSystemNode(buildDir string) error {
+	devSysNode := "/sys/devices/system/node"
+
+	for _, pseudoFile := range []string{"has_cpu", "has_memory", "has_normal_memory", "online", "possible"} {
+		path := filepath.Join(devSysNode, pseudoFile)
+		if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+			return err
+		}
+	}
+
+	nodeEntries, err := ioutil.ReadDir(devSysNode)
+	if err != nil {
+		return err
+	}
+
+	for _, nodeEntry := range nodeEntries {
+		nname := nodeEntry.Name()
+		if !strings.HasPrefix(nname, "node") {
+			continue
+		}
+
+		if _, err := strconv.Atoi(nname[4:]); err != nil {
+			// doesn't look like node0, node42... better skip it.
+			continue
+		}
+
+		trace("creating %s\n", nname)
+		if err := os.MkdirAll(filepath.Join(buildDir, devSysNode, nname), os.ModePerm); err != nil {
+			return err
+		}
+
+		devSysNodeNodeX := filepath.Join(devSysNode, nname)
+		perNodeEntries, err := ioutil.ReadDir(devSysNodeNodeX)
+		if err != nil {
+			return err
+		}
+
+		for _, perNodeEntry := range perNodeEntries {
+			for _, pseudoFile := range []string{"cpulist", "distance"} {
+				path := filepath.Join(devSysNodeNodeX, pseudoFile)
+				if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+					return err
+				}
+			}
+
+			pnname := perNodeEntry.Name()
+			if !isCPUEntry(pnname) {
+				continue
+			}
+
+			trace("creating %s\n", pnname)
+			// from sysfs layout, we know already we know these are symlinks
+			target, err := os.Readlink(filepath.Join(devSysNodeNodeX, pnname))
+			if err != nil {
+				return err
+			}
+
+			if err := os.Symlink(target, filepath.Join(buildDir, devSysNodeNodeX, pnname)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
