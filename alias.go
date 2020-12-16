@@ -24,8 +24,11 @@ import (
 type WithOption = option.Option
 
 var (
-	WithChroot = option.WithChroot
+	WithChroot   = option.WithChroot
+	WithSnapshot = option.WithSnapshot
 )
+
+type SnapshotOptions = option.SnapshotOptions
 
 type CPUInfo = cpu.Info
 

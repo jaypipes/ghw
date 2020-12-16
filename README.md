@@ -81,6 +81,54 @@ Alternately, you can use the `ghw.WithChroot()` function like so:
 cpu, err := ghw.CPU(ghw.WithChroot("/host"))
 ```
 
+### Consuming snapshots
+
+You can make `ghw` read from snapshots (created with `ghw-snapshot`) using
+environment variables or programmatically.
+
+The environment variable `GHW_SNAPSHOT_PATH` let users specify a snapshot
+that `ghw` will automatically consume. All the needed chroot changes will be
+automatically performed. By default, the snapshot is unpacked on a temporary
+directory managed by `ghw`, and cleaned up when no longer needed, avoiding
+leftovers.
+
+The rest of the environment variables are relevant iff `GHW_SNAPSHOT_PATH` is given.
+`GHW_SNAPSHOT_ROOT` let users specify the directory
+on which the snapshot should be unpacked. This moves the ownership of that
+directory from `ghw` to users. `ghw` will still clean up the unpacked snapshot
+when no longer needed.
+
+`GHW_SNAPSHOT_EXCLUSIVE` is relevant iff `GHW_SNAPSHOT_ROOT` is given.
+Set it to any value to toggle it on. This tells `ghw` that the directory is meant
+only to contain the given snapshot, thus `ghw` will *not* attempt to unpack it
+(and will go ahead silently!) unless the directory is empty.
+You can use both `GHW_SNAPSHOT_ROOT` and `GHW_SNAPSHOT_EXCLUSIVE` to make sure
+`ghw` unpacks the snapshot only once regardless of how many `ghw` packages
+(e.g. cpu, memory) access it.
+
+Set `GHW_SNAPSHOT_PRESERVE` to any value to enable it. If set, `ghw` will *not*
+clean up the unpacked snapshot once done, leaving it into the system.
+
+```go
+cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
+	Path: "/path/to/linux-amd64-d4771ed3300339bc75f856be09fc6430.tar.gz",
+}))
+
+
+myRoot := "/my/safe/directory"
+cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
+	Path: "/path/to/linux-amd64-d4771ed3300339bc75f856be09fc6430.tar.gz",
+	Root: &myRoot,
+}))
+
+myOtherRoot := "/my/other/safe/directory"
+cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
+	Path:      "/path/to/linux-amd64-d4771ed3300339bc75f856be09fc6430.tar.gz",
+	Root:      &myOtherRoot,
+	Exclusive: true,
+}))
+```
+
 ### Disabling warning messages
 
 When `ghw` isn't able to retrieve some information, it may print certain
