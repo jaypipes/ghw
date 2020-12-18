@@ -160,17 +160,15 @@ func createBlockDevices(buildDir string) error {
 			continue
 		}
 		devPath := filepath.Join("/sys/block", dname)
-		fi, err := os.Lstat(devPath)
+		trace("processing block device %q\n", devPath)
+
+		// from the sysfs layout, we know this is always a symlink
+		linkContentPath, err := os.Readlink(devPath)
 		if err != nil {
 			return err
 		}
-		var link string
-		if fi.Mode()&os.ModeSymlink != 0 {
-			link, err = os.Readlink(devPath)
-			if err != nil {
-				return err
-			}
-		}
+		trace("link target for block device %q is %q\n", devPath, linkContentPath)
+
 		// Create a symlink in our build filesystem that is a directory
 		// pointing to the actual device bus path where the block device's
 		// information directory resides
@@ -178,14 +176,19 @@ func createBlockDevices(buildDir string) error {
 		linkTargetPath := filepath.Join(
 			buildDir,
 			"sys/block",
-			strings.TrimPrefix(link, string(os.PathSeparator)),
+			strings.TrimPrefix(linkContentPath, string(os.PathSeparator)),
 		)
 		trace("creating device directory %s\n", linkTargetPath)
 		if err = os.MkdirAll(linkTargetPath, os.ModePerm); err != nil {
 			return err
 		}
-		trace("linking device directory %s to %s\n", linkPath, linkTargetPath)
-		if err = os.Symlink(linkTargetPath, linkPath); err != nil {
+
+		trace("linking device directory %s to %s\n", linkPath, linkContentPath)
+		// Make sure the link target is a relative path!
+		// if we use absolute path, the link target will be an absolute path starting
+		// with buildDir, hence the snapshot will contain broken link.
+		// Otherwise, the unpack directory will never have the same prefix of buildDir!
+		if err = os.Symlink(linkContentPath, linkPath); err != nil {
 			return err
 		}
 		// Now read the source block device directory and populate the
@@ -193,8 +196,9 @@ func createBlockDevices(buildDir string) error {
 		// appropriate block device pseudofiles
 		srcDeviceDir := filepath.Join(
 			"/sys/block",
-			strings.TrimPrefix(link, string(os.PathSeparator)),
+			strings.TrimPrefix(linkContentPath, string(os.PathSeparator)),
 		)
+		trace("creating device directory %q from %q\n", linkTargetPath, srcDeviceDir)
 		if err = createBlockDeviceDir(linkTargetPath, srcDeviceDir); err != nil {
 			return err
 		}
