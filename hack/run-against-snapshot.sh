@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+CONTAINER_RUNTIME=${$CONTAINER_RUNTIME:-docker}
 SNAPSHOT_FILEPATH=${SNAPSHOT_FILEPATH:-$1}
 
 if [[ ! -f $SNAPSHOT_FILEPATH ]]; then
@@ -21,11 +22,14 @@ cp -L $SNAPSHOT_FILEPATH $snap_tmp_dir
 
 echo "building Docker image with ghwc ..."
 
-docker build -f $root_dir/Dockerfile -t $ghwc_image_name:$IMAGE_VERSION $root_dir
+${CONTAINER_RUNTIME} build -f $root_dir/Dockerfile -t $ghwc_image_name:$IMAGE_VERSION $root_dir
 
 echo "running ghwc Docker image with volume mount to snapshot dir ..."
 
-docker run -it -v $snap_tmp_dir:/host \
+# note the trailing ":z" on the "-v" option. We use :z on the host volume mount below to ensure
+# the container runtime has the ability to read the contents contained in the host volume.
+# podman is especially picky about this.
+${CONTAINER_RUNTIME} run -it -v $snap_tmp_dir:/host:z \
 	-e GHW_SNAPSHOT_PATH="/host/$( basename $SNAPSHOT_FILEPATH )" \
 	-e GHW_SNAPSHOT_PRESERVE=1 \
 	-e GHW_SNAPSHOT_EXCLUSIVE=1 \
