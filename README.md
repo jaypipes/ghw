@@ -85,6 +85,8 @@ cpu, err := ghw.CPU(ghw.WithChroot("/host"))
 
 You can make `ghw` read from snapshots (created with `ghw-snapshot`) using
 environment variables or programmatically.
+Please check `SNAPSHOT.md` to learn more about how ghw creates and consumes
+snapshots.
 
 The environment variable `GHW_SNAPSHOT_PATH` let users specify a snapshot
 that `ghw` will automatically consume. All the needed chroot changes will be
