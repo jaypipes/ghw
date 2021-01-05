@@ -131,6 +131,60 @@ cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
 }))
 ```
 
+### Creating snapshots
+
+You can create ghw snapshots in two ways.
+You can just consume the `ghw-snapshot` tool, or you can create them programmatically
+from your golang code. We explore now the latter case.
+
+Snapshotting takes two phases:
+1. clone the relevant pseudofiles/pseudodirectories into a temporary tree
+   This tree is usually deleted once the packing is successful.
+2. pack the cloned tree into a tar.gz
+
+```go
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+
+	"github.com/jaypipes/ghw/pkg/snapshot"
+)
+
+// ...
+
+scratchDir, err := ioutil.TempDir("", "ghw-snapshot-*")
+if err != nil {
+	fmt.Printf("Error creating clone directory: %v", err)
+}
+defer os.RemoveAll(scratchDir)
+
+// this step clones all the files and directories ghw cares about
+if err := snapshot.CloneTreeInto(scratchDir); err != nil {
+	fmt.Printf("error cloning into %q: %v", scratchDir, err)
+}
+
+// optionally, you may add extra content into your snapshot.
+// ghw will ignore the extra content.
+// Glob patterns like `filepath.Glob` are supported.
+fileSpecs := []string{
+	"/proc/cmdline",
+}
+
+// options allows the client code to optionally deference symlinks, or copy
+// them into the cloned tree as symlinks
+var opts *snapshot.CopyFileOptions
+if err := snapshot.CopyFilesInto(fileSpecs, scratchDir, opts); err != nil {
+	fmt.Printf("error cloning extra files into %q: %v", scratchDir, err)
+}
+
+// automates the creation of the gzipped tarball out of the given tree.
+if err := snapshot.PackFrom("my-snapshot.tgz", scratchDir); err != nil {
+	fmt.Printf("error packing %q into %q: %v", scratchDir, *output, err)
+}
+```
+
 ### Disabling warning messages
 
 When `ghw` isn't able to retrieve some information, it may print certain
