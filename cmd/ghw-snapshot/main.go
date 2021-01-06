@@ -85,6 +85,7 @@ func execute(cmd *cobra.Command, args []string) error {
 		"etc",
 		"sys/block",
 		"sys/devices/system/cpu",
+		"sys/devices/system/memory",
 		"sys/devices/system/node",
 	}
 
@@ -101,6 +102,9 @@ func execute(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if err = createSysDevicesSystemCPU(scratchDir); err != nil {
+		return err
+	}
+	if err = createSysDevicesSystemMemory(scratchDir); err != nil {
 		return err
 	}
 	if err = createSysDevicesSystemNode(scratchDir); err != nil {
@@ -427,6 +431,47 @@ func createSysDevicesSystemCPU(buildDir string) error {
 			}
 		}
 
+	}
+	return nil
+}
+
+func createSysDevicesSystemMemory(buildDir string) error {
+	devSysMemory := "/sys/devices/system/memory"
+
+	for _, pseudoFile := range []string{"block_size_bytes"} {
+		path := filepath.Join(devSysMemory, pseudoFile)
+		if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+			return err
+		}
+	}
+
+	memoryEntries, err := ioutil.ReadDir(devSysMemory)
+	if err != nil {
+		return err
+	}
+
+	for _, memoryEntry := range memoryEntries {
+		mname := memoryEntry.Name()
+		if !strings.HasPrefix(mname, "memory") {
+			continue
+		}
+
+		if _, err := strconv.Atoi(mname[6:]); err != nil {
+			// doesn't look like memory0, memory42... better skip it.
+			continue
+		}
+
+		trace("creating %s\n", mname)
+		if err := os.MkdirAll(filepath.Join(buildDir, devSysMemory, mname), os.ModePerm); err != nil {
+			return err
+		}
+
+		for _, pseudoFile := range []string{"online", "state"} {
+			path := filepath.Join(devSysMemory, mname, pseudoFile)
+			if err := copyPseudoFile(path, filepath.Join(buildDir, path)); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
