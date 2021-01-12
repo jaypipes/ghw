@@ -15,6 +15,7 @@ import (
 	"github.com/jaypipes/pcidb"
 
 	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -128,12 +129,24 @@ func (d *Device) String() string {
 
 type Info struct {
 	ctx *context.Context
+	// All PCI devices on the host system
+	Devices []*Device
 	// hash of class ID -> class information
-	Classes map[string]*pcidb.Class
+	// DEPRECATED. Will be removed in v1.0. Please use
+	// github.com/jaypipes/pcidb to explore PCIDB information
+	Classes map[string]*pcidb.Class `json:"-"`
 	// hash of vendor ID -> vendor information
-	Vendors map[string]*pcidb.Vendor
+	// DEPRECATED. Will be removed in v1.0. Please use
+	// github.com/jaypipes/pcidb to explore PCIDB information
+	Vendors map[string]*pcidb.Vendor `json:"-"`
 	// hash of vendor ID + product/device ID -> product information
-	Products map[string]*pcidb.Product
+	// DEPRECATED. Will be removed in v1.0. Please use
+	// github.com/jaypipes/pcidb to explore PCIDB information
+	Products map[string]*pcidb.Product `json:"-"`
+}
+
+func (i *Info) String() string {
+	return fmt.Sprintf("PCI (%d devices)", len(i.Devices))
 }
 
 type Address struct {
@@ -177,4 +190,22 @@ func New(opts ...*option.Option) (*Info, error) {
 		return nil, err
 	}
 	return info, nil
+}
+
+// simple private struct used to encapsulate PCI information in a top-level
+// "pci" YAML/JSON map/object key
+type pciPrinter struct {
+	Info *Info `json:"pci"`
+}
+
+// YAMLString returns a string with the PCI information formatted as YAML
+// under a top-level "pci:" key
+func (i *Info) YAMLString() string {
+	return marshal.SafeYAML(pciPrinter{i})
+}
+
+// JSONString returns a string with the PCI information formatted as JSON
+// under a top-level "pci:" key
+func (i *Info) JSONString(indent bool) string {
+	return marshal.SafeJSON(pciPrinter{i}, indent)
 }

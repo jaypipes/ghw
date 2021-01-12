@@ -27,6 +27,7 @@ func (i *Info) load() error {
 	i.Classes = db.Classes
 	i.Vendors = db.Vendors
 	i.Products = db.Products
+	i.Devices = i.ListDevices()
 	return nil
 }
 
@@ -272,6 +273,8 @@ func (info *Info) GetDevice(address string) *Device {
 
 // ListDevices returns a list of pointers to Device structs present on the
 // host system
+// DEPRECATED. Will be removed in v1.0. Please use
+// github.com/jaypipes/pcidb to explore PCIDB information
 func (info *Info) ListDevices() []*Device {
 	paths := linuxpath.New(info.ctx)
 	devs := make([]*Device, 0)
