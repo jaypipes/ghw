@@ -692,31 +692,29 @@ are exposed on the `ghw.PCIInfo` struct.
 The `ghw.PCI()` function returns a `ghw.PCIInfo` struct. The `ghw.PCIInfo`
 struct contains a number of fields that may be queried for PCI information:
 
+* `ghw.PCIInfo.Devices` is a slice of pointers to `ghw.PCIDevice` structs that
+  describe the PCI devices on the host system
 * `ghw.PCIInfo.Classes` is a map, keyed by the PCI class ID (a hex-encoded
   string) of pointers to `pcidb.Class` structs, one for each class of PCI
   device known to `ghw`
+  (**DEPRECATED**, will be removed in `ghw` `v1.0`. Use the
+  `github.com/jaypipes/pcidb` library for exploring PCI database information)
 * `ghw.PCIInfo.Vendors` is a map, keyed by the PCI vendor ID (a hex-encoded
   string) of pointers to `pcidb.Vendor` structs, one for each PCI vendor
   known to `ghw`
-* `ghw.PCIInfo.Products` is a map, keyed by the PCI product ID* (a hex-encoded
+  (**DEPRECATED**, will be removed in `ghw` `v1.0`. Use the
+  `github.com/jaypipes/pcidb` library for exploring PCI database information)
+* `ghw.PCIInfo.Products` is a map, keyed by the PCI product ID (a hex-encoded
   string) of pointers to `pcidb.Product` structs, one for each PCI product
   known to `ghw`
+  (**DEPRECATED**, will be removed in `ghw` `v1.0`. Use the
+  `github.com/jaypipes/pcidb` library for exploring PCI database information)
 
 **NOTE**: PCI products are often referred to by their "device ID". We use
 the term "product ID" in `ghw` because it more accurately reflects what the
 identifier is for: a specific product line produced by the vendor.
 
-#### Listing and accessing host PCI device information
-
-In addition to the above information, the `ghw.PCIInfo` struct has the
-following methods:
-
-* `ghw.PCIInfo.ListDevices() []*PCIDevice`
-* `ghw.PCIInfo.GetDevice(address string) *PCIDevice`
-
-This methods return either an array of or a single pointer to a `ghw.PCIDevice`
-struct, which has the following fields:
-
+The `ghw.PCIDevice` struct has the following fields:
 
 * `ghw.PCIDevice.Vendor` is a pointer to a `pcidb.Vendor` struct that
   describes the device's primary vendor. This will always be non-nil.
@@ -731,6 +729,13 @@ struct, which has the following fields:
 * `ghw.PCIDevice.ProgrammingInterface` is a pointer to a
   `pcidb.ProgrammingInterface` struct that describes the device subclass'
   programming interface. This will always be non-nil.
+
+#### Finding a PCI device by PCI address
+
+In addition to the above information, the `ghw.PCIInfo` struct has the
+following method:
+
+* `ghw.PCIInfo.GetDevice(address string)`
 
 The following code snippet shows how to call the `ghw.PCIInfo.ListDevices()`
 method and output a simple list of PCI address and vendor/product information:
@@ -751,13 +756,8 @@ func main() {
 	}
 	fmt.Printf("host PCI devices:\n")
 	fmt.Println("====================================================")
-	devices := pci.ListDevices()
-	if len(devices) == 0 {
-		fmt.Printf("error: could not retrieve PCI devices\n")
-		return
-	}
 
-	for _, device := range devices {
+	for _, device := range pci.Devices {
 		vendor := device.Vendor
 		vendorName := vendor.Name
 		if len(vendor.Name) > 20 {
