@@ -62,6 +62,11 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 	if err != nil {
 		return nil
 	}
+
+	return parseModaliasData(string(data))
+}
+
+func parseModaliasData(data string) *deviceModaliasInfo {
 	// The modalias file is an encoded file that looks like this:
 	//
 	// $ cat /sys/devices/pci0000\:00/0000\:00\:03.0/0000\:03\:00.0/modalias
@@ -77,13 +82,13 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 	// bc03 -- PCI base class
 	// sc00 -- PCI subclass
 	// i00 -- programming interface
-	vendorID := strings.ToLower(string(data[9:13]))
-	productID := strings.ToLower(string(data[18:22]))
-	subvendorID := strings.ToLower(string(data[28:32]))
-	subproductID := strings.ToLower(string(data[38:42]))
-	classID := string(data[44:46])
-	subclassID := string(data[48:50])
-	progIfaceID := string(data[51:53])
+	vendorID := strings.ToLower(data[9:13])
+	productID := strings.ToLower(data[18:22])
+	subvendorID := strings.ToLower(data[28:32])
+	subproductID := strings.ToLower(data[38:42])
+	classID := data[44:46]
+	subclassID := data[48:50]
+	progIfaceID := data[51:53]
 	return &deviceModaliasInfo{
 		vendorID:     vendorID,
 		productID:    productID,
@@ -233,7 +238,21 @@ func (info *Info) GetDevice(address string) *Device {
 	if modaliasInfo == nil {
 		return nil
 	}
+	return info.getDeviceFromModaliasInfo(address, modaliasInfo)
+}
 
+// ParseDevice returns a pointer to a Device given its describing data.
+// The PCI device obtained this way may not exist in the system;
+// use GetDevice to get a *Device which is found in the system
+func (info *Info) ParseDevice(address, modalias string) *Device {
+	modaliasInfo := parseModaliasData(modalias)
+	if modaliasInfo == nil {
+		return nil
+	}
+	return info.getDeviceFromModaliasInfo(address, modaliasInfo)
+}
+
+func (info *Info) getDeviceFromModaliasInfo(address string, modaliasInfo *deviceModaliasInfo) *Device {
 	vendor := findPCIVendor(info, modaliasInfo.vendorID)
 	product := findPCIProduct(
 		info,
