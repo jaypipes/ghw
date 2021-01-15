@@ -7,7 +7,7 @@
 package pci
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -40,69 +40,54 @@ type Device struct {
 	ProgrammingInterface *pcidb.ProgrammingInterface `json:"programming_interface"`
 }
 
+type devIdent struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type devMarshallable struct {
+	Address   string   `json:"address"`
+	Vendor    devIdent `json:"vendor"`
+	Product   devIdent `json:"product"`
+	Subsystem devIdent `json:"subsystem"`
+	Class     devIdent `json:"class""`
+	Subclass  devIdent `json:"subclass"`
+	Interface devIdent `json:"programming_interface"`
+}
+
 // NOTE(jaypipes) Device has a custom JSON marshaller because we don't want
 // to serialize the entire PCIDB information for the Vendor (which includes all
 // of the vendor's products, etc). Instead, we simply serialize the ID and
 // human-readable name of the vendor, product, class, etc.
 func (d *Device) MarshalJSON() ([]byte, error) {
-	b := bytes.NewBufferString("{")
-	b.WriteString(fmt.Sprintf("\"address\":\"%s\"", d.Address))
-	b.WriteString(",\"vendor\": {")
-	b.WriteString(
-		fmt.Sprintf(
-			"\"id\":\"%s\",\"name\":\"%s\"",
-			d.Vendor.ID,
-			d.Vendor.Name,
-		),
-	)
-	b.WriteString("},")
-	b.WriteString("\"product\": {")
-	b.WriteString(
-		fmt.Sprintf(
-			"\"id\":\"%s\",\"name\":\"%s\"",
-			d.Product.ID,
-			d.Product.Name,
-		),
-	)
-	b.WriteString("},")
-	b.WriteString("\"subsystem\": {")
-	b.WriteString(
-		fmt.Sprintf(
-			"\"id\":\"%s\",\"name\":\"%s\"",
-			d.Subsystem.ID,
-			d.Subsystem.Name,
-		),
-	)
-	b.WriteString("},")
-	b.WriteString("\"class\": {")
-	b.WriteString(
-		fmt.Sprintf(
-			"\"id\":\"%s\",\"name\":\"%s\"",
-			d.Class.ID,
-			d.Class.Name,
-		),
-	)
-	b.WriteString("},")
-	b.WriteString("\"subclass\": {")
-	b.WriteString(
-		fmt.Sprintf(
-			"\"id\":\"%s\",\"name\":\"%s\"",
-			d.Subclass.ID,
-			d.Subclass.Name,
-		),
-	)
-	b.WriteString("},")
-	b.WriteString("\"programming_interface\": {")
-	b.WriteString(
-		fmt.Sprintf(
-			"\"id\":\"%s\",\"name\":\"%s\"",
-			d.ProgrammingInterface.ID,
-			d.ProgrammingInterface.Name,
-		),
-	)
-	b.WriteString("}")
-	b.WriteString("}")
-	return b.Bytes(), nil
+	dm := devMarshallable{
+		Address: d.Address,
+		Vendor: devIdent{
+			ID:   d.Vendor.ID,
+			Name: d.Vendor.Name,
+		},
+		Product: devIdent{
+			ID:   d.Product.ID,
+			Name: d.Product.Name,
+		},
+		Subsystem: devIdent{
+			ID:   d.Subsystem.ID,
+			Name: d.Subsystem.Name,
+		},
+		Class: devIdent{
+			ID:   d.Class.ID,
+			Name: d.Class.Name,
+		},
+		Subclass: devIdent{
+			ID:   d.Subclass.ID,
+			Name: d.Subclass.Name,
+		},
+		Interface: devIdent{
+			ID:   d.ProgrammingInterface.ID,
+			Name: d.ProgrammingInterface.Name,
+		},
+	}
+	return json.Marshal(dm)
 }
 
 func (d *Device) String() string {
