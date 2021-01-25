@@ -158,6 +158,13 @@ func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) err
 		if err != nil {
 			return err
 		}
+		// directories must be listed explicitely and created separately.
+		// In the future we may want to expose this decision as hook point in
+		// CopyFileOptions, when clear use cases emerge.
+		if fi.IsDir() {
+			trace("expanded glob path %q is a directory - skipped", path)
+			continue
+		}
 		if opts.IsSymlinkFn(path, fi) {
 			trace("    copying link: %q\n", path)
 			if err := copyLink(path, filepath.Join(destDir, path)); err != nil {
