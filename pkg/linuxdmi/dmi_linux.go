@@ -21,7 +21,7 @@ func Item(ctx *context.Context, value string) string {
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		util.Warn("Unable to read %s: %s\n", value, err)
+		ctx.Warn("Unable to read %s: %s\n", value, err)
 		return util.UNKNOWN
 	}
 

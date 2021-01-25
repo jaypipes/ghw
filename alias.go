@@ -26,6 +26,7 @@ type WithOption = option.Option
 var (
 	WithChroot   = option.WithChroot
 	WithSnapshot = option.WithSnapshot
+	WithAlterter = option.WithAlerter
 )
 
 type SnapshotOptions = option.SnapshotOptions

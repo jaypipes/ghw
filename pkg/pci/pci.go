@@ -189,11 +189,11 @@ type pciPrinter struct {
 // YAMLString returns a string with the PCI information formatted as YAML
 // under a top-level "pci:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(pciPrinter{i})
+	return marshal.SafeYAML(i.ctx, pciPrinter{i})
 }
 
 // JSONString returns a string with the PCI information formatted as JSON
 // under a top-level "pci:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(pciPrinter{i}, indent)
+	return marshal.SafeJSON(i.ctx, pciPrinter{i}, indent)
 }

@@ -12,6 +12,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/jaypipes/ghw/pkg/context"
 )
 
 const (
@@ -30,29 +32,21 @@ func SafeClose(c closer) {
 	}
 }
 
-func Warn(msg string, args ...interface{}) {
-	if _, ok := os.LookupEnv(disableWarningsEnv); ok {
-		return
-	}
-	_, _ = fmt.Fprint(os.Stderr, "WARNING: ")
-	_, _ = fmt.Fprintf(os.Stderr, msg, args...)
-}
-
 // Reads a supplied filepath and converts the contents to an integer. Returns
 // -1 if there were file permissions or existence errors or if the contents
 // could not be successfully converted to an integer. In any error, a warning
 // message is printed to STDERR and -1 is returned.
-func SafeIntFromFile(path string) int {
+func SafeIntFromFile(ctx *context.Context, path string) int {
 	msg := "failed to read int from file: %s\n"
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
-		Warn(msg, err)
+		ctx.Warn(msg, err)
 		return -1
 	}
 	contents := strings.TrimSpace(string(buf))
 	res, err := strconv.Atoi(contents)
 	if err != nil {
-		Warn(msg, err)
+		ctx.Warn(msg, err)
 		return -1
 	}
 	return res

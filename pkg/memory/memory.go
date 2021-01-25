@@ -70,11 +70,11 @@ type memoryPrinter struct {
 // YAMLString returns a string with the memory information formatted as YAML
 // under a top-level "memory:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(memoryPrinter{i})
+	return marshal.SafeYAML(i.ctx, memoryPrinter{i})
 }
 
 // JSONString returns a string with the memory information formatted as JSON
 // under a top-level "memory:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(memoryPrinter{i}, indent)
+	return marshal.SafeJSON(i.ctx, memoryPrinter{i}, indent)
 }

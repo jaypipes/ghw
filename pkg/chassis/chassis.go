@@ -111,11 +111,11 @@ type chassisPrinter struct {
 // YAMLString returns a string with the chassis information formatted as YAML
 // under a top-level "dmi:" key
 func (info *Info) YAMLString() string {
-	return marshal.SafeYAML(chassisPrinter{info})
+	return marshal.SafeYAML(info.ctx, chassisPrinter{info})
 }
 
 // JSONString returns a string with the chassis information formatted as JSON
 // under a top-level "chassis:" key
 func (info *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(chassisPrinter{info}, indent)
+	return marshal.SafeJSON(info.ctx, chassisPrinter{info}, indent)
 }

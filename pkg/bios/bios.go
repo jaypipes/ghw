@@ -67,11 +67,11 @@ type biosPrinter struct {
 // YAMLString returns a string with the BIOS information formatted as YAML
 // under a top-level "dmi:" key
 func (info *Info) YAMLString() string {
-	return marshal.SafeYAML(biosPrinter{info})
+	return marshal.SafeYAML(info.ctx, biosPrinter{info})
 }
 
 // JSONString returns a string with the BIOS information formatted as JSON
 // under a top-level "bios:" key
 func (info *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(biosPrinter{info}, indent)
+	return marshal.SafeJSON(info.ctx, biosPrinter{info}, indent)
 }

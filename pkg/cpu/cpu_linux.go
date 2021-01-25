@@ -204,7 +204,7 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 			continue
 		}
 		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
-		coreID := util.SafeIntFromFile(coreIDPath)
+		coreID := util.SafeIntFromFile(ctx, coreIDPath)
 		core := findCoreByID(coreID)
 		core.LogicalProcessors = append(
 			core.LogicalProcessors,

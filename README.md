@@ -207,6 +207,20 @@ $ GHW_DISABLE_WARNINGS=1 ghwc memory
 memory (24GB physical, 24GB usable)
 ```
 
+You can disable warning programmatically using the `WithAlerter` option:
+
+```go
+
+import (
+	"io/ioutil"
+	"log"
+
+	"github.com/jaypipes/ghw"
+)
+
+mem, err := ghw.Memory(ghw.WithAlerter(log.New(ioutil.Discard, "", 0))
+```
+
 ### Memory
 
 Information about the host computer's memory can be retrieved using the

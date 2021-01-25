@@ -159,11 +159,11 @@ type cpuPrinter struct {
 // YAMLString returns a string with the cpu information formatted as YAML
 // under a top-level "cpu:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(cpuPrinter{i})
+	return marshal.SafeYAML(i.ctx, cpuPrinter{i})
 }
 
 // JSONString returns a string with the cpu information formatted as JSON
 // under a top-level "cpu:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(cpuPrinter{i}, indent)
+	return marshal.SafeJSON(i.ctx, cpuPrinter{i}, indent)
 }
