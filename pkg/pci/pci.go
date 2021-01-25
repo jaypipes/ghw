@@ -50,7 +50,7 @@ type devMarshallable struct {
 	Vendor    devIdent `json:"vendor"`
 	Product   devIdent `json:"product"`
 	Subsystem devIdent `json:"subsystem"`
-	Class     devIdent `json:"class""`
+	Class     devIdent `json:"class"`
 	Subclass  devIdent `json:"subclass"`
 	Interface devIdent `json:"programming_interface"`
 }
