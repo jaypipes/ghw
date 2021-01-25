@@ -83,6 +83,32 @@ func TestPCI(t *testing.T) {
 	if len(devs) == 0 {
 		t.Fatalf("Expected to find >0 PCI devices from PCIInfo.ListDevices() but got 0.")
 	}
+
+	// Ensure that the data fields are at least populated, even if we don't yet
+	// check for data accuracy
+	for _, dev := range devs {
+		if dev.Class == nil {
+			t.Fatalf("Expected device class for %s to be non-nil", dev.Address)
+		}
+		if dev.Product == nil {
+			t.Fatalf("Expected device product for %s to be non-nil", dev.Address)
+		}
+		if dev.Vendor == nil {
+			t.Fatalf("Expected device vendor for %s to be non-nil", dev.Address)
+		}
+		if dev.Revision == "" {
+			t.Fatalf("Expected device revision for %s to be non-empty", dev.Address)
+		}
+		if dev.Subclass == nil {
+			t.Fatalf("Expected device subclass for %s to be non-nil", dev.Address)
+		}
+		if dev.Subsystem == nil {
+			t.Fatalf("Expected device subsystem for %s to be non-nil", dev.Address)
+		}
+		if dev.ProgrammingInterface == nil {
+			t.Fatalf("Expected device programming interface for %s to be non-nil", dev.Address)
+		}
+	}
 }
 
 func TestPCIMarshalJSON(t *testing.T) {

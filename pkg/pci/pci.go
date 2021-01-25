@@ -31,6 +31,7 @@ type Device struct {
 	Address   string         `json:"address"`
 	Vendor    *pcidb.Vendor  `json:"vendor"`
 	Product   *pcidb.Product `json:"product"`
+	Revision  string         `json:"revision"`
 	Subsystem *pcidb.Product `json:"subsystem"`
 	// optional subvendor/sub-device information
 	Class *pcidb.Class `json:"class"`
@@ -49,6 +50,7 @@ type devMarshallable struct {
 	Address   string   `json:"address"`
 	Vendor    devIdent `json:"vendor"`
 	Product   devIdent `json:"product"`
+	Revision  string   `json:"revision"`
 	Subsystem devIdent `json:"subsystem"`
 	Class     devIdent `json:"class"`
 	Subclass  devIdent `json:"subclass"`
@@ -70,6 +72,7 @@ func (d *Device) MarshalJSON() ([]byte, error) {
 			ID:   d.Product.ID,
 			Name: d.Product.Name,
 		},
+		Revision: d.Revision,
 		Subsystem: devIdent{
 			ID:   d.Subsystem.ID,
 			Name: d.Subsystem.Name,
