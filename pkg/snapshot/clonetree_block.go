@@ -120,6 +120,11 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 			// and whether the device is read-only
 			buf, err := ioutil.ReadFile(fp)
 			if err != nil {
+				if os.IsPermission(err) {
+					// example: /sys/devices/virtual/block/zram0/compact is 0400
+					trace("permission denied reading %q - skipped\n", fp)
+					continue
+				}
 				return err
 			}
 			targetPath := filepath.Join(buildDeviceDir, fname)
