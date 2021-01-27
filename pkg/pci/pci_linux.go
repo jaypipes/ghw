@@ -52,7 +52,7 @@ func getDeviceRevision(ctx *context.Context, address string) string {
 	}
 	revisionPath := filepath.Join(
 		paths.SysBusPciDevices,
-		pciAddr.Domain+":"+pciAddr.Bus+":"+pciAddr.Slot+"."+pciAddr.Function,
+		pciAddr.String(),
 		"revision",
 	)
 

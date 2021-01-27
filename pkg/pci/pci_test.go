@@ -9,6 +9,7 @@ package pci_test
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/context"
@@ -21,6 +22,11 @@ func TestPCIAddressFromString(t *testing.T) {
 	tests := []struct {
 		addrStr  string
 		expected *pci.Address
+		// AddressFromString is more flexible than String() and wants
+		// to accept addresses not in full canonical form, as long as
+		// it can do the right thing - e.g. a sane default Domain exists.
+		// Thus we need to sometimes skip the Address -> string check.
+		skipStringTest bool
 	}{
 		{
 			addrStr: "00:00.0",
@@ -30,6 +36,7 @@ func TestPCIAddressFromString(t *testing.T) {
 				Slot:     "00",
 				Function: "0",
 			},
+			skipStringTest: true,
 		},
 		{
 			addrStr: "0000:00:00.0",
@@ -63,6 +70,16 @@ func TestPCIAddressFromString(t *testing.T) {
 		got := pci.AddressFromString(test.addrStr)
 		if !reflect.DeepEqual(got, test.expected) {
 			t.Fatalf("Test #%d failed. Expected %v but got %v", x, test.expected, got)
+		}
+
+		if test.skipStringTest {
+			continue
+		}
+
+		addrStr := got.String()
+		// addresses are case insensitive
+		if !strings.EqualFold(addrStr, test.addrStr) {
+			t.Fatalf("Test #%d failed. Expected %q but got %q (case insensitive match)", x, test.addrStr, addrStr)
 		}
 	}
 }
