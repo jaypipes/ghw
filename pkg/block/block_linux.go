@@ -133,9 +133,13 @@ func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
 		return util.UNKNOWN
 	}
 
-	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT
-	// The non-_SHORT version often duplicates vendor information collected elsewhere, so use _SHORT.
+	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT The
+	// non-_SHORT version often duplicates vendor information collected
+	// elsewhere, so use _SHORT and fall back to ID_SERIAL if missing...
 	if serial, ok := info["ID_SERIAL_SHORT"]; ok {
+		return serial
+	}
+	if serial, ok := info["ID_SERIAL"]; ok {
 		return serial
 	}
 	return util.UNKNOWN
