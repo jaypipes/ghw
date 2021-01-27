@@ -44,6 +44,28 @@ func getDeviceModaliasPath(ctx *context.Context, address string) string {
 	)
 }
 
+func getDeviceRevision(ctx *context.Context, address string) string {
+	paths := linuxpath.New(ctx)
+	pciAddr := AddressFromString(address)
+	if pciAddr == nil {
+		return ""
+	}
+	revisionPath := filepath.Join(
+		paths.SysBusPciDevices,
+		pciAddr.Domain+":"+pciAddr.Bus+":"+pciAddr.Slot+"."+pciAddr.Function,
+		"revision",
+	)
+
+	if _, err := os.Stat(revisionPath); err != nil {
+		return ""
+	}
+	revision, err := ioutil.ReadFile(revisionPath)
+	if err != nil {
+		return ""
+	}
+	return string(revision)
+}
+
 type deviceModaliasInfo struct {
 	vendorID     string
 	productID    string
@@ -238,7 +260,10 @@ func (info *Info) GetDevice(address string) *Device {
 	if modaliasInfo == nil {
 		return nil
 	}
-	return info.getDeviceFromModaliasInfo(address, modaliasInfo)
+
+	device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
+	device.Revision = getDeviceRevision(info.ctx, address)
+	return device
 }
 
 // ParseDevice returns a pointer to a Device given its describing data.
