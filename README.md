@@ -207,18 +207,19 @@ $ GHW_DISABLE_WARNINGS=1 ghwc memory
 memory (24GB physical, 24GB usable)
 ```
 
-You can disable warning programmatically using the `WithAlerter` option:
+You can disable warning programmatically using the `WithNullAlerter` option:
 
 ```go
 
 import (
-	"io/ioutil"
-	"log"
-
 	"github.com/jaypipes/ghw"
 )
 
-mem, err := ghw.Memory(ghw.WithAlerter(log.New(ioutil.Discard, "", 0))
+mem, err := ghw.Memory(ghw.WithNullAlerter())
+
+You may also supply an `Alerter` to ghw to handle the warnings.
+In this case, please check the `option.Alerter` interface (compatible with stdlib's
+log.Logger type) and the `ghw.WithAlerter()` function
 ```
 
 ### Memory

@@ -30,6 +30,10 @@ type Alerter interface {
 	Printf(format string, v ...interface{})
 }
 
+var (
+	NullAlerter = log.New(ioutil.Discard, "", 0)
+)
+
 // EnvOrDefaultAlerter returns the default instance ghw will use to emit
 // its warnings. ghw will emit warnings to stderr by default unless the
 // environs variable GHW_DISABLE_WARNINGS is specified; in the latter case
@@ -147,6 +151,13 @@ func WithSnapshot(opts SnapshotOptions) *Option {
 func WithAlerter(alerter Alerter) *Option {
 	return &Option{
 		Alerter: alerter,
+	}
+}
+
+// WithNullAlerter sets No-op alerting options for ghw
+func WithNullAlerter() *Option {
+	return &Option{
+		Alerter: NullAlerter,
 	}
 }
 
