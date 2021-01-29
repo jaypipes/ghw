@@ -207,7 +207,7 @@ $ GHW_DISABLE_WARNINGS=1 ghwc memory
 memory (24GB physical, 24GB usable)
 ```
 
-You can disable warning programmatically using the `WithNullAlerter` option:
+You can disable warning programmatically using the `WithDisableWarnings` option:
 
 ```go
 
@@ -215,12 +215,17 @@ import (
 	"github.com/jaypipes/ghw"
 )
 
-mem, err := ghw.Memory(ghw.WithNullAlerter())
-
-You may also supply an `Alerter` to ghw to handle the warnings.
-In this case, please check the `option.Alerter` interface (compatible with stdlib's
-log.Logger type) and the `ghw.WithAlerter()` function
+mem, err := ghw.Memory(ghw.WithDisableWarnings())
 ```
+
+`WithDisableWarnings` is a alias for the `WithNullAlerter` option, which in turn
+leverages the more general `Alerter` feature of ghw.
+
+You may supply a `Alerter` to ghw to redirect all the warnings there, like
+logger objects (see for example golang's stdlib `log.Logger`).
+`Alerter` is in fact the minimal logging interface `ghw needs.
+To learn more, please check the `option.Alerter` interface and the `ghw.WithAlerter()`
+function.
 
 ### Memory
 

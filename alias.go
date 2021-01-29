@@ -28,6 +28,8 @@ var (
 	WithSnapshot     = option.WithSnapshot
 	WithAlterter     = option.WithAlerter
 	WithNullAlterter = option.WithNullAlerter
+	// match the existing environ variable to minimize surprises
+	WithDisableWarnings = option.WithNullAlerter
 )
 
 type SnapshotOptions = option.SnapshotOptions
