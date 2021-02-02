@@ -24,8 +24,12 @@ import (
 type WithOption = option.Option
 
 var (
-	WithChroot   = option.WithChroot
-	WithSnapshot = option.WithSnapshot
+	WithChroot       = option.WithChroot
+	WithSnapshot     = option.WithSnapshot
+	WithAlterter     = option.WithAlerter
+	WithNullAlterter = option.WithNullAlerter
+	// match the existing environ variable to minimize surprises
+	WithDisableWarnings = option.WithNullAlerter
 )
 
 type SnapshotOptions = option.SnapshotOptions

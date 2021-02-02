@@ -90,11 +90,11 @@ type productPrinter struct {
 // YAMLString returns a string with the product information formatted as YAML
 // under a top-level "dmi:" key
 func (info *Info) YAMLString() string {
-	return marshal.SafeYAML(productPrinter{info})
+	return marshal.SafeYAML(info.ctx, productPrinter{info})
 }
 
 // JSONString returns a string with the product information formatted as JSON
 // under a top-level "product:" key
 func (info *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(productPrinter{info}, indent)
+	return marshal.SafeJSON(info.ctx, productPrinter{info}, indent)
 }

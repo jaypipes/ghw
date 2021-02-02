@@ -112,11 +112,11 @@ type topologyPrinter struct {
 // YAMLString returns a string with the topology information formatted as YAML
 // under a top-level "topology:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(topologyPrinter{i})
+	return marshal.SafeYAML(i.ctx, topologyPrinter{i})
 }
 
 // JSONString returns a string with the topology information formatted as JSON
 // under a top-level "topology:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(topologyPrinter{i}, indent)
+	return marshal.SafeJSON(i.ctx, topologyPrinter{i}, indent)
 }

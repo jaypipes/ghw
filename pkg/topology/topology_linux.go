@@ -16,7 +16,6 @@ import (
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/util"
 )
 
 func (i *Info) load() error {
@@ -35,7 +34,7 @@ func topologyNodes(ctx *context.Context) []*Node {
 
 	files, err := ioutil.ReadDir(paths.SysDevicesSystemNode)
 	if err != nil {
-		util.Warn("failed to determine nodes: %s\n", err)
+		ctx.Warn("failed to determine nodes: %s\n", err)
 		return nodes
 	}
 	for _, file := range files {
@@ -46,26 +45,26 @@ func topologyNodes(ctx *context.Context) []*Node {
 		node := &Node{}
 		nodeID, err := strconv.Atoi(filename[4:])
 		if err != nil {
-			util.Warn("failed to determine node ID: %s\n", err)
+			ctx.Warn("failed to determine node ID: %s\n", err)
 			return nodes
 		}
 		node.ID = nodeID
 		cores, err := cpu.CoresForNode(ctx, nodeID)
 		if err != nil {
-			util.Warn("failed to determine cores for node: %s\n", err)
+			ctx.Warn("failed to determine cores for node: %s\n", err)
 			return nodes
 		}
 		node.Cores = cores
 		caches, err := memory.CachesForNode(ctx, nodeID)
 		if err != nil {
-			util.Warn("failed to determine caches for node: %s\n", err)
+			ctx.Warn("failed to determine caches for node: %s\n", err)
 			return nodes
 		}
 		node.Caches = caches
 
 		distances, err := distancesForNode(ctx, nodeID)
 		if err != nil {
-			util.Warn("failed to determine node distances for node: %s\n", err)
+			ctx.Warn("failed to determine node distances for node: %s\n", err)
 			return nodes
 		}
 		node.Distances = distances

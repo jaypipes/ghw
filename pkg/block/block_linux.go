@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -25,7 +26,7 @@ const (
 
 func (i *Info) load() error {
 	paths := linuxpath.New(i.ctx)
-	i.Disks = disks(paths)
+	i.Disks = disks(i.ctx, paths)
 	var tpb uint64
 	for _, d := range i.Disks {
 		tpb += d.SizeBytes
@@ -179,12 +180,12 @@ func diskWWN(paths *linuxpath.Paths, disk string) string {
 // but just the name. In other words, "sda", not "/dev/sda" and "nvme0n1" not
 // "/dev/nvme0n1") and returns a slice of pointers to Partition structs
 // representing the partitions in that disk
-func diskPartitions(paths *linuxpath.Paths, disk string) []*Partition {
+func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) []*Partition {
 	out := make([]*Partition, 0)
 	path := filepath.Join(paths.SysBlock, disk)
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		util.Warn("failed to read disk partitions: %s\n", err)
+		ctx.Warn("failed to read disk partitions: %s\n", err)
 		return out
 	}
 	for _, file := range files {
@@ -194,7 +195,7 @@ func diskPartitions(paths *linuxpath.Paths, disk string) []*Partition {
 		}
 		size := partitionSizeBytes(paths, disk, fname)
 		mp, pt, ro := partitionInfo(paths, fname)
-		du := diskPartUUID(fname)
+		du := diskPartUUID(ctx, fname)
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
@@ -208,7 +209,7 @@ func diskPartitions(paths *linuxpath.Paths, disk string) []*Partition {
 	return out
 }
 
-func diskPartUUID(part string) string {
+func diskPartUUID(ctx *context.Context, part string) string {
 	if !strings.HasPrefix(part, "/dev") {
 		part = "/dev/" + part
 	}
@@ -220,7 +221,7 @@ func diskPartUUID(part string) string {
 	}
 	out, err := exec.Command(args[0], args[1:]...).Output()
 	if err != nil {
-		util.Warn("failed to read disk partuuid of %s : %s\n", part, err.Error())
+		ctx.Warn("failed to read disk partuuid of %s : %s\n", part, err.Error())
 		return ""
 	}
 
@@ -230,7 +231,7 @@ func diskPartUUID(part string) string {
 
 	parts := strings.Split(string(out), "PARTUUID=")
 	if len(parts) != 2 {
-		util.Warn("failed to parse the partuuid of %s\n", part)
+		ctx.Warn("failed to parse the partuuid of %s\n", part)
 		return ""
 	}
 
@@ -250,7 +251,7 @@ func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
 	return false
 }
 
-func disks(paths *linuxpath.Paths) []*Disk {
+func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 	// In Linux, we could use the fdisk, lshw or blockdev commands to list disk
 	// information, however all of these utilities require root privileges to
 	// run. We can get all of this information by examining the /sys/block
@@ -269,7 +270,7 @@ func disks(paths *linuxpath.Paths) []*Disk {
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
 		// diskIsRotational for ease of unit testing
-		if !diskIsRotational(paths, dname) {
+		if !diskIsRotational(ctx, paths, dname) {
 			driveType = DRIVE_TYPE_SSD
 		}
 		size := diskSizeBytes(paths, dname)
@@ -297,7 +298,7 @@ func disks(paths *linuxpath.Paths) []*Disk {
 			WWN:                    wwn,
 		}
 
-		parts := diskPartitions(paths, dname)
+		parts := diskPartitions(ctx, paths, dname)
 		// Map this Disk object into the Partition...
 		for _, part := range parts {
 			part.Disk = d
@@ -348,9 +349,9 @@ func diskTypes(dname string) (
 	return driveType, storageController
 }
 
-func diskIsRotational(paths *linuxpath.Paths, devName string) bool {
+func diskIsRotational(ctx *context.Context, paths *linuxpath.Paths, devName string) bool {
 	path := filepath.Join(paths.SysBlock, devName, "queue", "rotational")
-	contents := util.SafeIntFromFile(path)
+	contents := util.SafeIntFromFile(ctx, path)
 	return contents == 1
 }
 

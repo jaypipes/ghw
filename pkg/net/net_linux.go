@@ -17,7 +17,6 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -40,7 +39,7 @@ func nics(ctx *context.Context) []*NIC {
 
 	etInstalled := ethtoolInstalled()
 	if !etInstalled {
-		util.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
+		ctx.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
 	}
 	for _, file := range files {
 		filename := file.Name()
@@ -64,7 +63,7 @@ func nics(ctx *context.Context) []*NIC {
 		mac := netDeviceMacAddress(paths, filename)
 		nic.MacAddress = mac
 		if etInstalled {
-			nic.Capabilities = netDeviceCapabilities(filename)
+			nic.Capabilities = netDeviceCapabilities(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
 		}
@@ -99,7 +98,7 @@ func ethtoolInstalled() bool {
 	return err == nil
 }
 
-func netDeviceCapabilities(dev string) []*NICCapability {
+func netDeviceCapabilities(ctx *context.Context, dev string) []*NICCapability {
 	caps := make([]*NICCapability, 0)
 	path, _ := exec.LookPath("ethtool")
 	cmd := exec.Command(path, "-k", dev)
@@ -108,7 +107,7 @@ func netDeviceCapabilities(dev string) []*NICCapability {
 	err := cmd.Run()
 	if err != nil {
 		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
-		util.Warn(msg)
+		ctx.Warn(msg)
 		return caps
 	}
 

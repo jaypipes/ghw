@@ -6,16 +6,48 @@
 
 package option
 
-import "os"
+import (
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+)
 
 const (
 	defaultChroot           = "/"
 	envKeyChroot            = "GHW_CHROOT"
+	envKeyDisableWarnings   = "GHW_DISABLE_WARNINGS"
 	envKeySnapshotPath      = "GHW_SNAPSHOT_PATH"
 	envKeySnapshotRoot      = "GHW_SNAPSHOT_ROOT"
 	envKeySnapshotExclusive = "GHW_SNAPSHOT_EXCLUSIVE"
 	envKeySnapshotPreserve  = "GHW_SNAPSHOT_PRESERVE"
 )
+
+// Alerter emits warnings about undesirable but recoverable errors.
+// We use a subset of a logger interface only to emit warnings, and
+// `Warninger` sounded ugly.
+type Alerter interface {
+	Printf(format string, v ...interface{})
+}
+
+var (
+	NullAlerter = log.New(ioutil.Discard, "", 0)
+)
+
+// EnvOrDefaultAlerter returns the default instance ghw will use to emit
+// its warnings. ghw will emit warnings to stderr by default unless the
+// environs variable GHW_DISABLE_WARNINGS is specified; in the latter case
+// all warning will be suppressed.
+func EnvOrDefaultAlerter() Alerter {
+	var dest io.Writer
+	if _, exists := os.LookupEnv(envKeyDisableWarnings); exists {
+		dest = ioutil.Discard
+	} else {
+		// default
+		dest = os.Stderr
+	}
+	return log.New(dest, "", 0)
+}
 
 // EnvOrDefaultChroot returns the value of the GHW_CHROOT environs variable or
 // the default value of "/" if not set
@@ -78,6 +110,9 @@ type Option struct {
 
 	// Snapshot contains options for handling ghw snapshots
 	Snapshot *SnapshotOptions
+
+	// Alerter contains the target for ghw warnings
+	Alerter Alerter
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -112,6 +147,20 @@ func WithSnapshot(opts SnapshotOptions) *Option {
 	}
 }
 
+// WithAlerter sets alerting options for ghw
+func WithAlerter(alerter Alerter) *Option {
+	return &Option{
+		Alerter: alerter,
+	}
+}
+
+// WithNullAlerter sets No-op alerting options for ghw
+func WithNullAlerter() *Option {
+	return &Option{
+		Alerter: NullAlerter,
+	}
+}
+
 // There is intentionally no Option related to GHW_SNAPSHOT_PRESERVE because we see that as
 // a debug/troubleshoot aid more something users wants to do regularly.
 // Hence we allow that only via the environment variable for the time being.
@@ -125,11 +174,17 @@ func Merge(opts ...*Option) *Option {
 		if opt.Snapshot != nil {
 			merged.Snapshot = opt.Snapshot
 		}
+		if opt.Alerter != nil {
+			merged.Alerter = opt.Alerter
+		}
 	}
 	// Set the default value if missing from mergeOpts
 	if merged.Chroot == nil {
 		chroot := EnvOrDefaultChroot()
 		merged.Chroot = &chroot
+	}
+	if merged.Alerter == nil {
+		merged.Alerter = EnvOrDefaultAlerter()
 	}
 	if merged.Snapshot == nil {
 		snapRoot := EnvOrDefaultSnapshotRoot()

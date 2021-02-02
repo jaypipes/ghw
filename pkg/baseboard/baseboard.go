@@ -67,11 +67,11 @@ type baseboardPrinter struct {
 // YAMLString returns a string with the baseboard information formatted as YAML
 // under a top-level "dmi:" key
 func (info *Info) YAMLString() string {
-	return marshal.SafeYAML(baseboardPrinter{info})
+	return marshal.SafeYAML(info.ctx, baseboardPrinter{info})
 }
 
 // JSONString returns a string with the baseboard information formatted as JSON
 // under a top-level "baseboard:" key
 func (info *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(baseboardPrinter{info}, indent)
+	return marshal.SafeJSON(info.ctx, baseboardPrinter{info}, indent)
 }

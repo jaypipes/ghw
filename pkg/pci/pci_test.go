@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/pci"
 )
@@ -121,7 +122,7 @@ func TestPCIMarshalJSON(t *testing.T) {
 	}
 
 	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02")
-	s := marshal.SafeJSON(dev, true)
+	s := marshal.SafeJSON(context.FromEnv(), dev, true)
 	if s == "" {
 		t.Fatalf("Error marshalling device: %v", dev)
 	}

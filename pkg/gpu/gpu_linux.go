@@ -57,7 +57,7 @@ func (i *Info) load() error {
 	paths := linuxpath.New(i.ctx)
 	links, err := ioutil.ReadDir(paths.SysClassDRM)
 	if err != nil {
-		util.Warn(_WARN_NO_SYS_CLASS_DRM)
+		i.ctx.Warn(_WARN_NO_SYS_CLASS_DRM)
 		return nil
 	}
 	cards := make([]*GraphicsCard, 0)
@@ -139,7 +139,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 			"device",
 			"numa_node",
 		)
-		nodeIdx := util.SafeIntFromFile(fpath)
+		nodeIdx := util.SafeIntFromFile(ctx, fpath)
 		if nodeIdx == -1 {
 			continue
 		}

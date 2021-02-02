@@ -73,11 +73,11 @@ type netPrinter struct {
 // YAMLString returns a string with the net information formatted as YAML
 // under a top-level "net:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(netPrinter{i})
+	return marshal.SafeYAML(i.ctx, netPrinter{i})
 }
 
 // JSONString returns a string with the net information formatted as JSON
 // under a top-level "net:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(netPrinter{i}, indent)
+	return marshal.SafeJSON(i.ctx, netPrinter{i}, indent)
 }

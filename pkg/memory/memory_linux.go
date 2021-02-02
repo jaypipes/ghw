@@ -49,7 +49,7 @@ func (i *Info) load() error {
 	tpb := memTotalPhysicalBytes(paths)
 	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		util.Warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
+		i.ctx.Warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
 		i.TotalPhysicalBytes = tub
 	}
 	i.SupportedPageSizes = memSupportedPageSizes(paths)

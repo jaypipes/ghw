@@ -18,12 +18,14 @@ type Context struct {
 	SnapshotPath      string
 	SnapshotRoot      string
 	SnapshotExclusive bool
+	alert             option.Alerter
 }
 
 // New returns a Context struct pointer that has had various options set on it
 func New(opts ...*option.Option) *Context {
 	merged := option.Merge(opts...)
 	ctx := &Context{
+		alert:  option.EnvOrDefaultAlerter(),
 		Chroot: *merged.Chroot,
 	}
 
@@ -35,6 +37,11 @@ func New(opts ...*option.Option) *Context {
 		}
 		ctx.SnapshotExclusive = merged.Snapshot.Exclusive
 	}
+
+	if merged.Alerter != nil {
+		ctx.alert = merged.Alerter
+	}
+
 	return ctx
 }
 
@@ -103,4 +110,8 @@ func (ctx *Context) Teardown() error {
 		return nil
 	}
 	return snapshot.Cleanup(ctx.SnapshotRoot)
+}
+
+func (ctx *Context) Warn(msg string, args ...interface{}) {
+	ctx.alert.Printf("WARNING: "+msg, args...)
 }
