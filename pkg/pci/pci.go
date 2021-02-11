@@ -144,6 +144,11 @@ type Address struct {
 	Function string
 }
 
+// String() returns the canonical [D]BSF representation of this Address
+func (addr *Address) String() string {
+	return addr.Domain + ":" + addr.Bus + ":" + addr.Slot + "." + addr.Function
+}
+
 // Given a string address, returns a complete Address struct, filled in with
 // domain, bus, slot and function components. The address string may either
 // be in $BUS:$SLOT.$FUNCTION (BSF) format or it can be a full PCI address
