@@ -67,6 +67,9 @@ func nics(ctx *context.Context) []*NIC {
 		} else {
 			nic.Capabilities = []*NICCapability{}
 		}
+
+		nic.PCIAddress = netDevicePCIAddress(paths.SysClassNet, filename)
+
 		nics = append(nics, nic)
 	}
 	return nics
@@ -161,4 +164,55 @@ func netParseEthtoolFeature(line string) *NICCapability {
 		IsEnabled: enabled,
 		CanEnable: !fixed,
 	}
+}
+
+func netDevicePCIAddress(netDevDir, netDevName string) *string {
+	// what we do here is not that hard in the end: we need to navigate the sysfs
+	// up to the directory belonging to the device backing the network interface.
+	// we can make few relatively safe assumptions, but the safest way is follow
+	// the right links. And so we go.
+	// First of all, knowing the network device name we need to resolve the backing
+	// device path to its full sysfs path.
+	// say we start with netDevDir="/sys/class/net" and netDevName="enp0s31f6"
+	netPath := filepath.Join(netDevDir, netDevName)
+	dest, err := os.Readlink(netPath)
+	if err != nil {
+		// bail out with empty value
+		return nil
+	}
+	// now we have something like dest="../../devices/pci0000:00/0000:00:1f.6/net/enp0s31f6"
+	// remember the path is relative to netDevDir="/sys/class/net"
+
+	netDev := filepath.Clean(filepath.Join(netDevDir, dest))
+	// so we clean "/sys/class/net/../../devices/pci0000:00/0000:00:1f.6/net/enp0s31f6"
+	// leading to "/sys/devices/pci0000:00/0000:00:1f.6/net/enp0s31f6"
+	// still not there. We need to access the data of the pci device. So we jump into the path
+	// linked to the "device" pseudofile
+	dest, err = os.Readlink(filepath.Join(netDev, "device"))
+	if err != nil {
+		// bail out with empty value
+		return nil
+	}
+	// we expect something like="../../../0000:00:1f.6"
+
+	devPath := filepath.Clean(filepath.Join(netDev, dest))
+	// so we clean "/sys/devices/pci0000:00/0000:00:1f.6/net/enp0s31f6/../../../0000:00:1f.6"
+	// leading to "/sys/devices/pci0000:00/0000:00:1f.6/"
+	// finally here!
+
+	// to which bus is this device connected to?
+	dest, err = os.Readlink(filepath.Join(devPath, "subsystem"))
+	if err != nil {
+		// bail out with empty value
+		return nil
+	}
+	// ok, this is hacky, but since we need the last *two* path components and we know we
+	// are running on linux...
+	if !strings.HasSuffix(dest, "/bus/pci") {
+		// unsupported and unexpected bus!
+		return nil
+	}
+
+	pciAddr := filepath.Base(devPath)
+	return &pciAddr
 }
