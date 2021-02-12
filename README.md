@@ -653,6 +653,9 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.Capabilities` is an array of pointers to `ghw.NICCapability` structs
   that can describe the things the NIC supports. These capabilities match the
   returned values from the `ethtool -k <DEVICE>` call on Linux
+* `ghw.NIC.PCIAddress` is the PCI device address of the device backing the NIC.
+  this is not-nil only if the backing device is indeed a PCI device; more backing
+  devices (e.g. USB) will be added in future versions.
 
 The `ghw.NICCapability` struct contains the following fields:
 
