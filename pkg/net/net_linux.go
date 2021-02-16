@@ -37,10 +37,14 @@ func nics(ctx *context.Context) []*NIC {
 		return nics
 	}
 
-	etInstalled := ethtoolInstalled()
-	if !etInstalled {
-		ctx.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
+	etAvailable := ctx.EnableTools
+	if etAvailable {
+		if etInstalled := ethtoolInstalled(); !etInstalled {
+			ctx.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
+			etAvailable = false
+		}
 	}
+
 	for _, file := range files {
 		filename := file.Name()
 		// Ignore loopback...
@@ -62,7 +66,7 @@ func nics(ctx *context.Context) []*NIC {
 
 		mac := netDeviceMacAddress(paths, filename)
 		nic.MacAddress = mac
-		if etInstalled {
+		if etAvailable {
 			nic.Capabilities = netDeviceCapabilities(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}

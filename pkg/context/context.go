@@ -15,6 +15,7 @@ import (
 // context when calling internal discovery methods
 type Context struct {
 	Chroot            string
+	EnableTools       bool
 	SnapshotPath      string
 	SnapshotRoot      string
 	SnapshotExclusive bool
@@ -42,6 +43,10 @@ func New(opts ...*option.Option) *Context {
 		ctx.alert = merged.Alerter
 	}
 
+	if merged.EnableTools != nil {
+		ctx.EnableTools = *merged.EnableTools
+	}
+
 	return ctx
 }
 
@@ -49,11 +54,13 @@ func New(opts ...*option.Option) *Context {
 // default options values
 func FromEnv() *Context {
 	chrootVal := option.EnvOrDefaultChroot()
+	enableTools := option.EnvOrDefaultTools()
 	snapPathVal := option.EnvOrDefaultSnapshotPath()
 	snapRootVal := option.EnvOrDefaultSnapshotRoot()
 	snapExclusiveVal := option.EnvOrDefaultSnapshotExclusive()
 	return &Context{
 		Chroot:            chrootVal,
+		EnableTools:       enableTools,
 		SnapshotPath:      snapPathVal,
 		SnapshotRoot:      snapRootVal,
 		SnapshotExclusive: snapExclusiveVal,
