@@ -6,7 +6,6 @@
 package pci
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -277,11 +276,13 @@ func findPCIProgrammingInterface(
 func (info *Info) GetDevice(address string) *Device {
 	fp := getDeviceModaliasPath(info.ctx, address)
 	if fp == "" {
+		info.ctx.Warn("error finding modalias info for device %q", address)
 		return nil
 	}
 
 	modaliasInfo := parseModaliasFile(fp)
 	if modaliasInfo == nil {
+		info.ctx.Warn("error parsing modalias info for device %q", address)
 		return nil
 	}
 
@@ -355,7 +356,7 @@ func (info *Info) ListDevices() []*Device {
 	// address and append to the returned array.
 	links, err := ioutil.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error: failed to read /sys/bus/pci/devices")
+		info.ctx.Warn("failed to read /sys/bus/pci/devices")
 		return nil
 	}
 	var dev *Device
@@ -363,7 +364,7 @@ func (info *Info) ListDevices() []*Device {
 		addr := link.Name()
 		dev = info.GetDevice(addr)
 		if dev == nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: failed to get device information for PCI address %s\n", addr)
+			info.ctx.Warn("failed to get device information for PCI address %s", addr)
 		} else {
 			devs = append(devs, dev)
 		}
