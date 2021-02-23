@@ -46,6 +46,15 @@ func CloneTreeInto(scratchDir string) error {
 // ghw cares about. The intended usage of this function is to validate a clone tree,
 // checking that the content matches the expectations.
 func ExpectedCloneContent() []string {
+	fileSpecs := ExpectedCloneStaticContent()
+	fileSpecs = append(fileSpecs, ExpectedCloneNetContent()...)
+	return fileSpecs
+}
+
+// ExpectedCloneStaticContent return a slice of glob patterns which represent the pseudofiles
+// ghw cares about, and which are independent from host specific topology or configuration,
+// thus are safely represented by a static slice - e.g. they don't need to be discovered at runtime.
+func ExpectedCloneStaticContent() []string {
 	return []string{
 		"/etc/mtab",
 		"/proc/cpuinfo",

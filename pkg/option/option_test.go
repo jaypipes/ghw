@@ -28,7 +28,8 @@ func TestOption(t *testing.T) {
 				option.WithChroot("/my/chroot/dir/2"),
 			},
 			merged: &option.Option{
-				Chroot: stringPtr("/my/chroot/dir/2"),
+				Chroot:      stringPtr("/my/chroot/dir/2"),
+				EnableTools: boolPtr(true),
 			},
 		},
 		{
@@ -106,6 +107,17 @@ func TestOption(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "chroot and disabling tools",
+			opts: []*option.Option{
+				option.WithChroot("/my/chroot/dir"),
+				option.WithDisableTools(),
+			},
+			merged: &option.Option{
+				Chroot:      stringPtr("/my/chroot/dir"),
+				EnableTools: boolPtr(false),
+			},
+		},
 	}
 	for _, optTCase := range optTCases {
 		t.Run(optTCase.name, func(t *testing.T) {
@@ -119,6 +131,10 @@ func TestOption(t *testing.T) {
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }
 
 func optionEqual(a, b *option.Option) (string, bool) {
@@ -138,6 +154,14 @@ func optionEqual(a, b *option.Option) (string, bool) {
 			return "snapshot ptr", false
 		}
 		return optionSnapshotEqual(a.Snapshot, b.Snapshot)
+	}
+	if a.EnableTools != nil {
+		if b.EnableTools == nil {
+			return "enabletools ptr", false
+		}
+		if *a.EnableTools != *b.EnableTools {
+			return "enabletools value", false
+		}
 	}
 	return "", true
 }
