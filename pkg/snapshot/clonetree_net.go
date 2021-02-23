@@ -17,9 +17,9 @@ const (
 	sysClassNet = "/sys/class/net"
 )
 
-// ExpectedCloneNetContent returns a slice of strings pertaning the network interfaces ghw
+// ExpectedCloneNetContent returns a slice of strings pertaning to the network interfaces ghw
 // cares about. We cannot use a static list because we want to filter away the virtual devices,
-// which  ghw doesn't concerns itself about. So we need to do some runtime discovery.
+// which  ghw doesn't concern itself about. So we need to do some runtime discovery.
 // Additionally, we want to make sure to clone the backing device data.
 func ExpectedCloneNetContent() []string {
 	var fileSpecs []string
@@ -41,7 +41,7 @@ func ExpectedCloneNetContent() []string {
 		}
 		if strings.Contains(dest, "devices/virtual/net") {
 			// there is no point in cloning data for virtual devices,
-			// becahse ghw concerns itself with HardWare.
+			// because ghw concerns itself with HardWare.
 			continue
 		}
 

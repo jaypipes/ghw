@@ -1280,13 +1280,13 @@ memory:
 
 ## Calling external programs
 
-By default ghw may call external programs, for example `ethtool` to learn about hardware capabilities.
+By default ghw may call external programs, for example `ethtool`, to learn about hardware capabilities.
 In some rare circumstances it may be useful to opt out from this behaviour and rely only on the data
 provided by pseudo-filesystems, like sysfs.
 The most common use case is when we want to consume a snapshot from ghw. In these cases the information
 provided by tools will be most likely inconsistent with the data from the snapshot - they will run on
 a different host!
-To make ghw not calling external tools, set the environs variable `GHW_DISABLE_TOOLS` to any value,
+To prevent ghw from calling external tools, set the environs variable `GHW_DISABLE_TOOLS` to any value,
 or, programmatically, check the `WithDisableTools` function.
 The default behaviour of ghw is to call external tools when available.
 
