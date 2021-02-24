@@ -64,7 +64,7 @@ func getDeviceRevision(ctx *context.Context, address string) string {
 	if err != nil {
 		return ""
 	}
-	return string(revision)
+	return strings.TrimSpace(string(revision))
 }
 
 func getDeviceNUMANode(ctx *context.Context, address string) *topology.Node {
