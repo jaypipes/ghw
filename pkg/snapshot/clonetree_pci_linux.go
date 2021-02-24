@@ -70,6 +70,19 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		"revision",
 		"vendor",
 	}
+
+	perDevEntriesOpt := []string{
+		"driver",
+		"net/*",
+		"physfn",
+		"sriov_*",
+		"virtfn*",
+	}
+
+	ignoreSet := newKeySet(
+		"sriov_vf_msix_count", // linux >= 5.14, write-only
+	)
+
 	entries, err := ioutil.ReadDir(root)
 	if err != nil {
 		return []string{}, []string{}
@@ -94,6 +107,25 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		fileSpecs = append(fileSpecs, entryPath)
 		for _, perNetEntry := range perDevEntries {
 			fileSpecs = append(fileSpecs, filepath.Join(pciEntry, perNetEntry))
+		}
+
+		for _, perNetEntryOpt := range perDevEntriesOpt {
+			netEntryOptPath := filepath.Join(pciEntry, perNetEntryOpt)
+
+			items, err := filepath.Glob(netEntryOptPath)
+			if err != nil {
+				// TODO: we skip silently because we don't have
+				// a ctx handy, so we can't do ctx.Warn :\
+				continue
+			}
+
+			for _, item := range items {
+				globbedEntry := filepath.Base(item)
+				if ignoreSet.Contains(globbedEntry) {
+					continue
+				}
+				fileSpecs = append(fileSpecs, item)
+			}
 		}
 
 		if isPCIBridge(entryPath) {
@@ -148,4 +180,20 @@ func isPCIBridge(entryPath string) bool {
 		}
 	}
 	return false
+}
+
+// TODO: make this a real package
+type keySet map[string]struct{}
+
+func newKeySet(keys ...string) keySet {
+	ks := make(map[string]struct{})
+	for _, key := range keys {
+		ks[key] = struct{}{}
+	}
+	return ks
+}
+
+func (ks keySet) Contains(key string) bool {
+	_, ok := ks[key]
+	return ok
 }

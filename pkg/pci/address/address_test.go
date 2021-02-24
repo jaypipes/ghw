@@ -80,3 +80,11 @@ func TestPCIAddressFromString(t *testing.T) {
 		}
 	}
 }
+
+func TestPCIAddressEqual(t *testing.T) {
+	addr1 := pciaddr.FromString("0000:03:00.A")
+	addr2 := pciaddr.FromString("03:00.A")
+	if addr1.Equal(addr2) == false {
+		t.Fatalf("addr1 %v and addr2 %v should be equal", addr1, addr2)
+	}
+}
