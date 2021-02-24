@@ -17,6 +17,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -39,6 +40,9 @@ type Device struct {
 	Subclass *pcidb.Subclass `json:"subclass"`
 	// optional programming interface
 	ProgrammingInterface *pcidb.ProgrammingInterface `json:"programming_interface"`
+	// Topology node that the PCI device is affined to. Will be nil if the
+	// architecture is not NUMA.
+	Node *topology.Node `json:"node,omitempty"`
 }
 
 type devIdent struct {
@@ -116,7 +120,8 @@ func (d *Device) String() string {
 }
 
 type Info struct {
-	ctx *context.Context
+	arch topology.Architecture
+	ctx  *context.Context
 	// All PCI devices on the host system
 	Devices []*Device
 	// hash of class ID -> class information
@@ -178,7 +183,19 @@ func AddressFromString(address string) *Address {
 // PCI devices on the host system
 func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &Info{ctx: ctx}
+	// by default we don't report NUMA information;
+	// we will only if are sure we are running on NUMA architecture
+	arch := topology.ARCHITECTURE_SMP
+	topo, err := topology.NewWithContext(ctx)
+	if err == nil {
+		arch = topo.Architecture
+	} else {
+		ctx.Warn("error detecting system topology: %v", err)
+	}
+	info := &Info{
+		arch: arch,
+		ctx:  ctx,
+	}
 	if err := ctx.Do(info.load); err != nil {
 		return nil, err
 	}

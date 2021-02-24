@@ -16,6 +16,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -64,6 +65,28 @@ func getDeviceRevision(ctx *context.Context, address string) string {
 		return ""
 	}
 	return string(revision)
+}
+
+func getDeviceNUMANode(ctx *context.Context, address string) *topology.Node {
+	paths := linuxpath.New(ctx)
+	pciAddr := AddressFromString(address)
+	if pciAddr == nil {
+		return nil
+	}
+	numaNodePath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "numa_node")
+
+	if _, err := os.Stat(numaNodePath); err != nil {
+		return nil
+	}
+
+	nodeIdx := util.SafeIntFromFile(ctx, numaNodePath)
+	if nodeIdx == -1 {
+		return nil
+	}
+
+	return &topology.Node{
+		ID: nodeIdx,
+	}
 }
 
 type deviceModaliasInfo struct {
@@ -263,6 +286,9 @@ func (info *Info) GetDevice(address string) *Device {
 
 	device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
 	device.Revision = getDeviceRevision(info.ctx, address)
+	if info.arch == topology.ARCHITECTURE_NUMA {
+		device.Node = getDeviceNUMANode(info.ctx, address)
+	}
 	return device
 }
 
