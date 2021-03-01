@@ -22,8 +22,9 @@ expect, we recommend to check also the [project issues](https://github.com/jaypi
 
 ghw supports snapshots only on linux platforms. This restriction may be lifted in future releases.
 Snapshots must be consumable in the following supported ways:
+
 1. (way 1) from docker (or podman), mounting them as volumes. See `hack/run-against-snapshot.sh`
-2. (way 2) using the environment variables `ghw_SNAPSHOT_*`. See `README.md` for the full documentation.
+2. (way 2) using the environment variables `GHW_SNAPSHOT_*`. See `README.md` for the full documentation.
 
 Other combinations are possible, but are unsupported and may stop working any time.
 You should depend only on the supported ways to consume snapshots.
@@ -31,6 +32,7 @@ You should depend only on the supported ways to consume snapshots.
 ### Snapshot content constraints
 
 Stemming from the use cases, the snapshot content must have the following properties:
+
 0. (constraint 0) MUST contain the same information as live system (obviously). Whatever you learn from a live system, you MUST be able to learn from a snapshot.
 1. (constraint 1) MUST NOT require any post processing before it is consumable besides, obviously, unpacking the `.tar.gz` on the right directory - and pointing ghw to that directory.
 2. (constraint 2) MUST NOT require any special handling nor special code path in ghw. From ghw perspective running against a live system or against a snapshot should be completely transparent.
