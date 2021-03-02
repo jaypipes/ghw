@@ -9,6 +9,7 @@ package snapshot
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -35,7 +36,7 @@ func OpenDestination(snapshotName string) (*os.File, error) {
 	var f *os.File
 	var err error
 
-	if _, err = os.Stat(snapshotName); os.IsNotExist(err) {
+	if _, err = os.Stat(snapshotName); errors.Is(err, os.ErrNotExist) {
 		if f, err = os.Create(snapshotName); err != nil {
 			return nil, err
 		}

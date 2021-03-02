@@ -6,6 +6,7 @@
 package memory
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -62,7 +63,7 @@ func CachesForNode(ctx *context.Context, nodeID int) ([]*Cache, error) {
 		// directories contains information about the size of that level of
 		// cache and the processors mapped to it.
 		cachePath := filepath.Join(cpuPath, "cache")
-		if _, err = os.Stat(cachePath); os.IsNotExist(err) {
+		if _, err = os.Stat(cachePath); errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 		cacheDirFiles, err := ioutil.ReadDir(cachePath)

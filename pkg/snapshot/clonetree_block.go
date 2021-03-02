@@ -7,6 +7,7 @@
 package snapshot
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -120,7 +121,7 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 			// and whether the device is read-only
 			buf, err := ioutil.ReadFile(fp)
 			if err != nil {
-				if os.IsPermission(err) {
+				if errors.Is(err, os.ErrPermission) {
 					// example: /sys/devices/virtual/block/zram0/compact is 0400
 					trace("permission denied reading %q - skipped\n", fp)
 					continue
