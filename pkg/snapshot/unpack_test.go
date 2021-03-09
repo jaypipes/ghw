@@ -7,6 +7,7 @@
 package snapshot_test
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ func TestUnpack(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	if _, err := os.Stat(root); !os.IsNotExist(err) {
+	if _, err := os.Stat(root); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("Expected %q to be gone, but still exists", root)
 	}
 }
@@ -60,7 +61,7 @@ func TestUnpackInto(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	if _, err := os.Stat(testRoot); !os.IsNotExist(err) {
+	if _, err := os.Stat(testRoot); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("Expected %q to be gone, but still exists", testRoot)
 	}
 }
@@ -103,7 +104,7 @@ func TestUnpackIntoPresrving(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	if _, err := os.Stat(testRoot); !os.IsNotExist(err) {
+	if _, err := os.Stat(testRoot); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("Expected %q to be gone, but still exists", testRoot)
 	}
 }
