@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	// warning: don't use the context package here, this means not even the linuxpath package.
+	// TODO(fromani) remove the path duplication
 	sysClassNet = "/sys/class/net"
 )
 

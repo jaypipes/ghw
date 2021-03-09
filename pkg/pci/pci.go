@@ -10,16 +10,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/jaypipes/pcidb"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
+	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
+
+// backward compatibility, to be removed in 1.0.0
+type Address pciaddr.Address
+
+// backward compatibility, to be removed in 1.0.0
+var AddressFromString = pciaddr.FromString
 
 var (
 	regexAddress *regexp.Regexp = regexp.MustCompile(
@@ -140,43 +146,6 @@ type Info struct {
 
 func (i *Info) String() string {
 	return fmt.Sprintf("PCI (%d devices)", len(i.Devices))
-}
-
-type Address struct {
-	Domain   string
-	Bus      string
-	Slot     string
-	Function string
-}
-
-// String() returns the canonical [D]BSF representation of this Address
-func (addr *Address) String() string {
-	return addr.Domain + ":" + addr.Bus + ":" + addr.Slot + "." + addr.Function
-}
-
-// Given a string address, returns a complete Address struct, filled in with
-// domain, bus, slot and function components. The address string may either
-// be in $BUS:$SLOT.$FUNCTION (BSF) format or it can be a full PCI address
-// that includes the 4-digit $DOMAIN information as well:
-// $DOMAIN:$BUS:$SLOT.$FUNCTION.
-//
-// Returns "" if the address string wasn't a valid PCI address.
-func AddressFromString(address string) *Address {
-	addrLowered := strings.ToLower(address)
-	matches := regexAddress.FindStringSubmatch(addrLowered)
-	if len(matches) == 6 {
-		dom := "0000"
-		if matches[1] != "" {
-			dom = matches[2]
-		}
-		return &Address{
-			Domain:   dom,
-			Bus:      matches[3],
-			Slot:     matches[4],
-			Function: matches[5],
-		}
-	}
-	return nil
 }
 
 // New returns a pointer to an Info struct that contains information about the
