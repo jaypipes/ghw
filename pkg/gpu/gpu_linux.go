@@ -93,15 +93,15 @@ func (i *Info) load() error {
 		cards = append(cards, card)
 	}
 	gpuFillNUMANodes(i.ctx, cards)
-	gpuFillPCIDevice(cards)
+	gpuFillPCIDevice(i.ctx, cards)
 	i.GraphicsCards = cards
 	return nil
 }
 
 // Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
 // attribute with PCI device information
-func gpuFillPCIDevice(cards []*GraphicsCard) {
-	pci, err := pci.New()
+func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
+	pci, err := pci.NewWithContext(ctx)
 	if err != nil {
 		return
 	}
@@ -117,7 +117,7 @@ func gpuFillPCIDevice(cards []*GraphicsCard) {
 // system is not a NUMA system, the Node field will be set to nil.
 func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 	paths := linuxpath.New(ctx)
-	topo, err := topology.New()
+	topo, err := topology.NewWithContext(ctx)
 	if err != nil {
 		// Problem getting topology information so just set the graphics card's
 		// node to nil

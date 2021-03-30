@@ -151,7 +151,13 @@ func (i *Info) String() string {
 // New returns a pointer to an Info struct that contains information about the
 // PCI devices on the host system
 func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
+	return NewWithContext(context.New(opts...))
+}
+
+// NewWithContext returns a pointer to an Info struct that contains information about
+// the PCI devices on the host system. Use this function when you want to consume
+// the topology package from another package (e.g. gpu)
+func NewWithContext(ctx *context.Context) (*Info, error) {
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
 	arch := topology.ARCHITECTURE_SMP
