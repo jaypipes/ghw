@@ -7,6 +7,8 @@
 package context
 
 import (
+	"fmt"
+
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
@@ -22,6 +24,7 @@ type Context struct {
 	PathOverrides        option.PathOverrides
 	snapshotUnpackedPath string
 	alert                option.Alerter
+	err                  error
 }
 
 // WithContext returns an option.Option that contains a pre-existing Context
@@ -80,6 +83,13 @@ func New(opts ...*option.Option) *Context {
 		ctx.PathOverrides = merged.PathOverrides
 	}
 
+	// New is not allowed to return error - it would break the established API.
+	// so the only way out is to actually do the checks here and record the error,
+	// and return it later, at the earliest possible occasion, in Setup()
+	if ctx.SnapshotPath != "" && ctx.Chroot != option.DefaultChroot {
+		// The env/client code supplied a value, but we are will overwrite it when unpacking shapshots!
+		ctx.err = fmt.Errorf("Conflicting options: chroot %q and snapshot path %q", ctx.Chroot, ctx.SnapshotPath)
+	}
 	return ctx
 }
 
@@ -116,6 +126,9 @@ func (ctx *Context) Do(fn func() error) error {
 // You should call `Setup` just once. It is safe to call `Setup` if you don't make
 // use of optional extra features - `Setup` will do nothing.
 func (ctx *Context) Setup() error {
+	if ctx.err != nil {
+		return ctx.err
+	}
 	if ctx.SnapshotPath == "" {
 		// nothing to do!
 		return nil
