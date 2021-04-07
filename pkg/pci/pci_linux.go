@@ -15,6 +15,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -26,7 +27,20 @@ const (
 )
 
 func (i *Info) load() error {
-	db, err := pcidb.New(pcidb.WithChroot(i.ctx.Chroot))
+	// when consuming snapshots - most notably, but not only, in tests,
+	// the context pkg forces the chroot value to the unpacked snapshot root.
+	// This is intentional, intentionally transparent and ghw is prepared to handle this case.
+	// However, `pcidb` is not. It doesn't know about ghw snaphots, nor it should.
+	// so we need to complicate things a bit. If the user explicitely supplied
+	// a chroot option, then we should honor it all across the stack, and passing down
+	// the chroot to pcidb is the right thing to do. If, however, the chroot was
+	// implcitely set by snapshot support, then this must be consumed by ghw only.
+	// In this case we should NOT pass it down to pcidb.
+	chroot := i.ctx.Chroot
+	if i.ctx.SnapshotPath != "" {
+		chroot = option.DefaultChroot
+	}
+	db, err := pcidb.New(pcidb.WithChroot(chroot))
 	if err != nil {
 		return err
 	}
