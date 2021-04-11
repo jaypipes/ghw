@@ -160,18 +160,22 @@ func New(opts ...*option.Option) (*Info, error) {
 func NewWithContext(ctx *context.Context) (*Info, error) {
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
-	arch := topology.ARCHITECTURE_SMP
-	topo, err := topology.NewWithContext(ctx)
-	if err == nil {
-		arch = topo.Architecture
-	} else {
-		ctx.Warn("error detecting system topology: %v", err)
-	}
 	info := &Info{
-		arch: arch,
+		arch: topology.ARCHITECTURE_SMP,
 		ctx:  ctx,
 	}
-	if err := ctx.Do(info.load); err != nil {
+	// we do this trick because we need to make sure ctx.Setup() gets
+	// a chance to run before any subordinate package is created reusing
+	// our context.
+	if err := ctx.Do(func() error {
+		topo, err := topology.NewWithContext(ctx)
+		if err == nil {
+			info.arch = topo.Architecture
+		} else {
+			ctx.Warn("error detecting system topology: %v", err)
+		}
+		return info.load()
+	}); err != nil {
 		return nil, err
 	}
 	return info, nil
