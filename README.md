@@ -97,8 +97,8 @@ leftovers.
 The rest of the environment variables are relevant iff `GHW_SNAPSHOT_PATH` is given.
 `GHW_SNAPSHOT_ROOT` let users specify the directory
 on which the snapshot should be unpacked. This moves the ownership of that
-directory from `ghw` to users. `ghw` will still clean up the unpacked snapshot
-when no longer needed.
+directory from `ghw` to users. For this reason, `ghw` will *not* clean up automatically
+the content unpacked in `GHW_SNAPSHOT_ROOT`.
 
 `GHW_SNAPSHOT_EXCLUSIVE` is relevant iff `GHW_SNAPSHOT_ROOT` is given.
 Set it to any value to toggle it on. This tells `ghw` that the directory is meant
