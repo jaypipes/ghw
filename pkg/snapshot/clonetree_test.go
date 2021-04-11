@@ -18,12 +18,17 @@ import (
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
+// NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
+// want to make sure we never leak directories. `snapshot.Cleanup` is used and
+// tested explicitely in `unpack_test.go`.
+
 // nolint: gocyclo
 func TestCloneTree(t *testing.T) {
 	root, err := snapshot.Unpack(testDataSnapshot)
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
+	defer os.RemoveAll(root)
 
 	cloneRoot, err := ioutil.TempDir("", "ghw-test-clonetree-*")
 	if err != nil {
