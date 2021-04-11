@@ -50,7 +50,14 @@ func (i *Info) String() string {
 // New returns a pointer to a Info struct containing information
 // about the host's BIOS
 func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
+	return newWithContext(context.New(opts...))
+}
+
+func NewWithContext(ctx *context.Context) (*Info, error) {
+	return newWithContext(context.FromParent(ctx))
+}
+
+func newWithContext(ctx *context.Context) (*Info, error) {
 	info := &Info{ctx: ctx}
 	if err := ctx.Do(info.load); err != nil {
 		return nil, err

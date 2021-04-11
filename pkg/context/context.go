@@ -20,6 +20,7 @@ type Context struct {
 	SnapshotRoot      string
 	SnapshotExclusive bool
 	alert             option.Alerter
+	parent            *Context
 }
 
 // New returns a Context struct pointer that has had various options set on it
@@ -50,7 +51,7 @@ func New(opts ...*option.Option) *Context {
 	return ctx
 }
 
-// FromEnv returns an Option that has been populated from the environs or
+// FromEnv returns a Context that has been populated from the environs or
 // default options values
 func FromEnv() *Context {
 	chrootVal := option.EnvOrDefaultChroot()
@@ -64,6 +65,21 @@ func FromEnv() *Context {
 		SnapshotPath:      snapPathVal,
 		SnapshotRoot:      snapRootVal,
 		SnapshotExclusive: snapExclusiveVal,
+	}
+}
+
+// FromParent returns a Context which is subordinate to another one.
+// This means only the parent Context is in charge to the environment (e.g. setting up the snapshot).
+// Subordinate contexts will defer any environment-changing action to their parent.
+func FromParent(ctx *Context) *Context {
+	return &Context{
+		Chroot:            ctx.Chroot,
+		EnableTools:       ctx.EnableTools,
+		SnapshotPath:      ctx.SnapshotPath,
+		SnapshotRoot:      ctx.SnapshotRoot,
+		SnapshotExclusive: ctx.SnapshotExclusive,
+		alert:             ctx.alert,
+		parent:            ctx,
 	}
 }
 
@@ -83,6 +99,10 @@ func (ctx *Context) Do(fn func() error) error {
 // You should call `Setup` just once. It is safe to call `Setup` if you don't make
 // use of optional extra features - `Setup` will do nothing.
 func (ctx *Context) Setup() error {
+	if ctx.parent != nil {
+		// nothing to do - the parent is in charge
+		return nil
+	}
 	if ctx.SnapshotPath == "" {
 		// nothing to do!
 		return nil
@@ -111,6 +131,10 @@ func (ctx *Context) Setup() error {
 // You should always call `Teardown` if you called `Setup` to free any resources
 // acquired by `Setup`. Check `Do` for more automated management.
 func (ctx *Context) Teardown() error {
+	if ctx.parent != nil {
+		// nothing to do - the parent is in charge
+		return nil
+	}
 	if ctx.SnapshotRoot != "" {
 		// if the client code provided the unpack directory,
 		// then it is also in charge of the cleanup.

@@ -151,7 +151,14 @@ func (i *Info) String() string {
 // New returns a pointer to an Info struct that contains information about the
 // PCI devices on the host system
 func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
+	return newWithContext(context.New(opts...))
+}
+
+func NewWithContext(ctx *context.Context) (*Info, error) {
+	return newWithContext(context.FromParent(ctx))
+}
+
+func newWithContext(ctx *context.Context) (*Info, error) {
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
 	arch := topology.ARCHITECTURE_SMP

@@ -79,13 +79,17 @@ type Info struct {
 // New returns a pointer to an Info struct that contains information about the
 // NUMA topology on the host system
 func New(opts ...*option.Option) (*Info, error) {
-	return NewWithContext(context.New(opts...))
+	return newWithContext(context.New(opts...))
 }
 
 // NewWithContext returns a pointer to an Info struct that contains information about
 // the NUMA topology on the host system. Use this function when you want to consume
 // the topology package from another package (e.g. pci, gpu)
 func NewWithContext(ctx *context.Context) (*Info, error) {
+	return newWithContext(context.FromParent(ctx))
+}
+
+func newWithContext(ctx *context.Context) (*Info, error) {
 	info := &Info{ctx: ctx}
 	if err := ctx.Do(info.load); err != nil {
 		return nil, err

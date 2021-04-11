@@ -134,7 +134,14 @@ type Info struct {
 // New returns a pointer to an Info struct that describes the block storage
 // resources of the host system.
 func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
+	return newWithContext(context.New(opts...))
+}
+
+func NewWithContext(ctx *context.Context) (*Info, error) {
+	return newWithContext(context.FromParent(ctx))
+}
+
+func newWithContext(ctx *context.Context) (*Info, error) {
 	info := &Info{ctx: ctx}
 	if err := ctx.Do(info.load); err != nil {
 		return nil, err
