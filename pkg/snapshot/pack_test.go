@@ -14,6 +14,10 @@ import (
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
+// NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
+// want to make sure we never leak directories. `snapshot.Cleanup` is used and
+// tested explicitely in `unpack_test.go`.
+
 // nolint: gocyclo
 func TestPackUnpack(t *testing.T) {
 	root, err := snapshot.Unpack(testDataSnapshot)
@@ -44,6 +48,7 @@ func TestPackUnpack(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
+	defer os.RemoveAll(cloneRoot)
 
 	verifyTestData(t, cloneRoot)
 }
