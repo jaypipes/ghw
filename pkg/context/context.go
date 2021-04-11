@@ -14,12 +14,13 @@ import (
 // Concrete merged set of configuration switches that act as an execution
 // context when calling internal discovery methods
 type Context struct {
-	Chroot            string
-	EnableTools       bool
-	SnapshotPath      string
-	SnapshotRoot      string
-	SnapshotExclusive bool
-	alert             option.Alerter
+	Chroot               string
+	EnableTools          bool
+	SnapshotPath         string
+	SnapshotRoot         string
+	SnapshotExclusive    bool
+	snapshotUnpackedPath string
+	alert                option.Alerter
 }
 
 // New returns a Context struct pointer that has had various options set on it
@@ -92,6 +93,9 @@ func (ctx *Context) Setup() error {
 	root := ctx.SnapshotRoot
 	if root == "" {
 		root, err = snapshot.Unpack(ctx.SnapshotPath)
+		if err == nil {
+			ctx.snapshotUnpackedPath = root
+		}
 	} else {
 		var flags uint
 		if ctx.SnapshotExclusive {
@@ -111,12 +115,12 @@ func (ctx *Context) Setup() error {
 // You should always call `Teardown` if you called `Setup` to free any resources
 // acquired by `Setup`. Check `Do` for more automated management.
 func (ctx *Context) Teardown() error {
-	if ctx.SnapshotRoot != "" {
+	if ctx.snapshotUnpackedPath == "" {
 		// if the client code provided the unpack directory,
 		// then it is also in charge of the cleanup.
 		return nil
 	}
-	return snapshot.Cleanup(ctx.SnapshotRoot)
+	return snapshot.Cleanup(ctx.snapshotUnpackedPath)
 }
 
 func (ctx *Context) Warn(msg string, args ...interface{}) {
