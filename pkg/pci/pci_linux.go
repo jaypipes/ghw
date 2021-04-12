@@ -271,9 +271,14 @@ func findPCIProgrammingInterface(
 }
 
 // GetDevice returns a pointer to a Device struct that describes the PCI
-// device at the requested address. If no such device could be found, returns
-// nil
+// device at the requested address. If no such device could be found, returns nil.
 func (info *Info) GetDevice(address string) *Device {
+	// check cached data first
+	if dev := info.lookupDevice(address); dev != nil {
+		return dev
+	}
+
+	// no cached data, let's get the information from system.
 	fp := getDeviceModaliasPath(info.ctx, address)
 	if fp == "" {
 		info.ctx.Warn("error finding modalias info for device %q", address)

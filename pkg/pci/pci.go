@@ -171,6 +171,16 @@ func New(opts ...*option.Option) (*Info, error) {
 	return info, nil
 }
 
+// lookupDevice gets a device from cached data
+func (info *Info) lookupDevice(address string) *Device {
+	for _, dev := range info.Devices {
+		if dev.Address == address {
+			return dev
+		}
+	}
+	return nil
+}
+
 // simple private struct used to encapsulate PCI information in a top-level
 // "pci" YAML/JSON map/object key
 type pciPrinter struct {
