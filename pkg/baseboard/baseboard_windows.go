@@ -9,13 +9,14 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version FROM Win32_BaseBoard"
+const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version, Product FROM Win32_BaseBoard"
 
 type win32Baseboard struct {
 	Manufacturer *string
 	SerialNumber *string
 	Tag          *string
 	Version      *string
+	Product      *string
 }
 
 func (i *Info) load() error {
@@ -29,6 +30,7 @@ func (i *Info) load() error {
 		i.SerialNumber = *win32BaseboardDescriptions[0].SerialNumber
 		i.Vendor = *win32BaseboardDescriptions[0].Manufacturer
 		i.Version = *win32BaseboardDescriptions[0].Version
+		i.Product = *win32BaseboardDescriptions[0].Product
 	}
 
 	return nil

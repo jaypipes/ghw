@@ -14,6 +14,7 @@ func (i *Info) load() error {
 	i.SerialNumber = linuxdmi.Item(i.ctx, "board_serial")
 	i.Vendor = linuxdmi.Item(i.ctx, "board_vendor")
 	i.Version = linuxdmi.Item(i.ctx, "board_version")
+	i.Product = linuxdmi.Item(i.ctx, "board_name")
 
 	return nil
 }
