@@ -493,6 +493,8 @@ Each `ghw.Partition` struct contains these fields:
 * `ghw.Partition.Disk` is a pointer to the `ghw.Disk` object associated with
   the partition. This will be `nil` if the `ghw.Partition` struct was returned
   by the `ghw.DiskPartitions()` library function.
+* `ghw.Partition.UUID` is a string containing the volume UUID on Linux, the
+  partition UUID on MacOS and nothing on Windows.
 
 ```go
 package main
@@ -803,6 +805,11 @@ The `ghw.PCIDevice` struct has the following fields:
 * `ghw.PCIDevice.ProgrammingInterface` is a pointer to a
   `pcidb.ProgrammingInterface` struct that describes the device subclass'
   programming interface. This will always be non-nil.
+
+The `ghw.PCIAddress` (which is an alias for the `ghw.pci.address.Address`
+struct) contains the PCI address fields. It has a `ghw.PCIAddress.String()`
+method that returns the canonical Domain:Bus:Slot.Function ([D]BSF)
+representation of this Address
 
 #### Finding a PCI device by PCI address
 
@@ -1136,6 +1143,8 @@ The `ghw.BaseboardInfo` struct contains multiple fields:
 * `ghw.BaseboardInfo.AssetTag` is a string with the baseboard asset tag
 * `ghw.BaseboardInfo.SerialNumber` is a string with the baseboard serial number
 * `ghw.BaseboardInfo.Vendor` is a string with the baseboard vendor
+* `ghw.BaseboardInfo.Product` is a string with the baseboard name on Linux and
+  Product on Windows
 * `ghw.BaseboardInfo.Version` is a string with the baseboard version
 
 **NOTE**: These fields are often missing for non-server hardware. Don't be
