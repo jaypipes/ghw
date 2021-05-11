@@ -22,6 +22,7 @@ type Info struct {
 	SerialNumber string `json:"serial_number"`
 	Vendor       string `json:"vendor"`
 	Version      string `json:"version"`
+	Product      string `json:"product"`
 }
 
 func (i *Info) String() string {
@@ -38,11 +39,17 @@ func (i *Info) String() string {
 		versionStr = " version=" + i.Version
 	}
 
+	productStr := ""
+	if i.Product != "" {
+		productStr = " product=" + i.Product
+	}
+
 	res := fmt.Sprintf(
-		"baseboard%s%s%s",
+		"baseboard%s%s%s%s",
 		vendorStr,
 		serialStr,
 		versionStr,
+		productStr,
 	)
 	return res
 }
