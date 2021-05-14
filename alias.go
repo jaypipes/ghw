@@ -32,9 +32,12 @@ var (
 	// match the existing environ variable to minimize surprises
 	WithDisableWarnings = option.WithNullAlerter
 	WithDisableTools    = option.WithDisableTools
+	WithPathOverrides   = option.WithPathOverrides
 )
 
 type SnapshotOptions = option.SnapshotOptions
+
+type PathOverrides = option.PathOverrides
 
 type CPUInfo = cpu.Info
 

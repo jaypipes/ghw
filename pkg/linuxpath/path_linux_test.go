@@ -15,6 +15,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
 func TestPathRoot(t *testing.T) {
@@ -47,6 +48,51 @@ func TestPathRoot(t *testing.T) {
 
 	path = paths.ProcCpuinfo
 	if path != "/host/proc/cpuinfo" {
-		t.Fatalf("Expected pathProcCpuinfo() to return '/host/proc/cpuinfo' but got %s", path)
+		t.Fatalf("Expected path.ProcCpuinfo to return '/host/proc/cpuinfo' but got %s", path)
+	}
+}
+
+func TestPathSpecificRoots(t *testing.T) {
+	ctx := context.New(option.WithPathOverrides(option.PathOverrides{
+		"/proc": "/host-proc",
+		"/sys":  "/host-sys",
+	}))
+
+	paths := linuxpath.New(ctx)
+
+	path := paths.ProcCpuinfo
+	expectedPath := "/host-proc/cpuinfo"
+	if path != expectedPath {
+		t.Fatalf("Expected path.ProcCpuInfo to return %q but got %q", expectedPath, path)
+	}
+
+	path = paths.SysBusPciDevices
+	expectedPath = "/host-sys/bus/pci/devices"
+	if path != expectedPath {
+		t.Fatalf("Expected path.SysBusPciDevices to return %q but got %q", expectedPath, path)
+	}
+}
+
+func TestPathChrootAndSpecifics(t *testing.T) {
+	ctx := context.New(
+		option.WithPathOverrides(option.PathOverrides{
+			"/proc": "/host2-proc",
+			"/sys":  "/host2-sys",
+		}),
+		option.WithChroot("/redirect"),
+	)
+
+	paths := linuxpath.New(ctx)
+
+	path := paths.ProcCpuinfo
+	expectedPath := "/redirect/host2-proc/cpuinfo"
+	if path != expectedPath {
+		t.Fatalf("Expected path.ProcCpuInfo to return %q but got %q", expectedPath, path)
+	}
+
+	path = paths.SysBusPciDevices
+	expectedPath = "/redirect/host2-sys/bus/pci/devices"
+	if path != expectedPath {
+		t.Fatalf("Expected path.SysBusPciDevices to return %q but got %q", expectedPath, path)
 	}
 }

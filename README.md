@@ -81,6 +81,34 @@ Alternately, you can use the `ghw.WithChroot()` function like so:
 cpu, err := ghw.CPU(ghw.WithChroot("/host"))
 ```
 
+### Overriding the per-mountpoint `ghw` uses
+
+When running inside containers, it could be a bit cumbersome to just override
+the root mountpoint. Inside containers, when granting access to the host
+file systems, is more common to bind-mount them in non standard location,
+like `/sys` on `/host-sys` or `/proc` on `/host-proc`.
+Is rarer to mount them in a common subtree (e.g. `/sys` on `/host/sys` and
+ `/proc` on /host/proc...)
+
+To better cover this use case, `ghw` allows to *programmatically* override
+the initial component of filesystems subtrees, allowing to access `sysfs`
+(or `procfs` or...) mounted on non-standard locations.
+
+
+```go
+cpu, err := ghw.CPU(ghw.WithPathOverrides(ghw.PathOverrides{
+	"/proc": "/host-proc",
+	"/sys": "/host-sys",
+}))
+```
+
+Please note
+- this feature works in addition and is composable with the
+  `WithChroot`/`GHW_CHROOT` feature.
+- `ghw` doesn't support yet environs variable to override individual
+   mountpoints, because this could lead to significant environs variables
+   proliferation.
+
 ### Consuming snapshots
 
 You can make `ghw` read from snapshots (created with `ghw-snapshot`) using

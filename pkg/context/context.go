@@ -19,6 +19,7 @@ type Context struct {
 	SnapshotPath         string
 	SnapshotRoot         string
 	SnapshotExclusive    bool
+	PathOverrides        option.PathOverrides
 	snapshotUnpackedPath string
 	alert                option.Alerter
 }
@@ -46,6 +47,10 @@ func New(opts ...*option.Option) *Context {
 
 	if merged.EnableTools != nil {
 		ctx.EnableTools = *merged.EnableTools
+	}
+
+	if merged.PathOverrides != nil {
+		ctx.PathOverrides = merged.PathOverrides
 	}
 
 	return ctx
