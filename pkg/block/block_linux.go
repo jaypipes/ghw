@@ -210,6 +210,10 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 }
 
 func diskPartUUID(ctx *context.Context, part string) string {
+	if !ctx.EnableTools {
+		ctx.Warn("EnableTools=false disables partition UUID detection.")
+		return ""
+	}
 	if !strings.HasPrefix(part, "/dev") {
 		part = "/dev/" + part
 	}

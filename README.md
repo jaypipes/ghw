@@ -1345,6 +1345,11 @@ To prevent ghw from calling external tools, set the environs variable `GHW_DISAB
 or, programmatically, check the `WithDisableTools` function.
 The default behaviour of ghw is to call external tools when available.
 
+**WARNING**:
+- on all platforms, disabling external tools make ghw return less data.
+  Unless noted otherwise, there is _no fallback flow_ if external tools are disabled.
+- on darwin, disabling external tools disable block support entirely
+
 ## Developers
 
 Contributions to `ghw` are welcomed! Fork the repo on GitHub and submit a pull
