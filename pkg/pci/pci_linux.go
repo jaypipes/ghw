@@ -40,7 +40,7 @@ func getDeviceModaliasPath(ctx *context.Context, address string) string {
 	}
 	return filepath.Join(
 		paths.SysBusPciDevices,
-		pciAddr.Domain+":"+pciAddr.Bus+":"+pciAddr.Slot+"."+pciAddr.Function,
+		pciAddr.String(),
 		"modalias",
 	)
 }
