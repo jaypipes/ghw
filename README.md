@@ -811,8 +811,23 @@ The `ghw.PCIDevice` struct has the following fields:
 
 The `ghw.PCIAddress` (which is an alias for the `ghw.pci.address.Address`
 struct) contains the PCI address fields. It has a `ghw.PCIAddress.String()`
-method that returns the canonical Domain:Bus:Slot.Function ([D]BSF)
-representation of this Address
+method that returns the canonical Domain:Bus:Device.Function ([D]BDF)
+representation of this Address.
+
+The `ghw.PCIAddress` struct has the following fields:
+
+* `ghw.PCIAddress.Domain` is a string representing the PCI domain component of
+  the address.
+* `ghw.PCIAddress.Bus` is a string representing the PCI bus component of
+  the address.
+* `ghw.PCIAddress.Device` is a string representing the PCI device component of
+  the address.
+* `ghw.PCIAddress.Function` is a string representing the PCI function component of
+  the address.
+
+**NOTE**: Older versions (pre-`v0.9.0`) erroneously referred to the `Device`
+field as the `Slot` field. As noted by [@pearsonk](https://github.com/pearsonk)
+in [#220](https://github.com/jaypipes/ghw/issues/220), this was a misnomer.
 
 #### Finding a PCI device by PCI address
 

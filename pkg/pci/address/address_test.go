@@ -30,7 +30,7 @@ func TestPCIAddressFromString(t *testing.T) {
 			expected: &pciaddr.Address{
 				Domain:   "0000",
 				Bus:      "00",
-				Slot:     "00",
+				Device:   "00",
 				Function: "0",
 			},
 			skipStringTest: true,
@@ -40,7 +40,7 @@ func TestPCIAddressFromString(t *testing.T) {
 			expected: &pciaddr.Address{
 				Domain:   "0000",
 				Bus:      "00",
-				Slot:     "00",
+				Device:   "00",
 				Function: "0",
 			},
 		},
@@ -49,7 +49,7 @@ func TestPCIAddressFromString(t *testing.T) {
 			expected: &pciaddr.Address{
 				Domain:   "0000",
 				Bus:      "03",
-				Slot:     "00",
+				Device:   "00",
 				Function: "0",
 			},
 		},
@@ -58,7 +58,7 @@ func TestPCIAddressFromString(t *testing.T) {
 			expected: &pciaddr.Address{
 				Domain:   "0000",
 				Bus:      "03",
-				Slot:     "00",
+				Device:   "00",
 				Function: "a",
 			},
 		},
