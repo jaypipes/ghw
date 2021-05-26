@@ -22,6 +22,7 @@ type Context struct {
 	PathOverrides        option.PathOverrides
 	snapshotUnpackedPath string
 	alert                option.Alerter
+	refCount             int
 }
 
 // New returns a Context struct pointer that has had various options set on it
@@ -89,8 +90,14 @@ func (ctx *Context) Do(fn func() error) error {
 // You should call `Setup` just once. It is safe to call `Setup` if you don't make
 // use of optional extra features - `Setup` will do nothing.
 func (ctx *Context) Setup() error {
+	if ctx.RefCount() > 1 {
+		// someone else came before and fixed things already!
+		ctx.incRefCount()
+		return nil
+	}
 	if ctx.SnapshotPath == "" {
-		// nothing to do!
+		// nothing to do
+		ctx.incRefCount()
 		return nil
 	}
 
@@ -108,26 +115,57 @@ func (ctx *Context) Setup() error {
 		}
 		_, err = snapshot.UnpackInto(ctx.SnapshotPath, root, flags)
 	}
-	if err != nil {
-		return err
+	if err == nil {
+		ctx.Chroot = root
+		ctx.incRefCount()
+		return nil
 	}
 
-	ctx.Chroot = root
-	return nil
+	// not ready: must try again
+	return err
 }
 
 // Teardown releases any resource acquired by Setup.
 // You should always call `Teardown` if you called `Setup` to free any resources
 // acquired by `Setup`. Check `Do` for more automated management.
 func (ctx *Context) Teardown() error {
+	if ctx.RefCount() > 1 {
+		// too early, the last one will do the cleaning
+		ctx.decRefCount()
+		return nil
+	}
 	if ctx.snapshotUnpackedPath == "" {
 		// if the client code provided the unpack directory,
 		// then it is also in charge of the cleanup.
+		ctx.decRefCount()
 		return nil
 	}
-	return snapshot.Cleanup(ctx.snapshotUnpackedPath)
+	err := snapshot.Cleanup(ctx.snapshotUnpackedPath)
+	if err == nil {
+		ctx.decRefCount()
+		return nil
+	}
+	// else need to try again later
+	return err
 }
 
 func (ctx *Context) Warn(msg string, args ...interface{}) {
 	ctx.alert.Printf("WARNING: "+msg, args...)
+}
+
+func (ctx *Context) IsReady() bool {
+	return ctx.refCount > 0
+}
+
+// RefCount() must be used only in testing code
+func (ctx *Context) RefCount() int {
+	return ctx.refCount
+}
+
+func (ctx *Context) incRefCount() {
+	ctx.refCount++
+}
+
+func (ctx *Context) decRefCount() {
+	ctx.refCount--
 }
