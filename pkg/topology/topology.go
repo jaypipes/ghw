@@ -79,7 +79,15 @@ type Info struct {
 // New returns a pointer to an Info struct that contains information about the
 // NUMA topology on the host system
 func New(opts ...*option.Option) (*Info, error) {
-	return NewWithContext(context.New(opts...))
+	ctx := context.New(opts...)
+	info := &Info{ctx: ctx}
+	if err := ctx.Do(info.load); err != nil {
+		return nil, err
+	}
+	for _, node := range info.Nodes {
+		sort.Sort(memory.SortByCacheLevelTypeFirstProcessor(node.Caches))
+	}
+	return info, nil
 }
 
 // NewWithContext returns a pointer to an Info struct that contains information about
@@ -87,7 +95,7 @@ func New(opts ...*option.Option) (*Info, error) {
 // the topology package from another package (e.g. pci, gpu)
 func NewWithContext(ctx *context.Context) (*Info, error) {
 	info := &Info{ctx: ctx}
-	if err := ctx.Do(info.load); err != nil {
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	for _, node := range info.Nodes {

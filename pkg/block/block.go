@@ -142,6 +142,18 @@ func New(opts ...*option.Option) (*Info, error) {
 	return info, nil
 }
 
+// New returns a pointer to an Info struct that describes the block storage
+// resources of the host system, reusing a given context.
+// Use this function when you want to consume this package from another,
+// ensuring the two see a coherent set of resources.
+func NewWithContext(ctx *context.Context) (*Info, error) {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
+		return nil, err
+	}
+	return info, nil
+}
+
 func (i *Info) String() string {
 	tpbs := util.UNKNOWN
 	if i.TotalPhysicalBytes > 0 {

@@ -34,10 +34,25 @@ type Info struct {
 	Modules            []*Module `json:"modules"`
 }
 
+// New returns a pointer to an Info struct containing information about the
+// host's memory.
 func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
 	info := &Info{ctx: ctx}
 	if err := ctx.Do(info.load); err != nil {
+		return nil, err
+	}
+	return info, nil
+
+}
+
+// New returns a pointer to an Info struct containing information about the
+// host's memory, reusing a given context.
+// Use this function when you want to consume this package from another,
+// ensuring the two see a coherent set of resources.
+func NewWithContext(ctx *context.Context) (*Info, error) {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
 		return nil, err
 	}
 	return info, nil

@@ -81,6 +81,18 @@ func New(opts ...*option.Option) (*Info, error) {
 	return info, nil
 }
 
+// New returns a pointer to a Info struct containing information
+// about the host's product, reusing a given context.
+// Use this function when you want to consume this package from another,
+// ensuring the two see a coherent set of resources.
+func NewWithContext(ctx *context.Context) (*Info, error) {
+	info := &Info{ctx: ctx}
+	if err := info.load(); err != nil {
+		return nil, err
+	}
+	return info, nil
+}
+
 // simple private struct used to encapsulate product information in a top-level
 // "product" YAML/JSON map/object key
 type productPrinter struct {

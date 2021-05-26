@@ -73,12 +73,13 @@ func FromEnv() *Context {
 	}
 }
 
-// Do wraps a Setup/Teardown pair around the given function
+// Do manages a context by wrapping a Setup/Teardown pair around the given function
 func (ctx *Context) Do(fn func() error) error {
 	err := ctx.Setup()
 	if err != nil {
 		return err
 	}
+	// TODO: any error returned by teardown is lost
 	defer ctx.Teardown()
 	return fn()
 }
