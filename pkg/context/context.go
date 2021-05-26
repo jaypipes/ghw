@@ -56,7 +56,7 @@ func New(opts ...*option.Option) *Context {
 	return ctx
 }
 
-// FromEnv returns an Option that has been populated from the environs or
+// FromEnv returns a Context that has been populated from the environs or
 // default options values
 func FromEnv() *Context {
 	chrootVal := option.EnvOrDefaultChroot()
