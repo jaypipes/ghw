@@ -129,6 +129,10 @@ type Option struct {
 	// EnableTools optionally request ghw to not call any external program to learn
 	// about the hardware. The default is to use such tools if available.
 	EnableTools *bool
+
+	// PathOverrides optionally allows to override the default paths ghw uses internally
+	// to learn about the system resources.
+	PathOverrides PathOverrides
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -152,6 +156,7 @@ type SnapshotOptions struct {
 	Exclusive bool
 }
 
+// WithChroot allows to override the root directory ghw uses.
 func WithChroot(dir string) *Option {
 	return &Option{Chroot: &dir}
 }
@@ -183,6 +188,16 @@ func WithDisableTools() *Option {
 	return &Option{EnableTools: &false_}
 }
 
+// PathOverrides is a map, keyed by the string name of a mount path, of override paths
+type PathOverrides map[string]string
+
+// WithPathOverrides supplies path-specific overrides for the context
+func WithPathOverrides(overrides PathOverrides) *Option {
+	return &Option{
+		PathOverrides: overrides,
+	}
+}
+
 // There is intentionally no Option related to GHW_SNAPSHOT_PRESERVE because we see that as
 // a debug/troubleshoot aid more something users wants to do regularly.
 // Hence we allow that only via the environment variable for the time being.
@@ -201,6 +216,10 @@ func Merge(opts ...*Option) *Option {
 		}
 		if opt.EnableTools != nil {
 			merged.EnableTools = opt.EnableTools
+		}
+		// intentionally only programmatically
+		if opt.PathOverrides != nil {
+			merged.PathOverrides = opt.PathOverrides
 		}
 	}
 	// Set the default value if missing from mergeOpts

@@ -118,6 +118,38 @@ func TestOption(t *testing.T) {
 				EnableTools: boolPtr(false),
 			},
 		},
+		{
+			name: "paths",
+			opts: []*option.Option{
+				option.WithPathOverrides(option.PathOverrides{
+					"/run": "/host-run",
+					"/var": "/host-var",
+				}),
+			},
+			merged: &option.Option{
+				PathOverrides: option.PathOverrides{
+					"/run": "/host-run",
+					"/var": "/host-var",
+				},
+			},
+		},
+		{
+			name: "chroot paths",
+			opts: []*option.Option{
+				option.WithChroot("/my/chroot/dir"),
+				option.WithPathOverrides(option.PathOverrides{
+					"/run": "/host-run",
+					"/var": "/host-var",
+				}),
+			},
+			merged: &option.Option{
+				Chroot: stringPtr("/my/chroot/dir"),
+				PathOverrides: option.PathOverrides{
+					"/run": "/host-run",
+					"/var": "/host-var",
+				},
+			},
+		},
 	}
 	for _, optTCase := range optTCases {
 		t.Run(optTCase.name, func(t *testing.T) {
