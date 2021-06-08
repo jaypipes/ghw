@@ -59,8 +59,8 @@ type Paths struct {
 	VarLog                 string
 	ProcMeminfo            string
 	ProcCpuinfo            string
+	ProcMounts             string
 	SysKernelMMHugepages   string
-	EtcMtab                string
 	SysBlock               string
 	SysDevicesSystemNode   string
 	SysDevicesSystemMemory string
@@ -79,8 +79,8 @@ func New(ctx *context.Context) *Paths {
 		VarLog:                 filepath.Join(ctx.Chroot, roots.Var, "log"),
 		ProcMeminfo:            filepath.Join(ctx.Chroot, roots.Proc, "meminfo"),
 		ProcCpuinfo:            filepath.Join(ctx.Chroot, roots.Proc, "cpuinfo"),
+		ProcMounts:             filepath.Join(ctx.Chroot, roots.Proc, "self", "mounts"),
 		SysKernelMMHugepages:   filepath.Join(ctx.Chroot, roots.Sys, "kernel", "mm", "hugepages"),
-		EtcMtab:                filepath.Join(ctx.Chroot, roots.Etc, "mtab"),
 		SysBlock:               filepath.Join(ctx.Chroot, roots.Sys, "block"),
 		SysDevicesSystemNode:   filepath.Join(ctx.Chroot, roots.Sys, "devices", "system", "node"),
 		SysDevicesSystemMemory: filepath.Join(ctx.Chroot, roots.Sys, "devices", "system", "memory"),

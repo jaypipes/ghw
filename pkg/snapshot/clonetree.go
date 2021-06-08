@@ -61,9 +61,9 @@ func ExpectedCloneContent() []string {
 // thus are safely represented by a static slice - e.g. they don't need to be discovered at runtime.
 func ExpectedCloneStaticContent() []string {
 	return []string{
-		"/etc/mtab",
 		"/proc/cpuinfo",
 		"/proc/meminfo",
+		"/proc/self/mounts",
 		"/sys/devices/system/cpu/cpu*/cache/index*/*",
 		"/sys/devices/system/cpu/cpu*/topology/*",
 		"/sys/devices/system/memory/block_size_bytes",
