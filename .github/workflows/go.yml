@@ -1,0 +1,53 @@
+name: go
+
+on:
+  pull_request:
+    branches: [ master ]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ghw
+
+jobs:
+  ubuntu1804:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        go: [ '1.14', '1.15', '1.16' ]
+    name: golang ${{ matrix.go }}
+    steps:
+    - name: checkout sources
+      uses: actions/checkout@v2
+      with:
+        path: ghw
+        fetch-depth: 0 # Fetch all history for all tags and branches
+
+    - uses: actions/setup-go@v2
+      id: go
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: run unit test
+      run: go test -v ./...
+
+  ubuntu2004:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        go: [ '1.14', '1.15', '1.16' ]
+    name: golang ${{ matrix.go }}
+    steps:
+    - name: checkout sources
+      uses: actions/checkout@v2
+      with:
+        path: ghw
+        fetch-depth: 0 # Fetch all history for all tags and branches
+
+    - uses: actions/setup-go@v2
+      id: go
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: run unit test
+      run: go test -v ./...
