@@ -19,4 +19,7 @@ jobs:
         go-version: 1.15
 
     - name: run unit-tests
+      env:
+        GHW_TESTING_SKIP_BLOCK: "1"
+        GHW_TESTING_SKIP_GPU: "1"
       run: go test -v ./...
