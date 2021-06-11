@@ -7,6 +7,7 @@
 package cpu_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/cpu"
@@ -14,6 +15,10 @@ import (
 
 // nolint: gocyclo
 func TestCPU(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
+		t.Skip("Skipping CPU tests.")
+	}
+
 	info, err := cpu.New()
 
 	if err != nil {

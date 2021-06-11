@@ -1,4 +1,4 @@
-name: CI
+name: CI tests
 
 on:
   push:
@@ -6,20 +6,74 @@ on:
   pull_request:
     branches: [ master ]
 
+# see: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
 jobs:
-
-  build:
-    runs-on: ubuntu-latest
+  # tier-1
+  # main development platfotm, gets features first and it's most tested
+  build-ubuntu-2004:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        go: [ '1.14', '1.15', '1.16' ]
     steps:
     - uses: actions/checkout@v2
 
     - name: set up go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: ${{ matrix.go }}
 
     - name: run unit-tests
       env:
         GHW_TESTING_SKIP_BLOCK: "1"
         GHW_TESTING_SKIP_GPU: "1"
+      run: go test -v ./...
+
+  # tier-2
+  # best-effort support, limited to most recent platforms (OS+go)
+  build-windows-2019:
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        go: [ '1.16' ]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: set up go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: run unit-tests
+      env:
+        GHW_TESTING_SKIP_BLOCK: "1"
+        GHW_TESTING_SKIP_GPU: "1"
+      run: go test -v ./...
+
+  # tier-2
+  # best-effort support, limited to most recent platforms (OS+go)
+  # TODO: check this is the last on x86, the switch to arm is nontrivial
+  build-macos-1015:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        go: [ '1.15' ]  # TODO: no 1.16 atm
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: set up go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: run unit-tests
+      env:
+        GHW_TESTING_SKIP_BLOCK: "1"
+        GHW_TESTING_SKIP_CPU: "1"
+        GHW_TESTING_SKIP_GPU: "1"
+        GHW_TESTING_SKIP_HOST: "1"
+        GHW_TESTING_SKIP_MEMORY: "1"
+        GHW_TESTING_SKIP_NET: "1"
+        GHW_TESTING_SKIP_PCI: "1"
+        GHW_TESTING_SKIP_TOPOLOGY: "1"
       run: go test -v ./...

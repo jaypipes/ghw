@@ -7,11 +7,16 @@
 package ghw
 
 import (
+	"os"
 	"testing"
 )
 
 // nolint: gocyclo
 func TestHost(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_HOST"); ok {
+		t.Skip("Skipping host tests.")
+	}
+
 	host, err := Host()
 
 	if err != nil {

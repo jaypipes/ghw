@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 
@@ -86,6 +88,22 @@ func TestPCIDeviceRevision(t *testing.T) {
 				t.Errorf("device %q got revision %q expected %q", tCase.addr, dev.Revision, tCase.revision)
 			}
 		})
+	}
+}
+
+func TestPCIMarshalJSON(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
+		t.Skip("Skipping PCI tests.")
+	}
+	info, err := pci.New()
+	if err != nil {
+		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
+	}
+
+	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02")
+	s := marshal.SafeJSON(context.FromEnv(), dev, true)
+	if s == "" {
+		t.Fatalf("Error marshalling device: %v", dev)
 	}
 }
 
