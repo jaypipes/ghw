@@ -7,12 +7,17 @@
 package net_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/net"
 )
 
 func TestNet(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_NET"); ok {
+		t.Skip("Skipping network tests.")
+	}
+
 	info, err := net.New()
 
 	if err != nil {

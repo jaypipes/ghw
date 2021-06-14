@@ -7,6 +7,7 @@
 package topology_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/topology"
@@ -14,6 +15,10 @@ import (
 
 // nolint: gocyclo
 func TestTopology(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_TOPOLOGY"); ok {
+		t.Skip("Skipping topology tests.")
+	}
+
 	info, err := topology.New()
 
 	if err != nil {

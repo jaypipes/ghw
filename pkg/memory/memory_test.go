@@ -7,6 +7,7 @@
 package memory_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/memory"
@@ -14,6 +15,10 @@ import (
 
 // nolint: gocyclo
 func TestMemory(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_MEMORY"); ok {
+		t.Skip("Skipping MEMORY tests.")
+	}
+
 	mem, err := memory.New()
 	if err != nil {
 		t.Fatalf("Expected nil error, but got %v", err)
