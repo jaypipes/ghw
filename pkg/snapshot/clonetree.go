@@ -22,22 +22,10 @@ import (
 // CloneTreeInto copies all the pseudofiles that ghw will consume into the root
 // `scratchDir`, preserving the hieratchy.
 func CloneTreeInto(scratchDir string) error {
-	var err error
-
-	var createPaths = []string{
-		"sys/block",
-	}
-
-	for _, path := range createPaths {
-		if err = os.MkdirAll(filepath.Join(scratchDir, path), os.ModePerm); err != nil {
-			return err
-		}
-	}
-
-	if err = createBlockDevices(scratchDir); err != nil {
+	err := setupScratchDir(scratchDir)
+	if err != nil {
 		return err
 	}
-
 	fileSpecs := ExpectedCloneContent()
 	return CopyFilesInto(fileSpecs, scratchDir, nil)
 }
@@ -54,27 +42,6 @@ func ExpectedCloneContent() []string {
 	fileSpecs = append(fileSpecs, ExpectedClonePCIContent()...)
 	fileSpecs = append(fileSpecs, ExpectedCloneGPUContent()...)
 	return fileSpecs
-}
-
-// ExpectedCloneStaticContent return a slice of glob patterns which represent the pseudofiles
-// ghw cares about, and which are independent from host specific topology or configuration,
-// thus are safely represented by a static slice - e.g. they don't need to be discovered at runtime.
-func ExpectedCloneStaticContent() []string {
-	return []string{
-		"/proc/cpuinfo",
-		"/proc/meminfo",
-		"/proc/self/mounts",
-		"/sys/devices/system/cpu/cpu*/cache/index*/*",
-		"/sys/devices/system/cpu/cpu*/topology/*",
-		"/sys/devices/system/memory/block_size_bytes",
-		"/sys/devices/system/memory/memory*/online",
-		"/sys/devices/system/memory/memory*/state",
-		"/sys/devices/system/node/has_*",
-		"/sys/devices/system/node/online",
-		"/sys/devices/system/node/possible",
-		"/sys/devices/system/node/node*/cpu*",
-		"/sys/devices/system/node/node*/distance",
-	}
 }
 
 // ValidateClonedTree checks the content of a cloned tree, whose root is `clonedDir`,
@@ -95,23 +62,6 @@ func ValidateClonedTree(fileSpecs []string, clonedDir string) ([]string, error) 
 		}
 	}
 	return missing, nil
-}
-
-func copyPseudoFile(path, targetPath string) error {
-	buf, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	trace("creating %s\n", targetPath)
-	f, err := os.Create(targetPath)
-	if err != nil {
-		return err
-	}
-	if _, err = f.Write(buf); err != nil {
-		return err
-	}
-	f.Close()
-	return nil
 }
 
 // CopyFileOptions allows to finetune the behaviour of the CopyFilesInto function
@@ -204,60 +154,19 @@ func copyLink(path, targetPath string) error {
 	return nil
 }
 
-type filterFunc func(string) bool
-
-// cloneContentByClass copies all the content related to a given device class
-// (devClass), possibly filtering out devices whose name does NOT pass a
-// filter (filterName). Each entry in `/sys/class/$CLASS` is actually a
-// symbolic link. We can filter out entries depending on the link target.
-// Each filter is a simple function which takes the entry name or the link
-// target and must return true if the entry should be collected, false
-// otherwise. Last, explicitely collect a list of attributes for each entry,
-// given as list of glob patterns as `subEntries`.
-// Return the final list of glob patterns to be collected.
-func cloneContentByClass(devClass string, subEntries []string, filterName filterFunc, filterLink filterFunc) []string {
-	var fileSpecs []string
-
-	// warning: don't use the context package here, this means not even the linuxpath package.
-	// TODO(fromani) remove the path duplication
-	sysClass := filepath.Join("sys", "class", devClass)
-	entries, err := ioutil.ReadDir(sysClass)
+func copyPseudoFile(path, targetPath string) error {
+	buf, err := ioutil.ReadFile(path)
 	if err != nil {
-		// we should not import context, hence we can't Warn()
-		return fileSpecs
+		return err
 	}
-	for _, entry := range entries {
-		devName := entry.Name()
-
-		if !filterName(devName) {
-			continue
-		}
-
-		devPath := filepath.Join(sysClass, devName)
-		dest, err := os.Readlink(devPath)
-		if err != nil {
-			continue
-		}
-
-		if !filterLink(dest) {
-			continue
-		}
-
-		// so, first copy the symlink itself
-		fileSpecs = append(fileSpecs, devPath)
-		// now we have to clone the content of the actual entry
-		// related (and found into a subdir of) the backing hardware
-		// device
-		devData := filepath.Clean(filepath.Join(sysClass, dest))
-		for _, subEntry := range subEntries {
-			fileSpecs = append(fileSpecs, filepath.Join(devData, subEntry))
-		}
+	trace("creating %s\n", targetPath)
+	f, err := os.Create(targetPath)
+	if err != nil {
+		return err
 	}
-
-	return fileSpecs
-}
-
-// filterNone allows all content, filtering out none of it
-func filterNone(_ string) bool {
-	return true
+	if _, err = f.Write(buf); err != nil {
+		return err
+	}
+	f.Close()
+	return nil
 }
