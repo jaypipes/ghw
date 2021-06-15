@@ -7,12 +7,6 @@
 
 package snapshot
 
-import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-)
-
 func setupScratchDir(scratchDir string) error {
 	return nil
 }

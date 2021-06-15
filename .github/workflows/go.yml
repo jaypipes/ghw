@@ -47,7 +47,13 @@ jobs:
     - name: run unit-tests
       env:
         GHW_TESTING_SKIP_BLOCK: "1"
+        GHW_TESTING_SKIP_CPU: "1"
         GHW_TESTING_SKIP_GPU: "1"
+        GHW_TESTING_SKIP_HOST: "1"
+        GHW_TESTING_SKIP_MEMORY: "1"
+        GHW_TESTING_SKIP_NET: "1"
+        GHW_TESTING_SKIP_PCI: "1"
+        GHW_TESTING_SKIP_TOPOLOGY: "1"
       run: go test -v ./...
 
   # tier-2
