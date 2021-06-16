@@ -1,6 +1,9 @@
-# `ghw` - Golang HardWare discovery/inspection library [![Build Status](https://travis-ci.org/jaypipes/ghw.svg?branch=master)](https://travis-ci.org/jaypipes/ghw)
+# `ghw` - Golang HardWare discovery/inspection library
+
+[![Build Status](https://github.com/jaypipes/ghw/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/jaypipes/ghw/actions)
+
 ![ghw mascot](images/ghw-gopher.png)
-<br /><br />
+
 `ghw` is a small Golang library providing hardware inspection and discovery
 for Linux and Windows. There currently exists partial support for MacOSX.
 
