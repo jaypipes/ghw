@@ -24,6 +24,7 @@ type pciTestCase struct {
 	addr     string
 	node     int
 	revision string
+	driver   string
 }
 
 // nolint: gocyclo
@@ -86,6 +87,37 @@ func TestPCIDeviceRevision(t *testing.T) {
 			}
 			if dev.Revision != tCase.revision {
 				t.Errorf("device %q got revision %q expected %q", tCase.addr, dev.Revision, tCase.revision)
+			}
+		})
+	}
+}
+
+// nolint: gocyclo
+func TestPCIDriver(t *testing.T) {
+	info := pciTestSetup(t)
+
+	tCases := []pciTestCase{
+		{
+			addr:   "0000:07:03.0",
+			driver: "mgag200",
+		},
+		{
+			addr:   "0000:05:11.0",
+			driver: "igbvf",
+		},
+		{
+			addr:   "0000:05:00.1",
+			driver: "igb",
+		},
+	}
+	for _, tCase := range tCases {
+		t.Run(fmt.Sprintf("%s (%s)", tCase.addr, tCase.driver), func(t *testing.T) {
+			dev := info.GetDevice(tCase.addr)
+			if dev == nil {
+				t.Fatalf("got nil device for address %q", tCase.addr)
+			}
+			if dev.Driver != tCase.driver {
+				t.Errorf("got driver %q expected %q", dev.Driver, tCase.driver)
 			}
 		})
 	}

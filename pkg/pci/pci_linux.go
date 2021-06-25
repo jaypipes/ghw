@@ -89,6 +89,25 @@ func getDeviceNUMANode(ctx *context.Context, address string) *topology.Node {
 	}
 }
 
+func getDeviceDriver(ctx *context.Context, address string) string {
+	paths := linuxpath.New(ctx)
+	pciAddr := AddressFromString(address)
+	if pciAddr == nil {
+		return ""
+	}
+	driverPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "driver")
+
+	if _, err := os.Stat(driverPath); err != nil {
+		return ""
+	}
+
+	dest, err := os.Readlink(driverPath)
+	if err != nil {
+		return ""
+	}
+	return filepath.Base(dest)
+}
+
 type deviceModaliasInfo struct {
 	vendorID     string
 	productID    string
@@ -296,6 +315,7 @@ func (info *Info) GetDevice(address string) *Device {
 	if info.arch == topology.ARCHITECTURE_NUMA {
 		device.Node = getDeviceNUMANode(info.ctx, address)
 	}
+	device.Driver = getDeviceDriver(info.ctx, address)
 	return device
 }
 
