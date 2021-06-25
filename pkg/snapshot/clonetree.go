@@ -7,9 +7,11 @@
 package snapshot
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
@@ -74,6 +76,15 @@ type CopyFileOptions struct {
 	// tree (having duplicated content). In this case you can just add a function
 	// which always return false.
 	IsSymlinkFn func(path string, info os.FileInfo) bool
+	// ShouldCreateDirFn allows to control if empty directories listed as clone
+	// content should be created or not. When creating snapshots, empty directories
+	// are most often useless (but also harmless). Because of this, directories are only
+	// created as side effect of copying the files which are inside, and thus directories
+	// are never empty. The only notable exception are device driver on linux: in this
+	// case, for a number of technical/historical reasons, we care about the directory
+	// name, but not about the files which are inside.
+	// Hence, this is the only case on which ghw clones empty directories.
+	ShouldCreateDirFn func(path string, info os.FileInfo) bool
 }
 
 // CopyFilesInto copies all the given glob files specs in the given `destDir` directory,
@@ -88,7 +99,8 @@ type CopyFileOptions struct {
 func CopyFilesInto(fileSpecs []string, destDir string, opts *CopyFileOptions) error {
 	if opts == nil {
 		opts = &CopyFileOptions{
-			IsSymlinkFn: isSymlink,
+			IsSymlinkFn:       isSymlink,
+			ShouldCreateDirFn: isDriversDir,
 		}
 	}
 	for _, fileSpec := range fileSpecs {
@@ -119,18 +131,25 @@ func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) err
 		// directories must be listed explicitely and created separately.
 		// In the future we may want to expose this decision as hook point in
 		// CopyFileOptions, when clear use cases emerge.
+		destPath := filepath.Join(destDir, path)
 		if fi.IsDir() {
-			trace("expanded glob path %q is a directory - skipped", path)
+			if opts.ShouldCreateDirFn(path, fi) {
+				if err := os.MkdirAll(destPath, os.ModePerm); err != nil {
+					return err
+				}
+			} else {
+				trace("expanded glob path %q is a directory - skipped\n", path)
+			}
 			continue
 		}
 		if opts.IsSymlinkFn(path, fi) {
-			trace("    copying link: %q\n", path)
-			if err := copyLink(path, filepath.Join(destDir, path)); err != nil {
+			trace("    copying link: %q -> %q\n", path, destPath)
+			if err := copyLink(path, destPath); err != nil {
 				return err
 			}
 		} else {
-			trace("    copying file: %q\n", path)
-			if err := copyPseudoFile(path, filepath.Join(destDir, path)); err != nil {
+			trace("    copying file: %q -> %q\n", path, destPath)
+			if err := copyPseudoFile(path, destPath); err != nil {
 				return err
 			}
 		}
@@ -142,12 +161,20 @@ func isSymlink(path string, fi os.FileInfo) bool {
 	return fi.Mode()&os.ModeSymlink != 0
 }
 
+func isDriversDir(path string, fi os.FileInfo) bool {
+	return strings.Contains(path, "drivers")
+}
+
 func copyLink(path, targetPath string) error {
 	target, err := os.Readlink(path)
 	if err != nil {
 		return err
 	}
+	trace("      symlink %q -> %q\n", target, targetPath)
 	if err := os.Symlink(target, targetPath); err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return nil
+		}
 		return err
 	}
 
