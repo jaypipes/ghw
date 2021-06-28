@@ -20,6 +20,11 @@ import (
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
+const (
+	// found running `wc` against real linux systems
+	modAliasExpectedLength = 54
+)
+
 func (i *Info) load() error {
 	db, err := pcidb.New(pcidb.WithChroot(i.ctx.Chroot))
 	if err != nil {
@@ -112,6 +117,13 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 }
 
 func parseModaliasData(data string) *deviceModaliasInfo {
+	// extra sanity check to avoid segfaults. We actually expect
+	// the data to be exactly long `modAliasExpectedlength`, but
+	// we will happily ignore any extra data we don't know how to
+	// handle.
+	if len(data) < modAliasExpectedLength {
+		return nil
+	}
 	// The modalias file is an encoded file that looks like this:
 	//
 	// $ cat /sys/devices/pci0000\:00/0000\:00\:03.0/0000\:03\:00.0/modalias
