@@ -32,12 +32,8 @@ func (i *Info) load() error {
 	return nil
 }
 
-func getDeviceModaliasPath(ctx *context.Context, address string) string {
+func getDeviceModaliasPath(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	paths := linuxpath.New(ctx)
-	pciAddr := pciaddr.FromString(address)
-	if pciAddr == nil {
-		return ""
-	}
 	return filepath.Join(
 		paths.SysBusPciDevices,
 		pciAddr.String(),
@@ -45,12 +41,8 @@ func getDeviceModaliasPath(ctx *context.Context, address string) string {
 	)
 }
 
-func getDeviceRevision(ctx *context.Context, address string) string {
+func getDeviceRevision(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	paths := linuxpath.New(ctx)
-	pciAddr := pciaddr.FromString(address)
-	if pciAddr == nil {
-		return ""
-	}
 	revisionPath := filepath.Join(
 		paths.SysBusPciDevices,
 		pciAddr.String(),
@@ -67,12 +59,8 @@ func getDeviceRevision(ctx *context.Context, address string) string {
 	return strings.TrimSpace(string(revision))
 }
 
-func getDeviceNUMANode(ctx *context.Context, address string) *topology.Node {
+func getDeviceNUMANode(ctx *context.Context, pciAddr *pciaddr.Address) *topology.Node {
 	paths := linuxpath.New(ctx)
-	pciAddr := AddressFromString(address)
-	if pciAddr == nil {
-		return nil
-	}
 	numaNodePath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "numa_node")
 
 	if _, err := os.Stat(numaNodePath); err != nil {
@@ -89,12 +77,8 @@ func getDeviceNUMANode(ctx *context.Context, address string) *topology.Node {
 	}
 }
 
-func getDeviceDriver(ctx *context.Context, address string) string {
+func getDeviceDriver(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	paths := linuxpath.New(ctx)
-	pciAddr := AddressFromString(address)
-	if pciAddr == nil {
-		return ""
-	}
 	driverPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "driver")
 
 	if _, err := os.Stat(driverPath); err != nil {
@@ -297,8 +281,14 @@ func (info *Info) GetDevice(address string) *Device {
 		return dev
 	}
 
+	pciAddr := pciaddr.FromString(address)
+	if pciAddr == nil {
+		info.ctx.Warn("error parsing the pci address %q", address)
+		return nil
+	}
+
 	// no cached data, let's get the information from system.
-	fp := getDeviceModaliasPath(info.ctx, address)
+	fp := getDeviceModaliasPath(info.ctx, pciAddr)
 	if fp == "" {
 		info.ctx.Warn("error finding modalias info for device %q", address)
 		return nil
@@ -311,11 +301,11 @@ func (info *Info) GetDevice(address string) *Device {
 	}
 
 	device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
-	device.Revision = getDeviceRevision(info.ctx, address)
+	device.Revision = getDeviceRevision(info.ctx, pciAddr)
 	if info.arch == topology.ARCHITECTURE_NUMA {
-		device.Node = getDeviceNUMANode(info.ctx, address)
+		device.Node = getDeviceNUMANode(info.ctx, pciAddr)
 	}
-	device.Driver = getDeviceDriver(info.ctx, address)
+	device.Driver = getDeviceDriver(info.ctx, pciAddr)
 	return device
 }
 
