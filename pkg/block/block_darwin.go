@@ -207,6 +207,10 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 }
 
 func (info *Info) load() error {
+	if !info.ctx.EnableTools {
+		return fmt.Errorf("EnableTools=false on darwin disables block support entirely.")
+	}
+
 	listPlist, err := getDiskUtilListPlist()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
