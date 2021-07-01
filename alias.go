@@ -19,6 +19,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/pci"
 	pciaddress "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/product"
+	"github.com/jaypipes/ghw/pkg/sriov"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
 
@@ -148,4 +149,12 @@ type GraphicsCard = gpu.GraphicsCard
 
 var (
 	GPU = gpu.New
+)
+
+type SRIOVInfo = sriov.Info
+type PhysicalFunction = sriov.PhysicalFunction
+type VirtualFunction = sriov.VirtualFunction
+
+var (
+	SRIOV = sriov.New
 )

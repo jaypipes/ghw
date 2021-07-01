@@ -48,7 +48,8 @@ type Device struct {
 	ProgrammingInterface *pcidb.ProgrammingInterface `json:"programming_interface"`
 	// Topology node that the PCI device is affined to. Will be nil if the
 	// architecture is not NUMA.
-	Node *topology.Node `json:"node,omitempty"`
+	Node   *topology.Node `json:"node,omitempty"`
+	Driver string         `json:"driver"`
 }
 
 type devIdent struct {
@@ -57,6 +58,7 @@ type devIdent struct {
 }
 
 type devMarshallable struct {
+	Driver    string   `json:"driver"`
 	Address   string   `json:"address"`
 	Vendor    devIdent `json:"vendor"`
 	Product   devIdent `json:"product"`
@@ -73,6 +75,7 @@ type devMarshallable struct {
 // human-readable name of the vendor, product, class, etc.
 func (d *Device) MarshalJSON() ([]byte, error) {
 	dm := devMarshallable{
+		Driver:  d.Driver,
 		Address: d.Address,
 		Vendor: devIdent{
 			ID:   d.Vendor.ID,
@@ -117,8 +120,9 @@ func (d *Device) String() string {
 		className = d.Class.Name
 	}
 	return fmt.Sprintf(
-		"%s -> class: '%s' vendor: '%s' product: '%s'",
+		"%s -> driver: '%s' class: '%s' vendor: '%s' product: '%s'",
 		d.Address,
+		d.Driver,
 		className,
 		vendorName,
 		productName,
@@ -160,18 +164,22 @@ func New(opts ...*option.Option) (*Info, error) {
 func NewWithContext(ctx *context.Context) (*Info, error) {
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
-	arch := topology.ARCHITECTURE_SMP
-	topo, err := topology.NewWithContext(ctx)
-	if err == nil {
-		arch = topo.Architecture
-	} else {
-		ctx.Warn("error detecting system topology: %v", err)
-	}
 	info := &Info{
-		arch: arch,
+		arch: topology.ARCHITECTURE_SMP,
 		ctx:  ctx,
 	}
-	if err := ctx.Do(info.load); err != nil {
+	// we do this trick because we need to make sure ctx.Setup() gets
+	// a chance to run before any subordinate package is created reusing
+	// our context.
+	if err := ctx.Do(func() error {
+		topo, err := topology.NewWithContext(ctx)
+		if err == nil {
+			info.arch = topo.Architecture
+		} else {
+			ctx.Warn("error detecting system topology: %v", err)
+		}
+		return info.load()
+	}); err != nil {
 		return nil, err
 	}
 	return info, nil

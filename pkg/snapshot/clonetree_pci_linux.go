@@ -26,7 +26,9 @@ const (
 // ghw cares about, pertaining to PCI devices only.
 // Beware: the content is host-specific, because the PCI topology is host-dependent and unpredictable.
 func ExpectedClonePCIContent() []string {
-	var fileSpecs []string
+	fileSpecs := []string{
+		"/sys/bus/pci/drivers/*",
+	}
 	pciRoots := []string{
 		sysBusPCIDir,
 	}
@@ -67,6 +69,15 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		"revision",
 		"vendor",
 	}
+
+	perDevEntriesOpt := []string{
+		"driver",
+		"net/*",
+		"physfn",
+		"sriov_*",
+		"virtfn*",
+	}
+
 	entries, err := ioutil.ReadDir(root)
 	if err != nil {
 		return []string{}, []string{}
@@ -91,6 +102,14 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		fileSpecs = append(fileSpecs, entryPath)
 		for _, perNetEntry := range perDevEntries {
 			fileSpecs = append(fileSpecs, filepath.Join(pciEntry, perNetEntry))
+		}
+
+		for _, perNetEntryOpt := range perDevEntriesOpt {
+			netEntryOptPath := filepath.Join(pciEntry, perNetEntryOpt)
+			if items, err := filepath.Glob(netEntryOptPath); err == nil && len(items) > 0 {
+				fileSpecs = append(fileSpecs, netEntryOptPath)
+			}
+
 		}
 
 		if isPCIBridge(entryPath) {

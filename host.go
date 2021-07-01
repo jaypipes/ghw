@@ -8,6 +8,7 @@ package ghw
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/net"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/product"
+	"github.com/jaypipes/ghw/pkg/sriov"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
 
@@ -40,6 +42,7 @@ type HostInfo struct {
 	Baseboard *baseboard.Info `json:"baseboard"`
 	Product   *product.Info   `json:"product"`
 	PCI       *pci.Info       `json:"pci"`
+	SRIOV     *sriov.Info     `json:"sriov"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -91,6 +94,10 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	sriovInfo, err := sriov.New(opts...)
+	if err != nil {
+		return nil, err
+	}
 	return &HostInfo{
 		ctx:       ctx,
 		CPU:       cpuInfo,
@@ -104,26 +111,32 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		Baseboard: baseboardInfo,
 		Product:   productInfo,
 		PCI:       pciInfo,
+		SRIOV:     sriovInfo,
 	}, nil
 }
 
 // String returns a newline-separated output of the HostInfo's component
 // structs' String-ified output
 func (info *HostInfo) String() string {
-	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-		info.Block.String(),
-		info.CPU.String(),
-		info.GPU.String(),
-		info.Memory.String(),
-		info.Network.String(),
-		info.Topology.String(),
-		info.Chassis.String(),
-		info.BIOS.String(),
-		info.Baseboard.String(),
-		info.Product.String(),
-		info.PCI.String(),
-	)
+	var b strings.Builder
+	for _, s := range []fmt.Stringer{
+		info.Block,
+		info.CPU,
+		info.GPU,
+		info.Memory,
+		info.Network,
+		info.Topology,
+		info.Chassis,
+		info.BIOS,
+		info.Baseboard,
+		info.Product,
+		info.PCI,
+		info.SRIOV,
+	} {
+		b.WriteString(s.String())
+		b.WriteString("\n")
+	}
+	return b.String()
 }
 
 // YAMLString returns a string with the host information formatted as YAML

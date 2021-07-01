@@ -73,7 +73,14 @@ func (i *Info) String() string {
 // New returns a pointer to a Info struct containing information
 // about the host's product
 func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
+	return NewWithContext(context.New(opts...))
+}
+
+// New returns a pointer to a Info struct containing information
+// about the host's product, reusing a given context.
+// Use this function when you want to consume this package from another,
+// ensuring the two see a coherent set of resources.
+func NewWithContext(ctx *context.Context) (*Info, error) {
 	info := &Info{ctx: ctx}
 	if err := ctx.Do(info.load); err != nil {
 		return nil, err

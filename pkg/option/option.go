@@ -14,7 +14,10 @@ import (
 )
 
 const (
-	defaultChroot           = "/"
+	DefaultChroot = "/"
+)
+
+const (
 	envKeyChroot            = "GHW_CHROOT"
 	envKeyDisableWarnings   = "GHW_DISABLE_WARNINGS"
 	envKeyDisableTools      = "GHW_DISABLE_TOOLS"
@@ -57,7 +60,7 @@ func EnvOrDefaultChroot() string {
 	if val, exists := os.LookupEnv(envKeyChroot); exists {
 		return val
 	}
-	return defaultChroot
+	return DefaultChroot
 }
 
 // EnvOrDefaultSnapshotPath returns the value of the GHW_SNAPSHOT_PATH environs variable

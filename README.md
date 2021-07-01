@@ -1092,6 +1092,67 @@ information
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
 
+### SRIOV
+
+*This API is PROVISIONAL! ghw will try hard to not make breaking changes to this API, but still users are advice this new API is not
+declared stable yet. We expect to declare it stable with ghw version 1.0.0*
+
+SRIOV (Single-Root Input/Output Virtualization) is a class of PCI devices that ghw models explicitly, like gpus.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	sriov, err := ghw.SRIOV()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting SRIOV info: %v", err)
+	}
+
+	fmt.Printf("%v\n", sriov)
+
+	for _, dev := range sriov.PhysicalFunctions {
+		fmt.Printf(" %v\n", dev)
+	}
+}
+```
+
+ghw discovers the SRIOV devices starting from the Physical Function (PF) and exposes them in the `PhysicalFunctions` slice.
+Virtual Function (VF) are exposed as properties of the PF instance with exposes them.
+However, in some cases users are interested in the VFs first, so it's clumsy to navigate the PFs to learn about VFs.
+To make this easier, ghw also exposes a slice of VF instances. These instances are soft references to the very same VF objects
+you can find from the PF objects.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	sriov, err := ghw.SRIOV()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting SRIOV info: %v", err)
+	}
+
+	fmt.Printf("%v\n", sriov)
+
+	// you will see the very same VF data data you seen from the previous example
+	for _, dev := range sriov.VirtualFunctions {
+		fmt.Printf(" %v\n", dev)
+	}
+}
+```
+
+
 ### Chassis
 
 The host's chassis information is accessible with the `ghw.Chassis()` function.  This

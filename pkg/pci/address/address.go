@@ -25,6 +25,16 @@ type Address struct {
 	Function string
 }
 
+func (addr *Address) Equal(a *Address) bool {
+	if addr == nil && a == nil {
+		return true
+	}
+	if addr != nil && a != nil {
+		return addr.Domain == a.Domain && addr.Bus == a.Bus && addr.Device == a.Device && addr.Function == a.Function
+	}
+	return false
+}
+
 // String() returns the canonical [D]BDF representation of this Address
 func (addr *Address) String() string {
 	return addr.Domain + ":" + addr.Bus + ":" + addr.Device + "." + addr.Function
