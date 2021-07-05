@@ -48,7 +48,8 @@ type Device struct {
 	ProgrammingInterface *pcidb.ProgrammingInterface `json:"programming_interface"`
 	// Topology node that the PCI device is affined to. Will be nil if the
 	// architecture is not NUMA.
-	Node *topology.Node `json:"node,omitempty"`
+	Node   *topology.Node `json:"node,omitempty"`
+	Driver string         `json:"driver"`
 }
 
 type devIdent struct {
@@ -57,6 +58,7 @@ type devIdent struct {
 }
 
 type devMarshallable struct {
+	Driver    string   `json:"driver"`
 	Address   string   `json:"address"`
 	Vendor    devIdent `json:"vendor"`
 	Product   devIdent `json:"product"`
@@ -73,6 +75,7 @@ type devMarshallable struct {
 // human-readable name of the vendor, product, class, etc.
 func (d *Device) MarshalJSON() ([]byte, error) {
 	dm := devMarshallable{
+		Driver:  d.Driver,
 		Address: d.Address,
 		Vendor: devIdent{
 			ID:   d.Vendor.ID,
@@ -117,8 +120,9 @@ func (d *Device) String() string {
 		className = d.Class.Name
 	}
 	return fmt.Sprintf(
-		"%s -> class: '%s' vendor: '%s' product: '%s'",
+		"%s -> driver: '%s' class: '%s' vendor: '%s' product: '%s'",
 		d.Address,
+		d.Driver,
 		className,
 		vendorName,
 		productName,

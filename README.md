@@ -839,6 +839,11 @@ The `ghw.PCIDevice` struct has the following fields:
 * `ghw.PCIDevice.ProgrammingInterface` is a pointer to a
   `pcidb.ProgrammingInterface` struct that describes the device subclass'
   programming interface. This will always be non-nil.
+* `ghw.PCIDevice.Driver` is a string representing the device driver the
+  system is using to handle this device. Can be empty string if this
+  information is not available. If the information is not available,
+  this doesn't mean at all the device is not functioning, but only the
+  fact `ghw` was not able to retrieve this information.
 
 The `ghw.PCIAddress` (which is an alias for the `ghw.pci.address.Address`
 struct) contains the PCI address fields. It has a `ghw.PCIAddress.String()`
