@@ -85,6 +85,7 @@ type Node struct {
 	Cores     []*cpu.ProcessorCore `json:"cores"`
 	Caches    []*memory.Cache      `json:"caches"`
 	Distances []int                `json:"distances"`
+	Memory    *memory.Area         `json:"memory"`
 }
 
 func (n *Node) String() string {
