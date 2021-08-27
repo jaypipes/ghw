@@ -90,9 +90,21 @@ func TestCloneSystemTree(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	if len(missing) > 0 {
+	if len(missing) > 0 && areEntriesOnSysfs(missing) {
 		t.Fatalf("Expected content %#v missing into the cloned tree %q", missing, cloneRoot)
 	}
+}
+
+func areEntriesOnSysfs(sysfsEntries []string) bool {
+	// turns out some ISA bridges do not actually expose the driver entry. The reason is not clear.
+	// So let's check if we actually have the entry we were looking for on sysfs. If so, we
+	// actually failed to clone an entry, and we must fail the test. Otherwise we carry on.
+	for _, sysfsEntry := range sysfsEntries {
+		if _, err := os.Lstat(sysfsEntry); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func scanTree(root, prefix string, excludeList []string) ([]string, error) {

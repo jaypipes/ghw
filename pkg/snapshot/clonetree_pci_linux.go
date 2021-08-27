@@ -62,6 +62,7 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 	perDevEntries := []string{
 		"class",
 		"device",
+		"driver",
 		"irq",
 		"local_cpulist",
 		"modalias",
