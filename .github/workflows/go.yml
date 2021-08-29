@@ -2,9 +2,9 @@ name: CI tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 # see: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
 jobs:

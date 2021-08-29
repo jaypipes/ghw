@@ -1,6 +1,7 @@
 # `ghw` - Golang HardWare discovery/inspection library
 
-[![Build Status](https://github.com/jaypipes/ghw/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/jaypipes/ghw/actions)
+[![Build Status](https://github.com/jaypipes/ghw/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/jaypipes/ghw/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jaypipes/ghw)](https://goreportcard.com/report/github.com/jaypipes/ghw)
 
 ![ghw mascot](images/ghw-gopher.png)
 
