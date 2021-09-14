@@ -20,3 +20,12 @@ func SnapshotsDirectory() (string, error) {
 	basedir := filepath.Dir(file)
 	return filepath.Join(basedir, "snapshots"), nil
 }
+
+func SamplesDirectory() (string, error) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", fmt.Errorf("Cannot retrieve testdata directory")
+	}
+	basedir := filepath.Dir(file)
+	return filepath.Join(basedir, "samples"), nil
+}

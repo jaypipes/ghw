@@ -7,11 +7,16 @@
 package block_test
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/block"
+
+	"github.com/jaypipes/ghw/testdata"
 )
 
 // nolint: gocyclo
@@ -23,7 +28,7 @@ func TestBlock(t *testing.T) {
 	info, err := block.New()
 
 	if err != nil {
-		t.Fatalf("Expected no error creating BlockInfo, but got %v", err)
+		t.Fatalf("Expected no error creating block.Info, but got %v", err)
 	}
 	tpb := info.TotalPhysicalBytes
 
@@ -72,4 +77,70 @@ func TestBlock(t *testing.T) {
 			t.Fatalf("Expected disk to be the same as d0 but got %v", p.Disk)
 		}
 	}
+}
+
+func TestBlockMarshalUnmarshal(t *testing.T) {
+	blocks, err := block.New()
+	if err != nil {
+		t.Fatalf("Expected no error creating block.Info, but got %v", err)
+	}
+
+	data, err := json.Marshal(blocks)
+	if err != nil {
+		t.Fatalf("Expected no error marshaling block.Info, but got %v", err)
+	}
+
+	var bi *block.Info
+	err = json.Unmarshal(data, &bi)
+	if err != nil {
+		t.Fatalf("Expected no error unmarshaling block.Info, but got %v", err)
+	}
+}
+
+type blockData struct {
+	Block block.Info `json:"block"`
+}
+
+func TestBlockUnmarshal(t *testing.T) {
+	testdataPath, err := testdata.SamplesDirectory()
+	if err != nil {
+		t.Fatalf("Expected nil err when detecting the samples directory, but got %v", err)
+	}
+
+	data, err := ioutil.ReadFile(filepath.Join(testdataPath, "dell-r610-block.json"))
+	if err != nil {
+		t.Fatalf("Expected nil err when reading the sample data, but got %v", err)
+	}
+
+	var bd blockData
+	err = json.Unmarshal(data, &bd)
+	if err != nil {
+		t.Fatalf("Expected no error unmarshaling block.Info, but got %v", err)
+	}
+
+	// to learn why we check these values, please review the "dell-r610-block.json" sample
+	sda := findDiskByName(bd.Block.Disks, "sda")
+	if sda == nil {
+		t.Fatalf("unexpected error: can't find 'sda' in the test data")
+	}
+	if sda.DriveType != block.DRIVE_TYPE_HDD || sda.StorageController != block.STORAGE_CONTROLLER_SCSI {
+		t.Fatalf("inconsistent data for sda: %s", sda)
+	}
+
+	zram0 := findDiskByName(bd.Block.Disks, "zram0")
+	if zram0 == nil {
+		t.Fatalf("unexpected error: can't find 'zram0' in the test data")
+	}
+	if zram0.DriveType != block.DRIVE_TYPE_SSD {
+		t.Fatalf("inconsistent data for zram0: %s", zram0)
+	}
+}
+
+func findDiskByName(disks []*block.Disk, name string) *block.Disk {
+	for _, disk := range disks {
+		if disk.Name == name {
+			return disk
+		}
+	}
+	return nil
 }
