@@ -33,6 +33,10 @@ var (
 	WithDisableWarnings = option.WithNullAlerter
 	WithDisableTools    = option.WithDisableTools
 	WithPathOverrides   = option.WithPathOverrides
+	// Deprecated: WithAlterter is misspelled, Instead, use WithAlerter.
+	WithAlterter      = option.WithAlerter
+	// Deprecated: WithNullAlterter is misspelled. Instead, use WithNullAlerter.
+	WithNullAlterter  = option.WithNullAlerter
 )
 
 type SnapshotOptions = option.SnapshotOptions
