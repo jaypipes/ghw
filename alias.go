@@ -27,8 +27,8 @@ type WithOption = option.Option
 var (
 	WithChroot       = option.WithChroot
 	WithSnapshot     = option.WithSnapshot
-	WithAlerter     = option.WithAlerter
-	WithNullAlerter = option.WithNullAlerter
+	WithAlerter      = option.WithAlerter
+	WithNullAlerter  = option.WithNullAlerter
 	// match the existing environ variable to minimize surprises
 	WithDisableWarnings = option.WithNullAlerter
 	WithDisableTools    = option.WithDisableTools
