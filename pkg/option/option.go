@@ -113,7 +113,7 @@ func EnvOrDefaultTools() bool {
 type Option struct {
 	// To facilitate querying of sysfs filesystems that are bind-mounted to a
 	// non-default root mountpoint, we allow users to set the GHW_CHROOT environ
-	// vairable to an alternate mountpoint. For instance, assume that the user of
+	// variable to an alternate mountpoint. For instance, assume that the user of
 	// ghw is a Golang binary being executed from an application container that has
 	// certain host filesystems bind-mounted into the container at /host. The user
 	// would ensure the GHW_CHROOT environ variable is set to "/host" and ghw will

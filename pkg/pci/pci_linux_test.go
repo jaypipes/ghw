@@ -152,7 +152,7 @@ func TestPCIMalformedModalias(t *testing.T) {
 	var dev *pci.Device
 	dev = info.ParseDevice("0000:00:01.0", "pci:junk")
 	if dev != nil {
-		t.Fatalf("Parsed succesfully junk data")
+		t.Fatalf("Parsed successfully junk data")
 	}
 
 	dev = info.ParseDevice("0000:00:01.0", "pci:v00008086d00005916sv000017AAsd0000224Bbc03sc00i00extrajunkextradataextraextra")

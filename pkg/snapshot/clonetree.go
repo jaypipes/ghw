@@ -128,7 +128,7 @@ func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) err
 		if err != nil {
 			return err
 		}
-		// directories must be listed explicitely and created separately.
+		// directories must be listed explicitly and created separately.
 		// In the future we may want to expose this decision as hook point in
 		// CopyFileOptions, when clear use cases emerge.
 		destPath := filepath.Join(destDir, path)

@@ -55,7 +55,7 @@ type filterFunc func(string) bool
 // symbolic link. We can filter out entries depending on the link target.
 // Each filter is a simple function which takes the entry name or the link
 // target and must return true if the entry should be collected, false
-// otherwise. Last, explicitely collect a list of attributes for each entry,
+// otherwise. Last, explicitly collect a list of attributes for each entry,
 // given as list of glob patterns as `subEntries`.
 // Return the final list of glob patterns to be collected.
 func cloneContentByClass(devClass string, subEntries []string, filterName filterFunc, filterLink filterFunc) []string {

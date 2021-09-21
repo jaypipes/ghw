@@ -93,7 +93,7 @@ func TestOption(t *testing.T) {
 				option.WithChroot("/my/chroot/dir"),
 				option.WithSnapshot(option.SnapshotOptions{
 					Path:      "/my/snapshot/dir",
-					Root:      stringPtr("/my/overriden/chroot/dir"),
+					Root:      stringPtr("/my/overridden/chroot/dir"),
 					Exclusive: true,
 				}),
 			},
@@ -102,7 +102,7 @@ func TestOption(t *testing.T) {
 				Chroot: stringPtr("/my/chroot/dir"),
 				Snapshot: &option.SnapshotOptions{
 					Path:      "/my/snapshot/dir",
-					Root:      stringPtr("/my/overriden/chroot/dir"),
+					Root:      stringPtr("/my/overridden/chroot/dir"),
 					Exclusive: true,
 				},
 			},
