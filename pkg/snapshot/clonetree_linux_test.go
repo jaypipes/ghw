@@ -20,7 +20,7 @@ import (
 
 // NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
 // want to make sure we never leak directories. `snapshot.Cleanup` is used and
-// tested explicitely in `unpack_test.go`.
+// tested explicitly in `unpack_test.go`.
 
 // nolint: gocyclo
 func TestCloneTree(t *testing.T) {
