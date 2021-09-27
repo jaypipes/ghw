@@ -1,0 +1,147 @@
+{
+  "block": {
+    "total_size_bytes": 775510031872,
+    "disks": [
+      {
+        "name": "dm-0",
+        "size_bytes": 34359738368,
+        "physical_block_size_bytes": 512,
+        "drive_type": "unknown",
+        "removable": false,
+        "storage_controller": "unknown",
+        "bus_path": "unknown",
+        "vendor": "unknown",
+        "model": "unknown",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      },
+      {
+        "name": "dm-1",
+        "size_bytes": 8589934592,
+        "physical_block_size_bytes": 512,
+        "drive_type": "unknown",
+        "removable": false,
+        "storage_controller": "unknown",
+        "bus_path": "unknown",
+        "vendor": "unknown",
+        "model": "unknown",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      },
+      {
+        "name": "dm-2",
+        "size_bytes": 12884901888,
+        "physical_block_size_bytes": 512,
+        "drive_type": "unknown",
+        "removable": false,
+        "storage_controller": "unknown",
+        "bus_path": "unknown",
+        "vendor": "unknown",
+        "model": "unknown",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      },
+      {
+        "name": "dm-3",
+        "size_bytes": 133143986176,
+        "physical_block_size_bytes": 512,
+        "drive_type": "unknown",
+        "removable": false,
+        "storage_controller": "unknown",
+        "bus_path": "unknown",
+        "vendor": "unknown",
+        "model": "unknown",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      },
+      {
+        "name": "dm-4",
+        "size_bytes": 85899345920,
+        "physical_block_size_bytes": 512,
+        "drive_type": "unknown",
+        "removable": false,
+        "storage_controller": "unknown",
+        "bus_path": "unknown",
+        "vendor": "unknown",
+        "model": "unknown",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      },
+      {
+        "name": "sda",
+        "size_bytes": 499558383616,
+        "physical_block_size_bytes": 512,
+        "drive_type": "hdd",
+        "removable": false,
+        "storage_controller": "scsi",
+        "bus_path": "pci-0000:03:00.0-scsi-0:2:0:0",
+        "vendor": "DELL",
+        "model": "PERC_6_i",
+        "serial_number": "unknown",
+        "wwn": "0xCAFE",
+        "partitions": [
+          {
+            "name": "sda1",
+            "label": "",
+            "mount_point": "/boot/efi",
+            "size_bytes": 134217728,
+            "type": "vfat",
+            "read_only": false,
+            "uuid": "00000000-0000-0000-0000-000000000000"
+          },
+          {
+            "name": "sda2",
+            "label": "",
+            "mount_point": "/boot",
+            "size_bytes": 536870912,
+            "type": "ext4",
+            "read_only": false,
+            "uuid": "00000000-0000-0000-0000-000000000000"
+          },
+          {
+            "name": "sda3",
+            "label": "",
+            "mount_point": "",
+            "size_bytes": 498886229504,
+            "type": "",
+            "read_only": true,
+            "uuid": "00000000-0000-0000-0000-000000000000"
+          }
+        ]
+      },
+      {
+        "name": "sr0",
+        "size_bytes": 1073741312,
+        "physical_block_size_bytes": 512,
+        "drive_type": "odd",
+        "removable": true,
+        "storage_controller": "scsi",
+        "bus_path": "pci-0000:00:1f.2-ata-1.0",
+        "vendor": "PLDS",
+        "model": "PLDS_DVD-ROM_DS-8D3SH",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      },
+      {
+        "name": "zram0",
+        "size_bytes": 0,
+        "physical_block_size_bytes": 4096,
+        "drive_type": "ssd",
+        "removable": false,
+        "storage_controller": "unknown",
+        "bus_path": "unknown",
+        "vendor": "unknown",
+        "model": "unknown",
+        "serial_number": "unknown",
+        "wwn": "unknown",
+        "partitions": []
+      }
+    ]
+  }
+}
