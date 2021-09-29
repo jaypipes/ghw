@@ -7,8 +7,10 @@
 package block
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/context"
@@ -37,6 +39,19 @@ var (
 		DRIVE_TYPE_ODD:     "ODD",
 		DRIVE_TYPE_SSD:     "SSD",
 	}
+
+	// NOTE(fromani): the keys are all lowercase and do not match
+	// the keys in the opposite table `driveTypeString`.
+	// This is done because of the choice we made in
+	// DriveType::MarshalJSON.
+	// We use this table only in UnmarshalJSON, so it should be OK.
+	stringDriveType = map[string]DriveType{
+		"unknown": DRIVE_TYPE_UNKNOWN,
+		"hdd":     DRIVE_TYPE_HDD,
+		"fdd":     DRIVE_TYPE_FDD,
+		"odd":     DRIVE_TYPE_ODD,
+		"ssd":     DRIVE_TYPE_SSD,
+	}
 )
 
 func (dt DriveType) String() string {
@@ -47,7 +62,21 @@ func (dt DriveType) String() string {
 // get, let's lowercase the string output when serializing, in order to
 // "normalize" the expected serialized output
 func (dt DriveType) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + strings.ToLower(dt.String()) + "\""), nil
+	return []byte(strconv.Quote(strings.ToLower(dt.String()))), nil
+}
+
+func (dt *DriveType) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	key := strings.ToLower(s)
+	val, ok := stringDriveType[key]
+	if !ok {
+		return fmt.Errorf("unknown drive type: %q", key)
+	}
+	*dt = val
+	return nil
 }
 
 // StorageController is a category of block storage controller/driver. It
@@ -75,17 +104,45 @@ var (
 		STORAGE_CONTROLLER_VIRTIO:  "virtio",
 		STORAGE_CONTROLLER_MMC:     "MMC",
 	}
+
+	// NOTE(fromani): the keys are all lowercase and do not match
+	// the keys in the opposite table `storageControllerString`.
+	// This is done/ because of the choice we made in
+	// StorageController::MarshalJSON.
+	// We use this table only in UnmarshalJSON, so it should be OK.
+	stringStorageController = map[string]StorageController{
+		"unknown": STORAGE_CONTROLLER_UNKNOWN,
+		"ide":     STORAGE_CONTROLLER_IDE,
+		"scsi":    STORAGE_CONTROLLER_SCSI,
+		"nvme":    STORAGE_CONTROLLER_NVME,
+		"virtio":  STORAGE_CONTROLLER_VIRTIO,
+		"mmc":     STORAGE_CONTROLLER_MMC,
+	}
 )
 
 func (sc StorageController) String() string {
 	return storageControllerString[sc]
 }
 
+func (sc *StorageController) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	key := strings.ToLower(s)
+	val, ok := stringStorageController[key]
+	if !ok {
+		return fmt.Errorf("unknown storage controller: %q", key)
+	}
+	*sc = val
+	return nil
+}
+
 // NOTE(jaypipes): since serialized output is as "official" as we're going to
 // get, let's lowercase the string output when serializing, in order to
 // "normalize" the expected serialized output
 func (sc StorageController) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + strings.ToLower(sc.String()) + "\""), nil
+	return []byte(strconv.Quote(strings.ToLower(sc.String()))), nil
 }
 
 // Disk describes a single disk drive on the host system. Disk drives provide
