@@ -163,21 +163,27 @@ func New(opts ...*option.Option) (*Info, error) {
 		arch: topology.ARCHITECTURE_SMP,
 		ctx:  ctx,
 	}
+
 	// we do this trick because we need to make sure ctx.Setup() gets
 	// a chance to run before any subordinate package is created reusing
 	// our context.
-	if err := ctx.Do(func() error {
+	loadDetectingTopology := func() error {
 		topo, err := topology.New(context.WithContext(ctx))
 		if err == nil {
 			info.arch = topo.Architecture
 		} else {
 			ctx.Warn("error detecting system topology: %v", err)
 		}
-		if context.Exists(merged) {
-			return info.load()
-		}
-		return ctx.Do(info.load)
-	}); err != nil {
+		return info.load()
+	}
+
+	var err error
+	if context.Exists(merged) {
+		err = loadDetectingTopology()
+	} else {
+		err = ctx.Do(loadDetectingTopology)
+	}
+	if err != nil {
 		return nil, err
 	}
 	return info, nil
