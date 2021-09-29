@@ -79,15 +79,16 @@ type Info struct {
 // New returns a pointer to an Info struct that contains information about the
 // NUMA topology on the host system
 func New(opts ...*option.Option) (*Info, error) {
-	return NewWithContext(context.New(opts...))
-}
-
-// NewWithContext returns a pointer to an Info struct that contains information about
-// the NUMA topology on the host system. Use this function when you want to consume
-// the topology package from another package (e.g. pci, gpu)
-func NewWithContext(ctx *context.Context) (*Info, error) {
+	merged := option.Merge(opts...)
+	ctx := context.New(merged)
 	info := &Info{ctx: ctx}
-	if err := ctx.Do(info.load); err != nil {
+	var err error
+	if context.Exists(merged) {
+		err = info.load()
+	} else {
+		err = ctx.Do(info.load)
+	}
+	if err != nil {
 		return nil, err
 	}
 	for _, node := range info.Nodes {

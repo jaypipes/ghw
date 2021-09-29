@@ -11,8 +11,8 @@ import (
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
-// Concrete merged set of configuration switches that act as an execution
-// context when calling internal discovery methods
+// Context contains the merged set of configuration switches that act as an
+// execution context when calling internal discovery methods
 type Context struct {
 	Chroot               string
 	EnableTools          bool
@@ -24,10 +24,37 @@ type Context struct {
 	alert                option.Alerter
 }
 
+// WithContext returns an option.Option that contains a pre-existing Context
+// struct. This is useful for some internal code that sets up snapshots.
+func WithContext(ctx *Context) *option.Option {
+	return &option.Option{
+		Context: ctx,
+	}
+}
+
+// Exists returns true if the supplied (merged) Option already contains
+// a context.
+//
+// TODO(jaypipes): We can get rid of this when we combine the option and
+// context packages, which will make it easier to detect the presence of a
+// pre-setup Context.
+func Exists(opt *option.Option) bool {
+	return opt != nil && opt.Context != nil
+}
+
 // New returns a Context struct pointer that has had various options set on it
 func New(opts ...*option.Option) *Context {
 	merged := option.Merge(opts...)
-	ctx := &Context{
+	var ctx *Context
+	if merged.Context != nil {
+		var castOK bool
+		ctx, castOK = merged.Context.(*Context)
+		if !castOK {
+			panic("passed in a non-Context for the WithContext() function!")
+		}
+		return ctx
+	}
+	ctx = &Context{
 		alert:  option.EnvOrDefaultAlerter(),
 		Chroot: *merged.Chroot,
 	}

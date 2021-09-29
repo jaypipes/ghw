@@ -133,6 +133,11 @@ type Option struct {
 	// PathOverrides optionally allows to override the default paths ghw uses internally
 	// to learn about the system resources.
 	PathOverrides PathOverrides
+
+	// Context may contain a pointer to a `Context` struct that is constructed
+	// during a call to the `context.WithContext` function. Only used internally.
+	// This is an interface to get around recursive package import issues.
+	Context interface{}
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -202,6 +207,8 @@ func WithPathOverrides(overrides PathOverrides) *Option {
 // a debug/troubleshoot aid more something users wants to do regularly.
 // Hence we allow that only via the environment variable for the time being.
 
+// Merge accepts one or more Options and merges them together, returning the
+// merged Option
 func Merge(opts ...*Option) *Option {
 	merged := &Option{}
 	for _, opt := range opts {
@@ -220,6 +227,9 @@ func Merge(opts ...*Option) *Option {
 		// intentionally only programmatically
 		if opt.PathOverrides != nil {
 			merged.PathOverrides = opt.PathOverrides
+		}
+		if opt.Context != nil {
+			merged.Context = opt.Context
 		}
 	}
 	// Set the default value if missing from mergeOpts
