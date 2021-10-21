@@ -7,10 +7,12 @@
 package memory_test
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/memory"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
 // nolint: gocyclo
@@ -44,5 +46,24 @@ func TestMemory(t *testing.T) {
 	}
 	if len(sps) == 0 {
 		t.Fatalf("Expected >0 supported page sizes, but got 0.")
+	}
+}
+
+func TestMemoryMarshalUnmarshal(t *testing.T) {
+	data, err := memory.New(option.WithNullAlerter())
+	if err != nil {
+		t.Fatalf("Expected no error creating memory.Info, but got %v", err)
+	}
+
+	jdata, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("Expected no error marshaling memory.Info, but got %v", err)
+	}
+
+	var topo *memory.Info
+
+	err = json.Unmarshal(jdata, &topo)
+	if err != nil {
+		t.Fatalf("Expected no error unmarshaling memory.Info, but got %v", err)
 	}
 }

@@ -7,9 +7,11 @@
 package topology_test
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
 
@@ -55,5 +57,24 @@ func TestTopology(t *testing.T) {
 		if len(n.Caches) == 0 {
 			t.Fatalf("Expected >0 caches but got 0.")
 		}
+	}
+}
+
+func TestTopologyMarshalUnmarshal(t *testing.T) {
+	data, err := topology.New(option.WithNullAlerter())
+	if err != nil {
+		t.Fatalf("Expected no error creating topology.Info, but got %v", err)
+	}
+
+	jdata, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("Expected no error marshaling topology.Info, but got %v", err)
+	}
+
+	var topo *topology.Info
+
+	err = json.Unmarshal(jdata, &topo)
+	if err != nil {
+		t.Fatalf("Expected no error unmarshaling topology.Info, but got %v", err)
 	}
 }
