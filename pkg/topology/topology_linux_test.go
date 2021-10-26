@@ -7,6 +7,7 @@
 package topology_test
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"testing"
 
@@ -56,5 +57,26 @@ func TestTopologyNUMADistances(t *testing.T) {
 
 	if info.Nodes[0].Distances[1] != info.Nodes[1].Distances[0] {
 		t.Fatalf("Expected symmetric distance to the other node, got %v and %v", info.Nodes[0].Distances, info.Nodes[1].Distances)
+	}
+}
+
+// we have this test in topology_linux_test.go (and not in topology_test.go) because `topologyFillInfo`
+// is not implemented on darwin; so having it in the platform-independent tests would lead to false negatives.
+func TestTopologyMarshalUnmarshal(t *testing.T) {
+	data, err := topology.New(option.WithNullAlerter())
+	if err != nil {
+		t.Fatalf("Expected no error creating topology.Info, but got %v", err)
+	}
+
+	jdata, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("Expected no error marshaling topology.Info, but got %v", err)
+	}
+
+	var topo *topology.Info
+
+	err = json.Unmarshal(jdata, &topo)
+	if err != nil {
+		t.Fatalf("Expected no error unmarshaling topology.Info, but got %v", err)
 	}
 }
