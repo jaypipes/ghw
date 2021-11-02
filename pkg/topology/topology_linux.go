@@ -69,6 +69,13 @@ func topologyNodes(ctx *context.Context) []*Node {
 		}
 		node.Distances = distances
 
+		area, err := memory.AreaForNode(ctx, nodeID)
+		if err != nil {
+			ctx.Warn("failed to determine memory area for node: %s\n", err)
+			return nodes
+		}
+		node.Memory = area
+
 		nodes = append(nodes, node)
 	}
 	return nodes

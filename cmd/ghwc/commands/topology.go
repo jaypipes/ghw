@@ -37,6 +37,11 @@ func showTopology(cmd *cobra.Command, args []string) error {
 			for _, cache := range node.Caches {
 				fmt.Printf("  %v\n", cache)
 			}
+			fmt.Printf("  %v\n", node.Memory)
+			fmt.Printf("  distances\n")
+			for nodeID, dist := range node.Distances {
+				fmt.Printf("    to node #%d %v\n", nodeID, dist)
+			}
 		}
 	case outputFormatJSON:
 		fmt.Printf("%s\n", topology.JSONString(pretty))

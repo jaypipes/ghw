@@ -262,10 +262,24 @@ function.
 
 ### Memory
 
+The basic building block of the memory support in ghw is the `ghw.MemoryArea` struct.
+A "memory area" is a block of memory which share common properties. In the simplest
+case, the whole system memory fits in a single memory area; in more complex scenarios,
+like multi-NUMA systems, many memory areas may be present in the system (e.g. one for
+each NUMA cell).
+
+The `ghw.MemoryArea` struct contains the following fields:
+
+* `ghw.MemoryInfo.TotalPhysicalBytes` contains the amount of physical memory on
+  the host
+* `ghw.MemoryInfo.TotalUsableBytes` contains the amount of memory the
+  system can actually use. Usable memory accounts for things like the kernel's
+  resident memory size and some reserved system bits
+
 Information about the host computer's memory can be retrieved using the
 `ghw.Memory()` function which returns a pointer to a `ghw.MemoryInfo` struct.
-
-The `ghw.MemoryInfo` struct contains three fields:
+`ghw.MemoryInfo` is a superset of `ghw.MemoryArea`. Thus, it contains all the
+fields found in the `ghw.MemoryArea` (replicated for clarity) plus some:
 
 * `ghw.MemoryInfo.TotalPhysicalBytes` contains the amount of physical memory on
   the host
@@ -600,6 +614,8 @@ Each `ghw.TopologyNode` struct contains the following fields:
   system
 * `ghw.TopologyNode.Distance` is an array of distances between NUMA nodes as reported
   by the system.
+* `ghw.TopologyNode.Memory` is a struct describing the memory attached to this node.
+   Please refer to the documentation of `ghw.MemoryArea`.
 
 See above in the [CPU](#cpu) section for information about the
 `ghw.ProcessorCore` struct and how to use and query it.

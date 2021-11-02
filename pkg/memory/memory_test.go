@@ -26,7 +26,12 @@ func TestMemory(t *testing.T) {
 
 	tpb := mem.TotalPhysicalBytes
 	tub := mem.TotalUsableBytes
-
+	if tpb == 0 {
+		t.Fatalf("Total physical bytes reported zero")
+	}
+	if tub == 0 {
+		t.Fatalf("Total usable bytes reported zero")
+	}
 	if tpb < tub {
 		t.Fatalf("Total physical bytes < total usable bytes. %d < %d",
 			tpb, tub)

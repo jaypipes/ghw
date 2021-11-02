@@ -45,6 +45,7 @@ var (
 	CPU = cpu.New
 )
 
+type MemoryArea = memory.Area
 type MemoryInfo = memory.Info
 type MemoryCacheType = memory.CacheType
 type MemoryModule = memory.Module
