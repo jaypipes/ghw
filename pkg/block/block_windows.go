@@ -115,7 +115,7 @@ func (i *Info) load() error {
 		}
 		for _, diskpartition := range win32DiskPartitionDescriptions {
 			// Finding disk partition linked to current disk drive
-			if diskdrive.Index == diskpartition.DiskIndex {
+			if *diskdrive.Index == *diskpartition.DiskIndex {
 				disk.PhysicalBlockSizeBytes = *diskpartition.BlockSize
 				// Finding logical partition linked to current disk partition
 				for _, logicaldisk := range win32LogicalDiskDescriptions {
