@@ -9,20 +9,20 @@ package ghw
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/context"
 
-	"github.com/jaypipes/ghw/pkg/baseboard"
-	"github.com/jaypipes/ghw/pkg/bios"
-	"github.com/jaypipes/ghw/pkg/block"
-	"github.com/jaypipes/ghw/pkg/chassis"
-	"github.com/jaypipes/ghw/pkg/cpu"
-	"github.com/jaypipes/ghw/pkg/gpu"
-	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/net"
-	"github.com/jaypipes/ghw/pkg/pci"
-	"github.com/jaypipes/ghw/pkg/product"
-	"github.com/jaypipes/ghw/pkg/topology"
+	"github.com/adumandix/ghw/pkg/baseboard"
+	"github.com/adumandix/ghw/pkg/bios"
+	"github.com/adumandix/ghw/pkg/block"
+	"github.com/adumandix/ghw/pkg/chassis"
+	"github.com/adumandix/ghw/pkg/cpu"
+	"github.com/adumandix/ghw/pkg/gpu"
+	"github.com/adumandix/ghw/pkg/marshal"
+	"github.com/adumandix/ghw/pkg/memory"
+	"github.com/adumandix/ghw/pkg/net"
+	"github.com/adumandix/ghw/pkg/pci"
+	"github.com/adumandix/ghw/pkg/product"
+	"github.com/adumandix/ghw/pkg/topology"
 )
 
 // HostInfo is a wrapper struct containing information about the host system's

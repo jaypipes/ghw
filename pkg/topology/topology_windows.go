@@ -51,11 +51,11 @@ func topologyNodes() ([]*Node, error) {
 				ID: lpi.numaNodeID(),
 			})
 		case relationProcessorCore:
-			// TODO(jaypipes): associated LP to processor core
+			// TODO(adumandix): associated LP to processor core
 		case relationProcessorPackage:
 			// ignore
 		case relationCache:
-			// TODO(jaypipes) handle cache layers
+			// TODO(adumandix) handle cache layers
 		default:
 			return nil, fmt.Errorf("Unknown LOGICAL_PROCESSOR_RELATIONSHIP value: %d", lpi.relationship)
 

@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
-	"github.com/jaypipes/ghw/pkg/unitutil"
-	"github.com/jaypipes/ghw/pkg/util"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/marshal"
+	"github.com/adumandix/ghw/pkg/option"
+	"github.com/adumandix/ghw/pkg/unitutil"
+	"github.com/adumandix/ghw/pkg/util"
 )
 
 type Module struct {

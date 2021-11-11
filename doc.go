@@ -26,7 +26,7 @@
 		import (
 			"fmt"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -50,7 +50,7 @@
 			"math"
 			"strings"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -97,7 +97,7 @@
 		import (
 			"fmt"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -127,7 +127,7 @@
 		import (
 			"fmt"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -157,7 +157,7 @@
 		import (
 			"fmt"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -205,7 +205,7 @@
 		import (
 			"fmt"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -245,7 +245,7 @@
 			"fmt"
 			"os"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {
@@ -295,7 +295,7 @@
 		import (
 			"fmt"
 
-			"github.com/jaypipes/ghw"
+			"github.com/adumandix/ghw"
 		)
 
 		func main() {

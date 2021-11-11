@@ -9,7 +9,7 @@ package memory
 import (
 	"github.com/StackExchange/wmi"
 
-	"github.com/jaypipes/ghw/pkg/unitutil"
+	"github.com/adumandix/ghw/pkg/unitutil"
 )
 
 const wqlOperatingSystem = "SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem"

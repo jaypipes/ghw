@@ -9,11 +9,11 @@ package gpu
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
-	"github.com/jaypipes/ghw/pkg/pci"
-	"github.com/jaypipes/ghw/pkg/topology"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/marshal"
+	"github.com/adumandix/ghw/pkg/option"
+	"github.com/adumandix/ghw/pkg/pci"
+	"github.com/adumandix/ghw/pkg/topology"
 )
 
 type GraphicsCard struct {
@@ -24,7 +24,7 @@ type GraphicsCard struct {
 	Index int `json:"index"`
 	// pointer to a PCIDevice struct that describes the vendor and product
 	// model, etc
-	// TODO(jaypipes): Rename this field to PCI, instead of DeviceInfo
+	// TODO(adumandix): Rename this field to PCI, instead of DeviceInfo
 	DeviceInfo *pci.Device `json:"pci"`
 	// Topology node that the graphics card is affined to. Will be nil if the
 	// architecture is not NUMA.

@@ -17,7 +17,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jaypipes/ghw/pkg/snapshot"
+	"github.com/adumandix/ghw/pkg/snapshot"
 )
 
 var (

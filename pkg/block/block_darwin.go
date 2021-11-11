@@ -189,7 +189,7 @@ func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
 	if infoPlist.SolidState {
 		dt = DRIVE_TYPE_SSD
 	}
-	// TODO(jaypipes): Figure out how to determine floppy and/or CD/optical
+	// TODO(adumandix): Figure out how to determine floppy and/or CD/optical
 	// drive type on Mac
 	return dt
 }
@@ -201,7 +201,7 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 	if strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController") {
 		sc = STORAGE_CONTROLLER_NVME
 	}
-	// TODO(jaypipes): I don't know if Mac even supports IDE controllers and
+	// TODO(adumandix): I don't know if Mac even supports IDE controllers and
 	// the "virtio" controller is libvirt-specific
 	return sc
 }

@@ -13,11 +13,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
-	"github.com/jaypipes/ghw/pkg/unitutil"
-	"github.com/jaypipes/ghw/pkg/util"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/marshal"
+	"github.com/adumandix/ghw/pkg/option"
+	"github.com/adumandix/ghw/pkg/unitutil"
+	"github.com/adumandix/ghw/pkg/util"
 )
 
 // DriveType describes the general category of drive device
@@ -58,7 +58,7 @@ func (dt DriveType) String() string {
 	return driveTypeString[dt]
 }
 
-// NOTE(jaypipes): since serialized output is as "official" as we're going to
+// NOTE(adumandix): since serialized output is as "official" as we're going to
 // get, let's lowercase the string output when serializing, in order to
 // "normalize" the expected serialized output
 func (dt DriveType) MarshalJSON() ([]byte, error) {
@@ -83,7 +83,7 @@ func (dt *DriveType) UnmarshalJSON(b []byte) error {
 // represents more of the physical hardware interface than the storage
 // protocol, which represents more of the software interface.
 //
-// See discussion on https://github.com/jaypipes/ghw/issues/117
+// See discussion on https://github.com/adumandix/ghw/issues/117
 type StorageController int
 
 const (
@@ -138,7 +138,7 @@ func (sc *StorageController) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// NOTE(jaypipes): since serialized output is as "official" as we're going to
+// NOTE(adumandix): since serialized output is as "official" as we're going to
 // get, let's lowercase the string output when serializing, in order to
 // "normalize" the expected serialized output
 func (sc StorageController) MarshalJSON() ([]byte, error) {
@@ -155,7 +155,7 @@ type Disk struct {
 	IsRemovable            bool              `json:"removable"`
 	StorageController      StorageController `json:"storage_controller"`
 	BusPath                string            `json:"bus_path"`
-	// TODO(jaypipes): Convert this to a TopologyNode struct pointer and then
+	// TODO(adumandix): Convert this to a TopologyNode struct pointer and then
 	// add to serialized output as "numa_node,omitempty"
 	NUMANodeID   int          `json:"-"`
 	Vendor       string       `json:"vendor"`
@@ -163,7 +163,7 @@ type Disk struct {
 	SerialNumber string       `json:"serial_number"`
 	WWN          string       `json:"wwn"`
 	Partitions   []*Partition `json:"partitions"`
-	// TODO(jaypipes): Add PCI field for accessing PCI device information
+	// TODO(adumandix): Add PCI field for accessing PCI device information
 	// PCI *PCIDevice `json:"pci"`
 }
 
@@ -182,7 +182,7 @@ type Partition struct {
 // Info describes all disk drives and partitions in the host system.
 type Info struct {
 	ctx *context.Context
-	// TODO(jaypipes): Deprecate this field and replace with TotalSizeBytes
+	// TODO(adumandix): Deprecate this field and replace with TotalSizeBytes
 	TotalPhysicalBytes uint64       `json:"total_size_bytes"`
 	Disks              []*Disk      `json:"disks"`
 	Partitions         []*Partition `json:"-"`

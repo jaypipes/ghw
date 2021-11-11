@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/adumandix/ghw/pkg/pci"
 )
 
 func TestPCI(t *testing.T) {

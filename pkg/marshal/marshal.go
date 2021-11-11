@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/ghodss/yaml"
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/context"
 )
 
 // safeYAML returns a string after marshalling the supplied parameter into YAML

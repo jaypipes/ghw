@@ -10,8 +10,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/adumandix/ghw/pkg/memory"
+	"github.com/adumandix/ghw/pkg/option"
 )
 
 // we have this test in memory_linux_test.go (and not in memory_test.go) because `mem.load.Info` is implemented

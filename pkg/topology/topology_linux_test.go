@@ -11,11 +11,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/option"
-	"github.com/jaypipes/ghw/pkg/topology"
+	"github.com/adumandix/ghw/pkg/memory"
+	"github.com/adumandix/ghw/pkg/option"
+	"github.com/adumandix/ghw/pkg/topology"
 
-	"github.com/jaypipes/ghw/testdata"
+	"github.com/adumandix/ghw/testdata"
 )
 
 // nolint: gocyclo

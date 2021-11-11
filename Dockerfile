@@ -1,5 +1,5 @@
 FROM golang:1.13-stretch as builder
-WORKDIR /go/src/github.com/jaypipes/ghw
+WORKDIR /go/src/github.com/adumandix/ghw
 
 # Force the go compiler to use modules.
 ENV GO111MODULE=on
@@ -21,6 +21,6 @@ RUN apk add --no-cache ethtool
 
 WORKDIR /bin
 
-COPY --from=builder /go/src/github.com/jaypipes/ghw/ghwc /bin
+COPY --from=builder /go/src/github.com/adumandix/ghw/ghwc /bin
 
 CMD ghwc

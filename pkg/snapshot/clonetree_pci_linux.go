@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
+	pciaddr "github.com/adumandix/ghw/pkg/pci/address"
 )
 
 const (

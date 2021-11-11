@@ -10,7 +10,7 @@ import (
 
 	"github.com/StackExchange/wmi"
 
-	"github.com/jaypipes/ghw/pkg/util"
+	"github.com/adumandix/ghw/pkg/util"
 )
 
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"

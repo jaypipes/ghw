@@ -17,10 +17,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/unitutil"
-	"github.com/jaypipes/ghw/pkg/util"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/linuxpath"
+	"github.com/adumandix/ghw/pkg/unitutil"
+	"github.com/adumandix/ghw/pkg/util"
 )
 
 const (

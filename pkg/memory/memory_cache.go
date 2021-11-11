@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/unitutil"
+	"github.com/adumandix/ghw/pkg/unitutil"
 )
 
 type CacheType int
@@ -46,7 +46,7 @@ func (a CacheType) String() string {
 	return memoryCacheTypeString[a]
 }
 
-// NOTE(jaypipes): since serialized output is as "official" as we're going to
+// NOTE(adumandix): since serialized output is as "official" as we're going to
 // get, let's lowercase the string output when serializing, in order to
 // "normalize" the expected serialized output
 func (a CacheType) MarshalJSON() ([]byte, error) {
@@ -78,7 +78,7 @@ func (a SortByCacheLevelTypeFirstProcessor) Less(i, j int) bool {
 		if a[i].Type < a[j].Type {
 			return true
 		} else if a[i].Type == a[j].Type {
-			// NOTE(jaypipes): len(LogicalProcessors) is always >0 and is always
+			// NOTE(adumandix): len(LogicalProcessors) is always >0 and is always
 			// sorted lowest LP ID to highest LP ID
 			return a[i].LogicalProcessors[0] < a[j].LogicalProcessors[0]
 		}

@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/linuxpath"
 )
 
 const (

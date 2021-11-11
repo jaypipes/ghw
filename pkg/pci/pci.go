@@ -13,12 +13,12 @@ import (
 
 	"github.com/jaypipes/pcidb"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
-	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
-	"github.com/jaypipes/ghw/pkg/topology"
-	"github.com/jaypipes/ghw/pkg/util"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/marshal"
+	"github.com/adumandix/ghw/pkg/option"
+	pciaddr "github.com/adumandix/ghw/pkg/pci/address"
+	"github.com/adumandix/ghw/pkg/topology"
+	"github.com/adumandix/ghw/pkg/util"
 )
 
 // backward compatibility, to be removed in 1.0.0
@@ -69,7 +69,7 @@ type devMarshallable struct {
 	Interface devIdent `json:"programming_interface"`
 }
 
-// NOTE(jaypipes) Device has a custom JSON marshaller because we don't want
+// NOTE(adumandix) Device has a custom JSON marshaller because we don't want
 // to serialize the entire PCIDB information for the Vendor (which includes all
 // of the vendor's products, etc). Instead, we simply serialize the ID and
 // human-readable name of the vendor, product, class, etc.

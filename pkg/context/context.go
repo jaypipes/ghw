@@ -9,8 +9,8 @@ package context
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/option"
-	"github.com/jaypipes/ghw/pkg/snapshot"
+	"github.com/adumandix/ghw/pkg/option"
+	"github.com/adumandix/ghw/pkg/snapshot"
 )
 
 // Context contains the merged set of configuration switches that act as an
@@ -38,7 +38,7 @@ func WithContext(ctx *Context) *option.Option {
 // Exists returns true if the supplied (merged) Option already contains
 // a context.
 //
-// TODO(jaypipes): We can get rid of this when we combine the option and
+// TODO(adumandix): We can get rid of this when we combine the option and
 // context packages, which will make it easier to detect the presence of a
 // pre-setup Context.
 func Exists(opt *option.Option) bool {

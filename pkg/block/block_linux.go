@@ -15,9 +15,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/util"
+	"github.com/adumandix/ghw/pkg/context"
+	"github.com/adumandix/ghw/pkg/linuxpath"
+	"github.com/adumandix/ghw/pkg/util"
 )
 
 const (
@@ -272,7 +272,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		}
 
 		driveType, storageController := diskTypes(dname)
-		// TODO(jaypipes): Move this into diskTypes() once abstracting
+		// TODO(adumandix): Move this into diskTypes() once abstracting
 		// diskIsRotational for ease of unit testing
 		if !diskIsRotational(ctx, paths, dname) {
 			driveType = DRIVE_TYPE_SSD

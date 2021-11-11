@@ -3,7 +3,7 @@
 For ghw, snapshots are partial clones of the `/proc`, `/sys` (et. al.) subtrees copied from arbitrary
 machines, which ghw can consume later. "partial" is because the snapshot doesn't need to contain a
 complete copy of all the filesystem subtree (that is doable but inpractical). It only needs to contain
-the paths ghw cares about. The snapshot concept was introduced [to make ghw easier to test](https://github.com/jaypipes/ghw/issues/66).
+the paths ghw cares about. The snapshot concept was introduced [to make ghw easier to test](https://github.com/adumandix/ghw/issues/66).
 
 ## Create and consume snapshot
 
@@ -16,7 +16,7 @@ To consume the ghw snapshots, please check the `README.md` document.
 
 The remainder of this document will describe how a snapshot looks like and provides rationale for all the major design decisions.
 Even though this document aims to provide all the necessary information to understand how ghw creates snapshots and what you should
-expect, we recommend to check also the [project issues](https://github.com/jaypipes/ghw/issues) and the `git` history to have the full picture.
+expect, we recommend to check also the [project issues](https://github.com/adumandix/ghw/issues) and the `git` history to have the full picture.
 
 ### Scope
 
@@ -40,6 +40,6 @@ Stemming from the use cases, the snapshot content must have the following proper
 4. (constraint 4) MUST NOT contain any personally-identifiable data. Data gathered into a snapshot is for testing and troubleshooting purposes and should be safe to send to troubleshooters to analyze.
 
 It must be noted that trivially cloning subtrees from `/proc` and `/sys` and creating a tarball out of them doesn't work
-because both pseudo filesystems make use of symlinks, and [docker doesn't really play nice with symlinks](https://github.com/jaypipes/ghw/commit/f8ffd4d24e62eb9017511f072ccf51f13d4a3399).
+because both pseudo filesystems make use of symlinks, and [docker doesn't really play nice with symlinks](https://github.com/adumandix/ghw/commit/f8ffd4d24e62eb9017511f072ccf51f13d4a3399).
 This conflcits with (way 1) above.
 

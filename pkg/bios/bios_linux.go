@@ -5,7 +5,7 @@
 
 package bios
 
-import "github.com/jaypipes/ghw/pkg/linuxdmi"
+import "github.com/adumandix/ghw/pkg/linuxdmi"
 
 func (i *Info) load() error {
 	i.Vendor = linuxdmi.Item(i.ctx, "bios_vendor")
