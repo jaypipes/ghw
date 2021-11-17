@@ -24,6 +24,18 @@ jobs:
     - name: format
       run: ./hack/check-format.sh
 
+  lint:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Verify
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: v1.41.1
+        args: --timeout=15m0s --verbose
+
   # tier-1
   # main development platfotm, gets features first and it's most tested
   build-ubuntu-2004:
