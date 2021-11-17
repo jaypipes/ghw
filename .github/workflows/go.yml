@@ -8,6 +8,22 @@ on:
 
 # see: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
 jobs:
+  # tier 0: system-independent checks
+  format:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: set up golang
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: format
+      run: ./hack/check-format.sh
+
   # tier-1
   # main development platfotm, gets features first and it's most tested
   build-ubuntu-2004:
