@@ -21,12 +21,6 @@ import (
 )
 
 var (
-	// version of application at compile time (-X 'main.version=$(VERSION)').
-	version = "(Unknown Version)"
-	// buildHash GIT hash of application at compile time (-X 'main.buildHash=$(GITCOMMIT)').
-	buildHash = "No Git-hash Provided."
-	// buildDate of application at compile time (-X 'main.buildDate=$(BUILDDATE)').
-	buildDate = "No Build Date Provided."
 	// show debug output
 	debug = false
 	// output filepath to save snapshot to

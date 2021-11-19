@@ -9,7 +9,6 @@ package pci
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 
 	"github.com/jaypipes/pcidb"
 
@@ -26,12 +25,6 @@ type Address pciaddr.Address
 
 // backward compatibility, to be removed in 1.0.0
 var AddressFromString = pciaddr.FromString
-
-var (
-	regexAddress *regexp.Regexp = regexp.MustCompile(
-		`^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
-	)
-)
 
 type Device struct {
 	// The PCI address of the device
