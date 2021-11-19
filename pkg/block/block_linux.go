@@ -229,7 +229,7 @@ func diskPartUUID(ctx *context.Context, part string) string {
 		return ""
 	}
 
-	if out == nil || len(out) == 0 {
+	if len(out) == 0 {
 		return ""
 	}
 
@@ -249,10 +249,7 @@ func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
 		return false
 	}
 	removable := strings.TrimSpace(string(contents))
-	if removable == "1" {
-		return true
-	}
-	return false
+	return removable == "1"
 }
 
 func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
