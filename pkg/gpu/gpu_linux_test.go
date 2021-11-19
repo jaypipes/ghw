@@ -48,7 +48,9 @@ func TestGPUWithoutNUMANodeInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to unpack %q into %q: %v", workstationSnapshot, tmpRoot, err)
 	}
-	defer snapshot.Cleanup(tmpRoot)
+	defer func() {
+		_ = snapshot.Cleanup(tmpRoot)
+	}()
 
 	err = os.Remove(filepath.Join(tmpRoot, "/sys/class/drm/card0/device/numa_node"))
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
