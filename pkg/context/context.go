@@ -116,7 +116,12 @@ func (ctx *Context) Do(fn func() error) error {
 	if err != nil {
 		return err
 	}
-	defer ctx.Teardown()
+	defer func() {
+		err := ctx.Teardown()
+		if err != nil {
+			ctx.Warn("teardown error: %v", err)
+		}
+	}()
 	return fn()
 }
 
