@@ -229,7 +229,7 @@ func diskPartUUID(ctx *context.Context, part string) string {
 		return ""
 	}
 
-	if out == nil || len(out) == 0 {
+	if len(out) == 0 {
 		return ""
 	}
 
@@ -249,10 +249,7 @@ func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
 		return false
 	}
 	removable := strings.TrimSpace(string(contents))
-	if removable == "1" {
-		return true
-	}
-	return false
+	return removable == "1"
 }
 
 func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
@@ -456,19 +453,4 @@ func parseMountEntry(line string) *mountEntry {
 	opts := strings.Split(fields[3], ",")
 	res.Options = opts
 	return res
-}
-
-func partitionMountPoint(paths *linuxpath.Paths, part string) string {
-	mp, _, _ := partitionInfo(paths, part)
-	return mp
-}
-
-func partitionType(paths *linuxpath.Paths, part string) string {
-	_, pt, _ := partitionInfo(paths, part)
-	return pt
-}
-
-func partitionIsReadOnly(paths *linuxpath.Paths, part string) bool {
-	_, _, ro := partitionInfo(paths, part)
-	return ro
 }

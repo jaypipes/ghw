@@ -95,7 +95,7 @@ func distancesForNode(ctx *context.Context, nodeID int) ([]int, error) {
 	}
 
 	items := strings.Fields(strings.TrimSpace(string(data)))
-	dists := make([]int, len(items), len(items)) // TODO: can a NUMA cell be offlined?
+	dists := make([]int, len(items)) // TODO: can a NUMA cell be offlined?
 	for idx, item := range items {
 		dist, err := strconv.Atoi(item)
 		if err != nil {

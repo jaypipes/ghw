@@ -17,8 +17,7 @@ import (
 )
 
 const (
-	UNKNOWN            = "unknown"
-	disableWarningsEnv = "GHW_DISABLE_WARNINGS"
+	UNKNOWN = "unknown"
 )
 
 type closer interface {

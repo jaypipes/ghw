@@ -81,7 +81,7 @@ func TestPCIDeviceRevision(t *testing.T) {
 		},
 	}
 	for _, tCase := range tCases {
-		t.Run(fmt.Sprintf("%s", tCase.addr), func(t *testing.T) {
+		t.Run(tCase.addr, func(t *testing.T) {
 			dev := info.GetDevice(tCase.addr)
 			if dev == nil {
 				t.Fatalf("got nil device for address %q", tCase.addr)

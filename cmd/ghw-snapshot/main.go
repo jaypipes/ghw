@@ -21,12 +21,6 @@ import (
 )
 
 var (
-	// version of application at compile time (-X 'main.version=$(VERSION)').
-	version = "(Unknown Version)"
-	// buildHash GIT hash of application at compile time (-X 'main.buildHash=$(GITCOMMIT)').
-	buildHash = "No Git-hash Provided."
-	// buildDate of application at compile time (-X 'main.buildDate=$(BUILDDATE)').
-	buildDate = "No Build Date Provided."
 	// show debug output
 	debug = false
 	// output filepath to save snapshot to
@@ -47,19 +41,25 @@ func trace(msg string, args ...interface{}) {
 	fmt.Printf(msg, args...)
 }
 
-func systemFingerprint() string {
+func systemFingerprint() (string, error) {
 	hn, err := os.Hostname()
 	if err != nil {
-		return "unknown"
+		return "unknown", err
 	}
 	m := md5.New()
-	io.WriteString(m, hn)
-	return fmt.Sprintf("%x", m.Sum(nil))
+	_, err = io.WriteString(m, hn)
+	if err != nil {
+		return "unknown", err
+	}
+	return fmt.Sprintf("%x", m.Sum(nil)), nil
 }
 
-func defaultOutPath() string {
-	fp := systemFingerprint()
-	return fmt.Sprintf("%s-%s-%s.tar.gz", runtime.GOOS, runtime.GOARCH, fp)
+func defaultOutPath() (string, error) {
+	fp, err := systemFingerprint()
+	if err != nil {
+		return "unknown", err
+	}
+	return fmt.Sprintf("%s-%s-%s.tar.gz", runtime.GOOS, runtime.GOARCH, fp), nil
 }
 
 func execute(cmd *cobra.Command, args []string) error {
@@ -75,7 +75,10 @@ func execute(cmd *cobra.Command, args []string) error {
 	}
 
 	if outPath == "" {
-		outPath = defaultOutPath()
+		outPath, err = defaultOutPath()
+		if err != nil {
+			return err
+		}
 		trace("using default output filepath %s\n", outPath)
 	}
 
@@ -83,7 +86,9 @@ func execute(cmd *cobra.Command, args []string) error {
 }
 
 func main() {
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		trace("execution failed: %v\n", err)
+	}
 }
 
 func init() {
