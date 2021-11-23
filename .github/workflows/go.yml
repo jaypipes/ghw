@@ -91,7 +91,7 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        go: [ '1.15' ]  # TODO: no 1.16 atm
+        go: [ '1.16' ]
     steps:
     - uses: actions/checkout@v2
 
