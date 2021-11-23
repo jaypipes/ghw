@@ -7,11 +7,9 @@
 package pci_test
 
 import (
-	"encoding/json"
 	"os"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 )
 
@@ -58,24 +56,5 @@ func TestPCI(t *testing.T) {
 		if dev.ProgrammingInterface == nil {
 			t.Fatalf("Expected device programming interface for %s to be non-nil", dev.Address)
 		}
-	}
-}
-
-func TestPCIMarshalUnmarshal(t *testing.T) {
-	data, err := pci.New(option.WithNullAlerter())
-	if err != nil {
-		t.Fatalf("Expected no error creating pci.Info, but got %v", err)
-	}
-
-	jdata, err := json.Marshal(data)
-	if err != nil {
-		t.Fatalf("Expected no error marshaling pci.Info, but got %v", err)
-	}
-
-	var topo *pci.Info
-
-	err = json.Unmarshal(jdata, &topo)
-	if err != nil {
-		t.Fatalf("Expected no error unmarshaling pci.Info, but got %v", err)
 	}
 }
