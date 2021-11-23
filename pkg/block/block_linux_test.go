@@ -4,6 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
+//go:build linux
 // +build linux
 
 package block
