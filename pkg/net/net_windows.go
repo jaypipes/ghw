@@ -11,7 +11,7 @@ import (
 	"github.com/StackExchange/wmi"
 )
 
-const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName  FROM Win32_NetworkAdapter"
+const wqlNetworkAdapter = "SELECT Description, DeviceID, Index, InterfaceIndex, MACAddress, Manufacturer, Name, NetConnectionID, ProductName, ServiceName, PhysicalAdapter FROM Win32_NetworkAdapter"
 
 type win32NetworkAdapter struct {
 	Description     *string
@@ -24,6 +24,7 @@ type win32NetworkAdapter struct {
 	NetConnectionID *string
 	ProductName     *string
 	ServiceName     *string
+	PhysicalAdapter *bool
 }
 
 func (i *Info) load() error {
@@ -44,7 +45,7 @@ func nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
 		nic := &NIC{
 			Name:         netDeviceName(nicDescription),
 			MacAddress:   *nicDescription.MACAddress,
-			IsVirtual:    false,
+			IsVirtual:    netIsVirtual(nicDescription),
 			Capabilities: []*NICCapability{},
 		}
 		// Appenging NIC to NICs
@@ -62,4 +63,12 @@ func netDeviceName(description win32NetworkAdapter) string {
 		name = *description.Description
 	}
 	return name
+}
+
+func netIsVirtual(description win32NetworkAdapter) bool {
+	if description.PhysicalAdapter == nil {
+		return false
+	}
+
+	return !(*description.PhysicalAdapter)
 }
