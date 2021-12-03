@@ -218,7 +218,9 @@ func diskWWN(paths *linuxpath.Paths, disk string) string {
 // diskPartitions takes the name of a disk (note: *not* the path of the disk,
 // but just the name. In other words, "sda", not "/dev/sda" and "nvme0n1" not
 // "/dev/nvme0n1") and returns a slice of pointers to Partition structs
-// representing the partitions in that disk
+// representing the partitions in that disk. If a disk has no partitions,
+// it returns information on the disk instead, but the Partition UUID is set
+// to the empty string (since there isn't one.)
 func diskPartitions(
 	ctx context.Context,
 	paths *linuxpath.Paths,
@@ -261,7 +263,7 @@ func diskPartitions(
 	if len(out) == 0 {
 		size := partitionSizeBytes(paths, disk, "")
 		mp, pt, ro := partitionInfo(paths, disk)
-		du := diskPartUUID(ctx, disk)
+		du := diskPartUUID(paths, disk, disk)
 		p := &Partition{
 			Name:       disk,
 			SizeBytes:  size,
