@@ -206,6 +206,23 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 		}
 		out = append(out, p)
 	}
+	// this is a disk with no partitions on it.
+	// Consider the filesystem on the disk to be a partition.
+	if len(out) == 0 {
+		size := partitionSizeBytes(paths, disk, "")
+		mp, pt, ro := partitionInfo(paths, disk)
+		du := diskPartUUID(ctx, disk)
+		p := &Partition{
+			Name:       disk,
+			SizeBytes:  size,
+			MountPoint: mp,
+			Type:       pt,
+			IsReadOnly: ro,
+			UUID:       du,
+		}
+		out = append(out, p)
+
+	}
 	return out
 }
 
