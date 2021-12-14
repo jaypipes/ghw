@@ -163,6 +163,7 @@ type Disk struct {
 	SerialNumber string       `json:"serial_number"`
 	WWN          string       `json:"wwn"`
 	Partitions   []*Partition `json:"partitions"`
+	Revision     string       `json:"revision"`
 	// TODO(jaypipes): Add PCI field for accessing PCI device information
 	// PCI *PCIDevice `json:"pci"`
 }
@@ -247,8 +248,12 @@ func (d *Disk) String() string {
 	if d.IsRemovable {
 		removable = " removable=true"
 	}
+	revision := ""
+	if d.Revision != "" {
+		revision = " revision=" + d.Revision
+	}
 	return fmt.Sprintf(
-		"%s %s (%s) %s [@%s%s]%s%s%s%s%s",
+		"%s %s (%s) %s [@%s%s]%s%s%s%s%s%s",
 		d.Name,
 		d.DriveType.String(),
 		sizeStr,
@@ -260,6 +265,7 @@ func (d *Disk) String() string {
 		serial,
 		wwn,
 		removable,
+		revision,
 	)
 }
 

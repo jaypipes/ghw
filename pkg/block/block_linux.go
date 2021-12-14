@@ -71,8 +71,8 @@ func diskNUMANodeID(paths *linuxpath.Paths, disk string) int {
 		return -1
 	}
 	for partial := link; strings.HasPrefix(partial, "../devices/"); partial = filepath.Base(partial) {
-		if nodeContents, err := ioutil.ReadFile(filepath.Join(paths.SysBlock, partial, "numa_node")); err != nil {
-			if nodeInt, err := strconv.Atoi(string(nodeContents)); err != nil {
+		if nodeContents, err := ioutil.ReadFile(filepath.Join(paths.SysBlock, partial, "numa_node")); err == nil {
+			if nodeInt, err := strconv.Atoi(string(nodeContents)); err == nil {
 				return nodeInt
 			}
 		}
@@ -84,6 +84,17 @@ func diskVendor(paths *linuxpath.Paths, disk string) string {
 	// In Linux, the vendor for a disk device is found in the
 	// /sys/block/$DEVICE/device/vendor file in sysfs
 	path := filepath.Join(paths.SysBlock, disk, "device", "vendor")
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return util.UNKNOWN
+	}
+	return strings.TrimSpace(string(contents))
+}
+
+func diskRevision(paths *linuxpath.Paths, disk string) string {
+	// In Linux, the disk revision is found in the
+	// /sys/block/$DEVICE/device/rev file in sysfs
+	path := filepath.Join(paths.SysBlock, disk, "device", "rev")
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return util.UNKNOWN
@@ -283,6 +294,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		serialNo := diskSerialNumber(paths, dname)
 		wwn := diskWWN(paths, dname)
 		removable := diskIsRemovable(paths, dname)
+		revision := diskRevision(paths, dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -297,6 +309,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 			Model:                  model,
 			SerialNumber:           serialNo,
 			WWN:                    wwn,
+			Revision:               revision,
 		}
 
 		parts := diskPartitions(ctx, paths, dname)

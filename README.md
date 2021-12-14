@@ -525,6 +525,7 @@ Each `ghw.Disk` struct contains the following fields:
   [World Wide Name](https://en.wikipedia.org/wiki/World_Wide_Name)
 * `ghw.Disk.Partitions` contains an array of pointers to `ghw.Partition`
   structs, one for each partition on the disk
+  `ghw.Disk.Revision` contains a string with the disk's device revision 
 
 Each `ghw.Partition` struct contains these fields:
 
