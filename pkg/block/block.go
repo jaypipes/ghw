@@ -29,6 +29,7 @@ const (
 	DRIVE_TYPE_FDD               // Floppy disk drive
 	DRIVE_TYPE_ODD               // Optical disk drive
 	DRIVE_TYPE_SSD               // Solid-state drive
+	DRIVE_TYPE_ISCSI             // iSCSI drive
 )
 
 var (
@@ -38,6 +39,7 @@ var (
 		DRIVE_TYPE_FDD:     "FDD",
 		DRIVE_TYPE_ODD:     "ODD",
 		DRIVE_TYPE_SSD:     "SSD",
+		DRIVE_TYPE_ISCSI:   "ISCSI",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
@@ -51,6 +53,7 @@ var (
 		"fdd":     DRIVE_TYPE_FDD,
 		"odd":     DRIVE_TYPE_ODD,
 		"ssd":     DRIVE_TYPE_SSD,
+		"iscsi":   DRIVE_TYPE_ISCSI,
 	}
 )
 
