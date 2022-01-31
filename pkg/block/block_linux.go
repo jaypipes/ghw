@@ -252,6 +252,19 @@ func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
 	return removable == "1"
 }
 
+func diskMembers(ctx *context.Context, paths *linuxpath.Paths, disk string) []string {
+	out := make([]string, 0)
+	path := filepath.Join(paths.SysBlock, disk, "slaves")
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return out
+	}
+	for _, file := range files {
+		out = append(out, file.Name())
+	}
+	return out
+}
+
 func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 	// In Linux, we could use the fdisk, lshw or blockdev commands to list disk
 	// information, however all of these utilities require root privileges to
@@ -271,7 +284,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
 		// diskIsRotational for ease of unit testing
-		if !diskIsRotational(ctx, paths, dname) {
+		if driveType != DRIVE_TYPE_MAPPER && !diskIsRotational(ctx, paths, dname) {
 			driveType = DRIVE_TYPE_SSD
 		}
 		size := diskSizeBytes(paths, dname)
@@ -286,6 +299,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		serialNo := diskSerialNumber(paths, dname)
 		wwn := diskWWN(paths, dname)
 		removable := diskIsRemovable(paths, dname)
+		members := diskMembers(ctx, paths, dname)
 
 		d := &Disk{
 			Name:                   dname,
@@ -300,6 +314,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 			Model:                  model,
 			SerialNumber:           serialNo,
 			WWN:                    wwn,
+			Members:                members,
 		}
 
 		parts := diskPartitions(ctx, paths, dname)
@@ -348,6 +363,8 @@ func diskTypes(dname string) (
 	} else if strings.HasPrefix(dname, "mmc") {
 		driveType = DRIVE_TYPE_SSD
 		storageController = STORAGE_CONTROLLER_MMC
+	} else if strings.HasPrefix(dname, "dm-") {
+		driveType = DRIVE_TYPE_MAPPER
 	}
 
 	return driveType, storageController

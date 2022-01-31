@@ -30,6 +30,7 @@ const (
 	DRIVE_TYPE_ODD               // Optical disk drive
 	DRIVE_TYPE_SSD               // Solid-state drive
 	DRIVE_TYPE_ISCSI             // iSCSI drive
+	DRIVE_TYPE_MAPPER            // Mapper device
 )
 
 var (
@@ -40,6 +41,7 @@ var (
 		DRIVE_TYPE_ODD:     "ODD",
 		DRIVE_TYPE_SSD:     "SSD",
 		DRIVE_TYPE_ISCSI:   "ISCSI",
+		DRIVE_TYPE_MAPPER:  "Mapper",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
@@ -54,6 +56,7 @@ var (
 		"odd":     DRIVE_TYPE_ODD,
 		"ssd":     DRIVE_TYPE_SSD,
 		"iscsi":   DRIVE_TYPE_ISCSI,
+		"mapper":  DRIVE_TYPE_MAPPER,
 	}
 )
 
@@ -166,6 +169,7 @@ type Disk struct {
 	SerialNumber string       `json:"serial_number"`
 	WWN          string       `json:"wwn"`
 	Partitions   []*Partition `json:"partitions"`
+	Members      []string     `json:"members"`
 	// TODO(jaypipes): Add PCI field for accessing PCI device information
 	// PCI *PCIDevice `json:"pci"`
 }
