@@ -248,18 +248,20 @@ func (d *Disk) String() string {
 		removable = " removable=true"
 	}
 	return fmt.Sprintf(
-		"%s %s (%s) %s [@%s%s]%s%s%s%s%s",
+		"%s %s (%s) %s [@%s%s]%s",
 		d.Name,
 		d.DriveType.String(),
 		sizeStr,
 		d.StorageController.String(),
 		d.BusPath,
 		atNode,
-		vendor,
-		model,
-		serial,
-		wwn,
-		removable,
+		util.ConcatStrings(
+			vendor,
+			model,
+			serial,
+			wwn,
+			removable,
+		),
 	)
 }
 

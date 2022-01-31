@@ -7,8 +7,6 @@
 package chassis
 
 import (
-	"fmt"
-
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
@@ -81,14 +79,12 @@ func (i *Info) String() string {
 		versionStr = " version=" + i.Version
 	}
 
-	res := fmt.Sprintf(
-		"chassis type=%s%s%s%s",
+	return "chassis type=" + util.ConcatStrings(
 		i.TypeDescription,
 		vendorStr,
 		serialStr,
 		versionStr,
 	)
-	return res
 }
 
 // New returns a pointer to a Info struct containing information
