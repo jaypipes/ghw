@@ -218,3 +218,45 @@ func TestISCSI(t *testing.T) {
 		t.Fatalf("Got drive type %s, but expected ISCSI", diskInventory[0].DriveType)
 	}
 }
+
+func TestMapper(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New()
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+	// Emulate a mapper device with no members
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "dm-0"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "dm-0", "size"), []byte("419430400\n"), 0644)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "dm-0", "queue"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "dm-0", "queue", "rotational"), []byte("0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "dm-0", "queue", "physical_block_size"), []byte("512\n"), 0644)
+
+	diskInventory := disks(ctx, paths)
+	if diskInventory[0].DriveType != DRIVE_TYPE_MAPPER {
+		t.Fatalf("Got drive type %s, but expected Mapper", diskInventory[0].DriveType)
+	}
+	if len(diskInventory[0].Members) > 0 {
+		t.Fatalf("Got %d members but didn't expect any", len(diskInventory[0].Members))
+	}
+
+	// Add members (we create regular files here for brevity even though in reality they are symlinks)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "dm-0", "slaves"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "dm-0", "slaves", "sda"), []byte(""), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "dm-0", "slaves", "sdb"), []byte(""), 0644)
+
+	diskInventory = disks(ctx, paths)
+	if diskInventory[0].DriveType != DRIVE_TYPE_MAPPER {
+		t.Fatalf("Got drive type %s, but expected Mapper", diskInventory[0].DriveType)
+	}
+	if len(diskInventory[0].Members) != 2 {
+		t.Fatalf("Got %d members but expected 2", len(diskInventory[0].Members))
+	}
+}
