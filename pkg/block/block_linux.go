@@ -277,6 +277,9 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		size := diskSizeBytes(paths, dname)
 		pbs := diskPhysicalBlockSizeBytes(paths, dname)
 		busPath := diskBusPath(paths, dname)
+		if strings.Contains(busPath, "-iscsi-") {
+			driveType = DRIVE_TYPE_ISCSI
+		}
 		node := diskNUMANodeID(paths, dname)
 		vendor := diskVendor(paths, dname)
 		model := diskModel(paths, dname)
