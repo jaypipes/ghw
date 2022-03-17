@@ -91,15 +91,29 @@ func diskVendor(paths *linuxpath.Paths, disk string) string {
 	return strings.TrimSpace(string(contents))
 }
 
-func udevInfo(paths *linuxpath.Paths, disk string) (map[string]string, error) {
+// udevInfoDisk gets the udev info for a disk
+func udevInfoDisk(paths *linuxpath.Paths, disk string) (map[string]string, error) {
 	// Get device major:minor numbers
 	devNo, err := ioutil.ReadFile(filepath.Join(paths.SysBlock, disk, "dev"))
 	if err != nil {
 		return nil, err
 	}
+	return udevInfo(paths, string(devNo))
+}
 
+// udevInfoPartition gets the udev info for a partition
+func udevInfoPartition(paths *linuxpath.Paths, disk string, partition string) (map[string]string, error) {
+	// Get device major:minor numbers
+	devNo, err := ioutil.ReadFile(filepath.Join(paths.SysBlock, disk, partition, "dev"))
+	if err != nil {
+		return nil, err
+	}
+	return udevInfo(paths, string(devNo))
+}
+
+func udevInfo(paths *linuxpath.Paths, devNo string) (map[string]string, error) {
 	// Look up block device in udev runtime database
-	udevID := "b" + strings.TrimSpace(string(devNo))
+	udevID := "b" + strings.TrimSpace(devNo)
 	udevBytes, err := ioutil.ReadFile(filepath.Join(paths.RunUdevData, udevID))
 	if err != nil {
 		return nil, err
@@ -117,7 +131,7 @@ func udevInfo(paths *linuxpath.Paths, disk string) (map[string]string, error) {
 }
 
 func diskModel(paths *linuxpath.Paths, disk string) string {
-	info, err := udevInfo(paths, disk)
+	info, err := udevInfoDisk(paths, disk)
 	if err != nil {
 		return util.UNKNOWN
 	}
@@ -129,7 +143,7 @@ func diskModel(paths *linuxpath.Paths, disk string) string {
 }
 
 func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
-	info, err := udevInfo(paths, disk)
+	info, err := udevInfoDisk(paths, disk)
 	if err != nil {
 		return util.UNKNOWN
 	}
@@ -147,7 +161,7 @@ func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
 }
 
 func diskBusPath(paths *linuxpath.Paths, disk string) string {
-	info, err := udevInfo(paths, disk)
+	info, err := udevInfoDisk(paths, disk)
 	if err != nil {
 		return util.UNKNOWN
 	}
@@ -161,7 +175,7 @@ func diskBusPath(paths *linuxpath.Paths, disk string) string {
 }
 
 func diskWWN(paths *linuxpath.Paths, disk string) string {
-	info, err := udevInfo(paths, disk)
+	info, err := udevInfoDisk(paths, disk)
 	if err != nil {
 		return util.UNKNOWN
 	}
@@ -196,6 +210,7 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 		size := partitionSizeBytes(paths, disk, fname)
 		mp, pt, ro := partitionInfo(paths, fname)
 		du := diskPartUUID(ctx, fname)
+		label := diskPartLabel(paths, disk, fname)
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
@@ -203,10 +218,23 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 			Type:       pt,
 			IsReadOnly: ro,
 			UUID:       du,
+			Label:      label,
 		}
 		out = append(out, p)
 	}
 	return out
+}
+
+func diskPartLabel(paths *linuxpath.Paths, disk string, partition string) string {
+	info, err := udevInfoPartition(paths, disk, partition)
+	if err != nil {
+		return util.UNKNOWN
+	}
+
+	if label, ok := info["ID_FS_LABEL"]; ok {
+		return label
+	}
+	return util.UNKNOWN
 }
 
 func diskPartUUID(ctx *context.Context, part string) string {
