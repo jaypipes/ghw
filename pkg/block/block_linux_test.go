@@ -10,6 +10,8 @@
 package block
 
 import (
+	"fmt"
+	"github.com/jaypipes/ghw/pkg/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -216,5 +218,36 @@ func TestISCSI(t *testing.T) {
 	diskInventory := disks(ctx, paths)
 	if diskInventory[0].DriveType != DRIVE_TYPE_ISCSI {
 		t.Fatalf("Got drive type %s, but expected ISCSI", diskInventory[0].DriveType)
+	}
+}
+
+func TestDiskPartLabel(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New()
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+	partLabel := "TEST_LABEL_GHW"
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a disk with one partition with label TEST_LABEL_GHW
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", partLabel)), 0644)
+	label := diskPartLabel(paths, "sda", "sda1")
+	if label != partLabel {
+		t.Fatalf("Got label %s but expected %s", label, partLabel)
+	}
+
+	// Check empty label if not found
+	label = diskPartLabel(paths, "sda", "sda2")
+	if label != util.UNKNOWN {
+		t.Fatalf("Got label %s, but expected %s label", label, util.UNKNOWN)
 	}
 }
