@@ -8,7 +8,6 @@ package snapshot
 
 import (
 	"errors"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -150,7 +149,7 @@ func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) err
 			}
 		} else {
 			trace("    copying file: %q -> %q\n", path, destPath)
-			if err := copyPseudoFile(path, destPath); err != nil && !errors.Is(err, fs.ErrPermission) {
+			if err := copyPseudoFile(path, destPath); err != nil && !errors.Is(err, os.ErrPermission) {
 				return err
 			}
 		}
