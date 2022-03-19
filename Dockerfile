@@ -1,4 +1,4 @@
-FROM golang:1.13-stretch as builder
+FROM golang:1.15-buster as builder
 WORKDIR /go/src/github.com/jaypipes/ghw
 
 # Force the go compiler to use modules.
