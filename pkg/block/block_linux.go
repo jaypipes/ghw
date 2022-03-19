@@ -233,7 +233,7 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 	if len(out) == 0 {
 		size := partitionSizeBytes(paths, disk, "")
 		mp, pt, ro := partitionInfo(paths, disk)
-		du := diskPartUUID(ctx, disk)
+		du := diskPartUUID(paths, disk, "")
 		p := &Partition{
 			Name:       disk,
 			SizeBytes:  size,
