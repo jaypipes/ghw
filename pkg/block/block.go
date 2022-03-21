@@ -30,6 +30,7 @@ const (
 	DRIVE_TYPE_ODD               // Optical disk drive
 	DRIVE_TYPE_SSD               // Solid-state drive
 	DRIVE_TYPE_ISCSI             // iSCSI drive
+	DRIVE_TYPE_LOOP              // loop device
 )
 
 var (
@@ -54,6 +55,7 @@ var (
 		"odd":     DRIVE_TYPE_ODD,
 		"ssd":     DRIVE_TYPE_SSD,
 		"iscsi":   DRIVE_TYPE_ISCSI,
+		"loop":    DRIVE_TYPE_LOOP,
 	}
 )
 
@@ -96,6 +98,7 @@ const (
 	STORAGE_CONTROLLER_NVME                      // Non-volatile Memory Express
 	STORAGE_CONTROLLER_VIRTIO                    // Virtualized storage controller/driver
 	STORAGE_CONTROLLER_MMC                       // Multi-media controller (used for mobile phone storage devices)
+	STORAGE_CONTROLLER_LOOP                      // loop device
 )
 
 var (
@@ -106,6 +109,7 @@ var (
 		STORAGE_CONTROLLER_NVME:    "NVMe",
 		STORAGE_CONTROLLER_VIRTIO:  "virtio",
 		STORAGE_CONTROLLER_MMC:     "MMC",
+		STORAGE_CONTROLLER_LOOP:    "loop",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
@@ -120,6 +124,7 @@ var (
 		"nvme":    STORAGE_CONTROLLER_NVME,
 		"virtio":  STORAGE_CONTROLLER_VIRTIO,
 		"mmc":     STORAGE_CONTROLLER_MMC,
+		"loop":    STORAGE_CONTROLLER_LOOP,
 	}
 )
 

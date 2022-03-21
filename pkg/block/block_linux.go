@@ -310,7 +310,9 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 	for _, file := range files {
 		dname := file.Name()
 		if strings.HasPrefix(dname, "loop") {
-			continue
+			if !ctx.LoopDevices {
+				continue
+			}
 		}
 
 		driveType, storageController := diskTypes(dname)
@@ -332,29 +334,36 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		wwn := diskWWN(paths, dname)
 		removable := diskIsRemovable(paths, dname)
 
-		d := &Disk{
-			Name:                   dname,
-			SizeBytes:              size,
-			PhysicalBlockSizeBytes: pbs,
-			DriveType:              driveType,
-			IsRemovable:            removable,
-			StorageController:      storageController,
-			BusPath:                busPath,
-			NUMANodeID:             node,
-			Vendor:                 vendor,
-			Model:                  model,
-			SerialNumber:           serialNo,
-			WWN:                    wwn,
+		if driveType == DRIVE_TYPE_LOOP && size == 0 {
+			// Do nothing for empty loop devices
+			// There can be several loop devices present on /dev but that doesnt mean they are in use
+			// With this we skip any non-used loop devices
+		} else {
+			d := &Disk{
+				Name:                   dname,
+				SizeBytes:              size,
+				PhysicalBlockSizeBytes: pbs,
+				DriveType:              driveType,
+				IsRemovable:            removable,
+				StorageController:      storageController,
+				BusPath:                busPath,
+				NUMANodeID:             node,
+				Vendor:                 vendor,
+				Model:                  model,
+				SerialNumber:           serialNo,
+				WWN:                    wwn,
+			}
+
+			parts := diskPartitions(ctx, paths, dname)
+			// Map this Disk object into the Partition...
+			for _, part := range parts {
+				part.Disk = d
+			}
+			d.Partitions = parts
+
+			disks = append(disks, d)
 		}
 
-		parts := diskPartitions(ctx, paths, dname)
-		// Map this Disk object into the Partition...
-		for _, part := range parts {
-			part.Disk = d
-		}
-		d.Partitions = parts
-
-		disks = append(disks, d)
 	}
 
 	return disks
@@ -393,6 +402,9 @@ func diskTypes(dname string) (
 	} else if strings.HasPrefix(dname, "mmc") {
 		driveType = DRIVE_TYPE_SSD
 		storageController = STORAGE_CONTROLLER_MMC
+	} else if strings.HasPrefix(dname, "loop") {
+		driveType = DRIVE_TYPE_LOOP
+		storageController = STORAGE_CONTROLLER_LOOP
 	}
 
 	return driveType, storageController

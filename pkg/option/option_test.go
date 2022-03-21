@@ -150,6 +150,15 @@ func TestOption(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "with loop devices",
+			opts: []*option.Option{
+				option.WithLoopDevices(),
+			},
+			merged: &option.Option{
+				LoopDevices: boolPtr(true),
+			},
+		},
 	}
 	for _, optTCase := range optTCases {
 		t.Run(optTCase.name, func(t *testing.T) {
