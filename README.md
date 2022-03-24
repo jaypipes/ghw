@@ -1383,7 +1383,6 @@ issue for a feature request or bug report.
 
 You can run unit tests easily using the `make test` command, like so:
 
-
 ```
 [jaypipes@uberbox ghw]$ make test
 go test github.com/jaypipes/ghw github.com/jaypipes/ghw/cmd/ghwc
