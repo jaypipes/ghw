@@ -211,6 +211,9 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 		mp, pt, ro := partitionInfo(paths, fname)
 		du := diskPartUUID(ctx, fname)
 		label := diskPartLabel(paths, disk, fname)
+		if pt == "" {
+			pt = diskPartTypeUdev(paths, disk, fname)
+		}
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
@@ -233,6 +236,20 @@ func diskPartLabel(paths *linuxpath.Paths, disk string, partition string) string
 
 	if label, ok := info["ID_FS_LABEL"]; ok {
 		return label
+	}
+	return util.UNKNOWN
+}
+
+// diskPartTypeUdev gets the partition type from the udev database directly and its only used as fallback when
+// the partition is not mounted, so we cannot get the type from paths.ProcMounts from the partitionInfo function
+func diskPartTypeUdev(paths *linuxpath.Paths, disk string, partition string) string {
+	info, err := udevInfoPartition(paths, disk, partition)
+	if err != nil {
+		return util.UNKNOWN
+	}
+
+	if pType, ok := info["ID_FS_TYPE"]; ok {
+		return pType
 	}
 	return util.UNKNOWN
 }

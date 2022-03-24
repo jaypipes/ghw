@@ -251,3 +251,34 @@ func TestDiskPartLabel(t *testing.T) {
 		t.Fatalf("Got label %s, but expected %s label", label, util.UNKNOWN)
 	}
 }
+
+func TestDiskTypeUdev(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New()
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+	expectedPartType := "ext4"
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a disk with one partition with label TEST_LABEL_GHW
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", expectedPartType)), 0644)
+	pt := diskPartTypeUdev(paths, "sda", "sda1")
+	if pt != expectedPartType {
+		t.Fatalf("Got partition type %s but expected %s", pt, expectedPartType)
+	}
+
+	// Check empty fs if not found
+	pt = diskPartTypeUdev(paths, "sda", "sda2")
+	if pt != util.UNKNOWN {
+		t.Fatalf("Got partition type %s, but expected %s", pt, util.UNKNOWN)
+	}
+}
