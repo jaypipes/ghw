@@ -3,14 +3,18 @@ module github.com/jaypipes/ghw
 go 1.15
 
 require (
-	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d
+	github.com/StackExchange/wmi v1.2.1
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-ole/go-ole v1.2.4 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jaypipes/pcidb v0.6.0
-	github.com/pkg/errors v0.8.0
+	github.com/kr/pretty v0.1.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.2 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
-	howett.net/plist v0.0.0-20181124034731-591f970eefbb
+	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+	howett.net/plist v1.0.0
 )
