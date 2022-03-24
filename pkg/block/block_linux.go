@@ -240,6 +240,8 @@ func diskPartLabel(paths *linuxpath.Paths, disk string, partition string) string
 	return util.UNKNOWN
 }
 
+// diskPartTypeUdev gets the partition type from the udev database directly and its only used as fallback when
+// the partition is not mounted, so we cannot get the type from paths.ProcMounts from the partitionInfo function
 func diskPartTypeUdev(paths *linuxpath.Paths, disk string, partition string) string {
 	info, err := udevInfoPartition(paths, disk, partition)
 	if err != nil {

@@ -261,7 +261,7 @@ func TestDiskTypeUdev(t *testing.T) {
 	ctx := context.New()
 	ctx.Chroot = baseDir
 	paths := linuxpath.New(ctx)
-	fsType := "ext4"
+	expectedPartType := "ext4"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
 	_ = os.MkdirAll(paths.RunUdevData, 0755)
@@ -270,15 +270,15 @@ func TestDiskTypeUdev(t *testing.T) {
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
 	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
-	fs := diskPartTypeUdev(paths, "sda", "sda1")
-	if fs != fsType {
-		t.Fatalf("Got fs %s but expected %s", fs, fsType)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", expectedPartType)), 0644)
+	pt := diskPartTypeUdev(paths, "sda", "sda1")
+	if pt != expectedPartType {
+		t.Fatalf("Got partition type %s but expected %s", pt, expectedPartType)
 	}
 
 	// Check empty fs if not found
-	fs = diskPartTypeUdev(paths, "sda", "sda2")
-	if fs != util.UNKNOWN {
-		t.Fatalf("Got label %s, but expected %s label", fs, util.UNKNOWN)
+	pt = diskPartTypeUdev(paths, "sda", "sda2")
+	if pt != util.UNKNOWN {
+		t.Fatalf("Got partition type %s, but expected %s", pt, util.UNKNOWN)
 	}
 }
