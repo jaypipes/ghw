@@ -172,8 +172,8 @@ func TestDiskTypes(t *testing.T) {
 		{
 			line: "loop0",
 			expected: entry{
-				driveType:         DRIVE_TYPE_LOOP,
-				storageController: STORAGE_CONTROLLER_LOOP,
+				driveType:         DRIVE_TYPE_VIRTUAL,
+				storageController: STORAGE_CONTROLLER_VIRTUAL,
 			},
 		},
 	}
@@ -264,7 +264,7 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	}
 	baseDir, _ := ioutil.TempDir("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New(option.WithLoopDevices(), option.WithNullAlerter(), option.WithDisableTools())
+	ctx := context.New(option.WithNullAlerter(), option.WithDisableTools())
 	ctx.Chroot = baseDir
 	paths := linuxpath.New(ctx)
 	fsType := "ext4"
@@ -304,38 +304,5 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	// Name should match
 	if foundDisk.Partitions[0].Name != loopPartitionName {
 		t.Fatalf("got partition %s but expected %s", foundDisk.Partitions[0], loopPartitionName)
-	}
-}
-
-// TestLoopDevicesWithoutOption tests to see if we find loop devices when the option is deactivated
-func TestLoopDevicesWithoutOption(t *testing.T) {
-	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
-		t.Skip("Skipping block tests.")
-	}
-	baseDir, _ := ioutil.TempDir("", "test")
-	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
-	fsType := "ext4"
-	expectedLoopName := "loop0"
-	loopPartitionName := "loop0p1"
-	_ = os.MkdirAll(paths.SysBlock, 0755)
-	_ = os.MkdirAll(paths.RunUdevData, 0755)
-
-	// Emulate a loop device with one partition
-	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName), 0755)
-	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, "queue"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "queue", "rotational"), []byte("62810112\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "size"), []byte("1\n"), 0644)
-	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("62810112\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
-	d := disks(ctx, paths)
-
-	// There should be nothing reported
-	if len(d) != 0 {
-		t.Fatalf("expected no disk device but the function reported %d", len(d))
 	}
 }

@@ -137,9 +137,6 @@ type Option struct {
 	// to learn about the system resources.
 	PathOverrides PathOverrides
 
-	// LoopDevices optionally allows reporting disk/partitions that are loop devices
-	LoopDevices *bool
-
 	// Context may contain a pointer to a `Context` struct that is constructed
 	// during a call to the `context.WithContext` function. Only used internally.
 	// This is an interface to get around recursive package import issues.
@@ -209,11 +206,6 @@ func WithPathOverrides(overrides PathOverrides) *Option {
 	}
 }
 
-func WithLoopDevices() *Option {
-	true_ := true
-	return &Option{LoopDevices: &true_}
-}
-
 // There is intentionally no Option related to GHW_SNAPSHOT_PRESERVE because we see that as
 // a debug/troubleshoot aid more something users wants to do regularly.
 // Hence we allow that only via the environment variable for the time being.
@@ -241,9 +233,6 @@ func Merge(opts ...*Option) *Option {
 		}
 		if opt.Context != nil {
 			merged.Context = opt.Context
-		}
-		if opt.LoopDevices != nil {
-			merged.LoopDevices = opt.LoopDevices
 		}
 	}
 	// Set the default value if missing from mergeOpts

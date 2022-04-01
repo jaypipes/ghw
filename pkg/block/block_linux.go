@@ -309,11 +309,6 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 	}
 	for _, file := range files {
 		dname := file.Name()
-		if strings.HasPrefix(dname, "loop") {
-			if !ctx.LoopDevices {
-				continue
-			}
-		}
 
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
@@ -331,36 +326,33 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		wwn := diskWWN(paths, dname)
 		removable := diskIsRemovable(paths, dname)
 
-		if driveType == DRIVE_TYPE_LOOP && size == 0 {
-			// Do nothing for empty loop devices
-			// There can be several loop devices present on /dev but that doesnt mean they are in use
-			// With this we skip any non-used loop devices
-		} else {
-			d := &Disk{
-				Name:                   dname,
-				SizeBytes:              size,
-				PhysicalBlockSizeBytes: pbs,
-				DriveType:              driveType,
-				IsRemovable:            removable,
-				StorageController:      storageController,
-				BusPath:                busPath,
-				NUMANodeID:             node,
-				Vendor:                 vendor,
-				Model:                  model,
-				SerialNumber:           serialNo,
-				WWN:                    wwn,
-			}
-
-			parts := diskPartitions(ctx, paths, dname)
-			// Map this Disk object into the Partition...
-			for _, part := range parts {
-				part.Disk = d
-			}
-			d.Partitions = parts
-
-			disks = append(disks, d)
+		if storageController == STORAGE_CONTROLLER_VIRTUAL && size == 0 {
+			// We don't care about unused loop devices...
+			continue
+		}
+		d := &Disk{
+			Name:                   dname,
+			SizeBytes:              size,
+			PhysicalBlockSizeBytes: pbs,
+			DriveType:              driveType,
+			IsRemovable:            removable,
+			StorageController:      storageController,
+			BusPath:                busPath,
+			NUMANodeID:             node,
+			Vendor:                 vendor,
+			Model:                  model,
+			SerialNumber:           serialNo,
+			WWN:                    wwn,
 		}
 
+		parts := diskPartitions(ctx, paths, dname)
+		// Map this Disk object into the Partition...
+		for _, part := range parts {
+			part.Disk = d
+		}
+		d.Partitions = parts
+
+		disks = append(disks, d)
 	}
 
 	return disks
@@ -400,8 +392,8 @@ func diskTypes(dname string) (
 		driveType = DRIVE_TYPE_SSD
 		storageController = STORAGE_CONTROLLER_MMC
 	} else if strings.HasPrefix(dname, "loop") {
-		driveType = DRIVE_TYPE_LOOP
-		storageController = STORAGE_CONTROLLER_LOOP
+		driveType = DRIVE_TYPE_VIRTUAL
+		storageController = STORAGE_CONTROLLER_VIRTUAL
 	}
 
 	return driveType, storageController
