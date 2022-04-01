@@ -39,6 +39,7 @@ var (
 		DRIVE_TYPE_FDD:     "FDD",
 		DRIVE_TYPE_ODD:     "ODD",
 		DRIVE_TYPE_SSD:     "SSD",
+		DRIVE_TYPE_VIRTUAL: "virtual",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
