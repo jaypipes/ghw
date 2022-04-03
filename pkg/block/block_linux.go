@@ -326,7 +326,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		wwn := diskWWN(paths, dname)
 		removable := diskIsRemovable(paths, dname)
 
-		if storageController == STORAGE_CONTROLLER_VIRTUAL && size == 0 {
+		if storageController == STORAGE_CONTROLLER_LOOP && size == 0 {
 			// We don't care about unused loop devices...
 			continue
 		}
@@ -393,7 +393,7 @@ func diskTypes(dname string) (
 		storageController = STORAGE_CONTROLLER_MMC
 	} else if strings.HasPrefix(dname, "loop") {
 		driveType = DRIVE_TYPE_VIRTUAL
-		storageController = STORAGE_CONTROLLER_VIRTUAL
+		storageController = STORAGE_CONTROLLER_LOOP
 	}
 
 	return driveType, storageController

@@ -173,7 +173,7 @@ func TestDiskTypes(t *testing.T) {
 			line: "loop0",
 			expected: entry{
 				driveType:         DRIVE_TYPE_VIRTUAL,
-				storageController: STORAGE_CONTROLLER_VIRTUAL,
+				storageController: STORAGE_CONTROLLER_LOOP,
 			},
 		},
 	}

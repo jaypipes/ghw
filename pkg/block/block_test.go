@@ -41,7 +41,15 @@ func TestBlock(t *testing.T) {
 		t.Fatalf("Expected >0 disks. Got %d", len(disks))
 	}
 
-	d0 := disks[0]
+	var d0 *block.Disk
+	// Skip loop devices on generic tests as we don't know what the underlying system is going to have
+	// And loop devices don't have Serial Numbers for example.
+	for _, d := range disks {
+		if d.StorageController != block.STORAGE_CONTROLLER_LOOP {
+			d0 = d
+			break
+		}
+	}
 	if d0.Name == "" {
 		t.Fatalf("Expected disk name, but got \"\"")
 	}
