@@ -309,9 +309,6 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 	}
 	for _, file := range files {
 		dname := file.Name()
-		if strings.HasPrefix(dname, "loop") {
-			continue
-		}
 
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
@@ -329,6 +326,10 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		wwn := diskWWN(paths, dname)
 		removable := diskIsRemovable(paths, dname)
 
+		if storageController == STORAGE_CONTROLLER_LOOP && size == 0 {
+			// We don't care about unused loop devices...
+			continue
+		}
 		d := &Disk{
 			Name:                   dname,
 			SizeBytes:              size,
@@ -390,6 +391,9 @@ func diskTypes(dname string) (
 	} else if strings.HasPrefix(dname, "mmc") {
 		driveType = DRIVE_TYPE_SSD
 		storageController = STORAGE_CONTROLLER_MMC
+	} else if strings.HasPrefix(dname, "loop") {
+		driveType = DRIVE_TYPE_VIRTUAL
+		storageController = STORAGE_CONTROLLER_LOOP
 	}
 
 	return driveType, storageController

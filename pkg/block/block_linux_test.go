@@ -19,6 +19,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -168,6 +169,13 @@ func TestDiskTypes(t *testing.T) {
 				storageController: STORAGE_CONTROLLER_UNKNOWN,
 			},
 		},
+		{
+			line: "loop0",
+			expected: entry{
+				driveType:         DRIVE_TYPE_VIRTUAL,
+				storageController: STORAGE_CONTROLLER_LOOP,
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -246,5 +254,55 @@ func TestDiskTypeUdev(t *testing.T) {
 	pt = diskPartTypeUdev(paths, "sda", "sda2")
 	if pt != util.UNKNOWN {
 		t.Fatalf("Got partition type %s, but expected %s", pt, util.UNKNOWN)
+	}
+}
+
+// TestLoopDevicesWithOption tests to see if we find loop devices when the option is activated
+func TestLoopDevicesWithOption(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New(option.WithNullAlerter(), option.WithDisableTools())
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+	fsType := "ext4"
+	expectedLoopName := "loop0"
+	loopNotUsed := "loop1"
+	loopPartitionName := "loop0p1"
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a loop device with one partition and another loop deviced not used
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, loopNotUsed), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, "queue"), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, loopNotUsed, "queue"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "queue", "rotational"), []byte("1\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "size"), []byte("62810112\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, loopNotUsed, "size"), []byte("0\n"), 0644)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("102400\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
+	d := disks(ctx, paths)
+	// There should be one disk, the other should be ignored due to 0 size
+	if len(d) != 1 {
+		t.Fatalf("expected one disk device but the function reported %d", len(d))
+	}
+	foundDisk := d[0]
+	// Should be the one we faked
+	if foundDisk.Name != expectedLoopName {
+		t.Fatalf("got loop device %s but expected %s", foundDisk.Name, expectedLoopName)
+	}
+	// Should have only one partition
+	if len(foundDisk.Partitions) != 1 {
+		t.Fatalf("expected one partition but the function reported %d", len(foundDisk.Partitions))
+	}
+	// Name should match
+	if foundDisk.Partitions[0].Name != loopPartitionName {
+		t.Fatalf("got partition %s but expected %s", foundDisk.Partitions[0], loopPartitionName)
 	}
 }
