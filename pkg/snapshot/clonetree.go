@@ -99,7 +99,7 @@ func CopyFilesInto(fileSpecs []string, destDir string, opts *CopyFileOptions) er
 	if opts == nil {
 		opts = &CopyFileOptions{
 			IsSymlinkFn:       isSymlink,
-			ShouldCreateDirFn: isDriversDir,
+			ShouldCreateDirFn: shouldCreateDir,
 		}
 	}
 	for _, fileSpec := range fileSpecs {
@@ -156,12 +156,25 @@ func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) err
 	return nil
 }
 
+func shouldCreateDir(path string, fi os.FileInfo) bool {
+	if isDeviceNetworkDir(path, fi) {
+		return true
+	}
+	return isDriversDir(path, fi)
+}
+
 func isSymlink(path string, fi os.FileInfo) bool {
 	return fi.Mode()&os.ModeSymlink != 0
 }
 
 func isDriversDir(path string, fi os.FileInfo) bool {
 	return strings.Contains(path, "drivers")
+}
+
+func isDeviceNetworkDir(path string, fi os.FileInfo) bool {
+	parentDir := filepath.Base(filepath.Dir(path))
+	// TODO: the "HasPrefix" check is brutal, but should work on linux
+	return parentDir == "net" && strings.HasPrefix(path, "/sys/devices")
 }
 
 func copyLink(path, targetPath string) error {

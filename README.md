@@ -879,6 +879,39 @@ Subclass: VGA compatible controller [00]
 Programming Interface: VGA controller [00]
 ```
 
+#### SRIOV
+
+SRIOV (Single-Root Input/Output Virtualization) is a class of PCI devices that ghw models explicitly.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting SRIOV info through PCI: %v", err)
+	}
+
+	fmt.Printf("%v\n", pci)
+
+	for _, dev := range pci.GetSRIOVDevices() {
+		fmt.Printf(" %v\n", dev)
+	}
+}
+```
+
+`ghw` discovers the SRIOV devices by scanning PCI devices. Thus, you need to make sure to have scanned the PCI devices before
+querying for SRIOV devices (aka "Functions", "PCI Functions").
+Virtual Functions (VFs) are hosted on Physical Functions (PFs).
+Virtual Functions are available both as entries in the `pci.Functions` slice and as properties of their parent Physical Functions.
+Both references are aliases to the same object.
+
 ### GPU
 
 The `ghw.GPU()` function returns a `ghw.GPUInfo` struct that contains

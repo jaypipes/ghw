@@ -45,7 +45,8 @@ func (i *Info) load() error {
 	}
 	i.db = db
 	i.Devices = i.getDevices()
-	return nil
+	// we need to do another pass once we filled all the PCI devices.
+	return i.fillSRIOVDevices()
 }
 
 func getDeviceModaliasPath(ctx *context.Context, pciAddr *pciaddr.Address) string {
