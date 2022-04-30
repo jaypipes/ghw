@@ -404,9 +404,9 @@ func (info *Info) getDevices() []*Device {
 		dev = info.GetDevice(addr)
 		if dev == nil {
 			info.ctx.Warn("failed to get device information for PCI address %s", addr)
-		} else {
-			devs = append(devs, dev)
+			continue
 		}
+		devs = append(devs, dev)
 	}
 	return devs
 }
