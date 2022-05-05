@@ -214,6 +214,7 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 		if pt == "" {
 			pt = diskPartTypeUdev(paths, disk, fname)
 		}
+		fsLabel := diskFSLabel(paths, disk, fname)
 		p := &Partition{
 			Name:       fname,
 			SizeBytes:  size,
@@ -222,10 +223,23 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 			IsReadOnly: ro,
 			UUID:       du,
 			Label:      label,
+			FSLabel:    fsLabel,
 		}
 		out = append(out, p)
 	}
 	return out
+}
+
+func diskFSLabel(paths *linuxpath.Paths, disk string, partition string) string {
+	info, err := udevInfoPartition(paths, disk, partition)
+	if err != nil {
+		return util.UNKNOWN
+	}
+
+	if label, ok := info["ID_FS_LABEL"]; ok {
+		return label
+	}
+	return util.UNKNOWN
 }
 
 func diskPartLabel(paths *linuxpath.Paths, disk string, partition string) string {
@@ -234,7 +248,7 @@ func diskPartLabel(paths *linuxpath.Paths, disk string, partition string) string
 		return util.UNKNOWN
 	}
 
-	if label, ok := info["ID_FS_LABEL"]; ok {
+	if label, ok := info["ID_PART_ENTRY_NAME"]; ok {
 		return label
 	}
 	return util.UNKNOWN
