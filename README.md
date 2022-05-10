@@ -530,6 +530,12 @@ Each `ghw.Partition` struct contains these fields:
 
 * `ghw.Partition.Name` contains a string with the short name of the partition,
   e.g. "sda1"
+* `ghw.Partition.Label` contains the label for the partition itself. On Linux
+  systems, this is derived from the `ID_PART_ENTRY_NAME` udev entry for the
+  partition.
+* `ghw.Partition.FilesystemLabel` contains the label for the filesystem housed
+  on the partition. On Linux systems, this is derived from the `ID_FS_NAME`
+  udev entry for the partition.
 * `ghw.Partition.SizeBytes` contains the amount of storage the partition
   provides
 * `ghw.Partition.MountPoint` contains a string with the partition's mount
