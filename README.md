@@ -1379,10 +1379,9 @@ if err := snapshot.PackFrom("my-snapshot.tgz", scratchDir); err != nil {
 
 ## Calling external programs
 
-By default `ghw` may call external programs, for example `ethtool`, to learn
-about hardware capabilities.  In some rare circumstances it may be useful to
-opt out from this behaviour and rely only on the data provided by
-pseudo-filesystems, like sysfs.
+By default ghw may call external programs to learn about hardware capabilities.
+We gather information using Go packages and system libraries, but in some cases ghw
+may call external tools/binaries, particularly on non-Linux platforms.
 
 The most common use case is when we want to read a snapshot from `ghw`. In
 these cases the information provided by tools will be inconsistent with the

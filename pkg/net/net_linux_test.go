@@ -10,141 +10,132 @@
 package net
 
 import (
-	"bytes"
-	"os"
+	"fmt"
 	"reflect"
-	"strings"
+	"sort"
 	"testing"
+
+	"github.com/safchain/ethtool"
 )
 
-func TestParseEthtoolFeature(t *testing.T) {
-	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_NET"); ok {
-		t.Skip("Skipping network tests.")
+func TestNetDeviceCapabilitiesFromEthHandle(t *testing.T) {
+	type testCase struct {
+		name string
+		dev  string
+		// dev(string) -> map[string]FeatureState
+		feats map[string]map[string]ethtool.FeatureState
+		// dev(string) -> error
+		errs          map[string]error
+		expected      []*NICCapability
+		expectedError error
 	}
 
-	tests := []struct {
-		line     string
-		expected *NICCapability
-	}{
+	testCases := []testCase{
 		{
-			line: "scatter-gather: off",
-			expected: &NICCapability{
-				Name:      "scatter-gather",
-				IsEnabled: false,
-				CanEnable: true,
+			name:          "nil data",
+			dev:           "foodev",
+			expectedError: fmt.Errorf("unsupported device: foodev"),
+		},
+		{
+			name: "empty data",
+			dev:  "foodev",
+			feats: map[string]map[string]ethtool.FeatureState{
+				"foodev": map[string]ethtool.FeatureState{},
+			},
+			expected: []*NICCapability{},
+		},
+		{
+			name: "minimal data",
+			dev:  "foodev",
+			feats: map[string]map[string]ethtool.FeatureState{
+				"foodev": map[string]ethtool.FeatureState{
+					"foo": ethtool.FeatureState{
+						Available:    true,
+						NeverChanged: true,
+					},
+					"bar": ethtool.FeatureState{
+						Available: true,
+						Requested: true,
+					},
+				},
+			},
+			expected: []*NICCapability{
+				{
+					Name:      "bar",
+					CanEnable: true,
+				},
+				{
+					Name:      "foo",
+					CanEnable: true,
+				},
 			},
 		},
 		{
-			line: "scatter-gather: on",
-			expected: &NICCapability{
-				Name:      "scatter-gather",
-				IsEnabled: true,
-				CanEnable: true,
+			name: "minimal data and errors",
+			dev:  "foodev",
+			feats: map[string]map[string]ethtool.FeatureState{
+				"foodev": map[string]ethtool.FeatureState{
+					"foo": ethtool.FeatureState{
+						Available:    true,
+						NeverChanged: true,
+					},
+					"bar": ethtool.FeatureState{
+						Available: true,
+						Requested: true,
+					},
+				},
 			},
+			errs: map[string]error{
+				"foodev": fmt.Errorf("fake error"),
+			},
+			expected:      nil,
+			expectedError: fmt.Errorf("fake error"),
 		},
 		{
-			line: "scatter-gather: off [fixed]",
-			expected: &NICCapability{
-				Name:      "scatter-gather",
-				IsEnabled: false,
-				CanEnable: false,
+			name:  "only errors",
+			dev:   "foodev",
+			feats: map[string]map[string]ethtool.FeatureState{},
+			errs: map[string]error{
+				"foodev": fmt.Errorf("fake error"),
 			},
+			expected:      nil,
+			expectedError: fmt.Errorf("fake error"),
 		},
 	}
 
-	for x, test := range tests {
-		actual := netParseEthtoolFeature(test.line)
-		if !reflect.DeepEqual(test.expected, actual) {
-			t.Fatalf("In test %d, expected %v == %v", x, test.expected, actual)
-		}
+	for _, tCase := range testCases {
+		t.Run(tCase.name, func(t *testing.T) {
+			fc := fakeCollector{
+				feats: tCase.feats,
+				errs:  tCase.errs,
+			}
+			got, err := netDeviceCapabilitiesFromEthHandle(fc, tCase.dev)
+			if (err != nil) != (tCase.expectedError != nil) {
+				t.Fatalf("got error %v expected error %v", err, tCase.expectedError)
+			}
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].Name < got[j].Name
+			})
+			if !reflect.DeepEqual(got, tCase.expected) {
+				t.Errorf("got %v expected %v", got, tCase.expected)
+			}
+		})
 	}
+
 }
 
-func TestParseNicAttrEthtool(t *testing.T) {
-	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_NET"); ok {
-		t.Skip("Skipping network tests.")
-	}
+type fakeCollector struct {
+	// dev(string) -> map[string]FeatureState
+	feats map[string]map[string]ethtool.FeatureState
+	errs  map[string]error
+}
 
-	tests := []struct {
-		input    string
-		expected *NIC
-	}{
-		{
-			input: `Settings for eth0:
-	Supported ports: [ TP ]
-	Supported link modes:   10baseT/Half 10baseT/Full
-	                        100baseT/Half 100baseT/Full
-	                        1000baseT/Full
-	Supported pause frame use: No
-	Supports auto-negotiation: Yes
-	Supported FEC modes: Not reported
-	Advertised link modes:  10baseT/Half 10baseT/Full
-	                        100baseT/Half 100baseT/Full
-	                        1000baseT/Full
-	Advertised pause frame use: No
-	Advertised auto-negotiation: Yes
-	Advertised FEC modes: Not reported
-	Speed: 1000Mb/s
-	Duplex: Full
-	Auto-negotiation: on
-	Port: Twisted Pair
-	PHYAD: 1
-	Transceiver: internal
-	MDI-X: off (auto)
-	Supports Wake-on: pumbg
-	Wake-on: d
-        Current message level: 0x00000007 (7)
-                               drv probe link
-	Link detected: yes
-`,
-			expected: &NIC{
-				Speed:          "1000Mb/s",
-				Duplex:         "Full",
-				SupportedPorts: []string{"TP"},
-				AdvertisedLinkModes: []string{
-					"10baseT/Half",
-					"10baseT/Full",
-					"100baseT/Half",
-					"100baseT/Full",
-					"1000baseT/Full",
-				},
-				SupportedLinkModes: []string{
-					"10baseT/Half",
-					"10baseT/Full",
-					"100baseT/Half",
-					"100baseT/Full",
-					"1000baseT/Full",
-				},
-				Capabilities: []*NICCapability{
-					{
-						Name:      "auto-negotiation",
-						IsEnabled: true,
-						CanEnable: true,
-					},
-					{
-						Name:      "pause-frame-use",
-						IsEnabled: false,
-						CanEnable: false,
-					},
-				},
-			},
-		},
+func (fc fakeCollector) FeaturesWithState(intf string) (map[string]ethtool.FeatureState, error) {
+	if err, ok := fc.errs[intf]; ok {
+		return nil, err
 	}
-
-	for x, test := range tests {
-		m := parseNicAttrEthtool(bytes.NewBufferString(test.input))
-		actual := &NIC{}
-		actual.Speed = strings.Join(m["Speed"], "")
-		actual.Duplex = strings.Join(m["Duplex"], "")
-		actual.SupportedLinkModes = m["Supported link modes"]
-		actual.SupportedPorts = m["Supported ports"]
-		actual.SupportedFECModes = m["Supported FEC modes"]
-		actual.AdvertisedLinkModes = m["Advertised link modes"]
-		actual.AdvertisedFECModes = m["Advertised FEC modes"]
-		actual.Capabilities = append(actual.Capabilities, autoNegCap(m))
-		actual.Capabilities = append(actual.Capabilities, pauseFrameUseCap(m))
-		if !reflect.DeepEqual(test.expected, actual) {
-			t.Fatalf("In test %d\nExpected:\n%+v\nActual:\n%+v\n", x, *test.expected, *actual)
-		}
+	if feats, ok := fc.feats[intf]; ok {
+		return feats, nil
 	}
+	return nil, fmt.Errorf("unsupported device: %s", intf)
 }
