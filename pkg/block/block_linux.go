@@ -216,14 +216,14 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 		}
 		fsLabel := diskFSLabel(paths, disk, fname)
 		p := &Partition{
-			Name:       fname,
-			SizeBytes:  size,
-			MountPoint: mp,
-			Type:       pt,
-			IsReadOnly: ro,
-			UUID:       du,
-			Label:      label,
-			FSLabel:    fsLabel,
+			Name:            fname,
+			SizeBytes:       size,
+			MountPoint:      mp,
+			Type:            pt,
+			IsReadOnly:      ro,
+			UUID:            du,
+			Label:           label,
+			FilesystemLabel: fsLabel,
 		}
 		out = append(out, p)
 	}

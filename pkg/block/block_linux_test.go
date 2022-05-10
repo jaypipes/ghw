@@ -235,7 +235,7 @@ func TestDiskFSLabel(t *testing.T) {
 	ctx := context.New()
 	ctx.Chroot = baseDir
 	paths := linuxpath.New(ctx)
-	partLabel := "TEST_LABEL_GHW"
+	fsLabel := "TEST_LABEL_GHW"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
 	_ = os.MkdirAll(paths.RunUdevData, 0755)
@@ -244,14 +244,14 @@ func TestDiskFSLabel(t *testing.T) {
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
 	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", partLabel)), 0644)
-	label := diskPartLabel(paths, "sda", "sda1")
-	if label != partLabel {
-		t.Fatalf("Got label %s but expected %s", label, partLabel)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", fsLabel)), 0644)
+	label := diskFSLabel(paths, "sda", "sda1")
+	if label != fsLabel {
+		t.Fatalf("Got label %s but expected %s", label, fsLabel)
 	}
 
 	// Check empty label if not found
-	label = diskPartLabel(paths, "sda", "sda2")
+	label = diskFSLabel(paths, "sda", "sda2")
 	if label != util.UNKNOWN {
 		t.Fatalf("Got label %s, but expected %s label", label, util.UNKNOWN)
 	}
