@@ -11,7 +11,6 @@ package block
 
 import (
 	"fmt"
-	"github.com/jaypipes/ghw/pkg/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,6 +19,8 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 func TestParseMountEntry(t *testing.T) {
@@ -168,6 +169,13 @@ func TestDiskTypes(t *testing.T) {
 				storageController: STORAGE_CONTROLLER_UNKNOWN,
 			},
 		},
+		{
+			line: "loop0",
+			expected: entry{
+				driveType:         DRIVE_TYPE_VIRTUAL,
+				storageController: STORAGE_CONTROLLER_LOOP,
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -184,40 +192,6 @@ func TestDiskTypes(t *testing.T) {
 				test.line, test.expected.storageController, gotStorageController,
 			)
 		}
-	}
-}
-
-func TestISCSI(t *testing.T) {
-	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
-		t.Skip("Skipping block tests.")
-	}
-
-	baseDir, _ := ioutil.TempDir("", "test")
-	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
-
-	_ = os.MkdirAll(paths.SysBlock, 0755)
-	_ = os.MkdirAll(paths.RunUdevData, 0755)
-
-	// Emulate an iSCSI device
-	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "size"), []byte("500118192\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "dev"), []byte("259:0\n"), 0644)
-	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "queue"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "queue", "rotational"), []byte("0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "queue", "physical_block_size"), []byte("512\n"), 0644)
-	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "device"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "device", "vendor"), []byte("LIO-ORG\n"), 0644)
-	udevData := "E:ID_MODEL=disk0\nE:ID_SERIAL=6001405961d8b6f55cf48beb0de296b2\n" +
-		"E:ID_PATH=ip-192.168.130.10:3260-iscsi-iqn.2022-01.com.redhat.foo:disk0-lun-0\n" +
-		"E:ID_WWN=0x6001405961d8b6f55cf48beb0de296b2\n"
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(udevData), 0644)
-
-	diskInventory := disks(ctx, paths)
-	if diskInventory[0].DriveType != DRIVE_TYPE_ISCSI {
-		t.Fatalf("Got drive type %s, but expected ISCSI", diskInventory[0].DriveType)
 	}
 }
 
@@ -239,7 +213,7 @@ func TestDiskPartLabel(t *testing.T) {
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
 	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", partLabel)), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_PART_ENTRY_NAME=%s\n", partLabel)), 0644)
 	label := diskPartLabel(paths, "sda", "sda1")
 	if label != partLabel {
 		t.Fatalf("Got label %s but expected %s", label, partLabel)
@@ -247,6 +221,37 @@ func TestDiskPartLabel(t *testing.T) {
 
 	// Check empty label if not found
 	label = diskPartLabel(paths, "sda", "sda2")
+	if label != util.UNKNOWN {
+		t.Fatalf("Got label %s, but expected %s label", label, util.UNKNOWN)
+	}
+}
+
+func TestDiskFSLabel(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New()
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+	fsLabel := "TEST_LABEL_GHW"
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a disk with one partition with label TEST_LABEL_GHW
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", fsLabel)), 0644)
+	label := diskFSLabel(paths, "sda", "sda1")
+	if label != fsLabel {
+		t.Fatalf("Got label %s but expected %s", label, fsLabel)
+	}
+
+	// Check empty label if not found
+	label = diskFSLabel(paths, "sda", "sda2")
 	if label != util.UNKNOWN {
 		t.Fatalf("Got label %s, but expected %s label", label, util.UNKNOWN)
 	}
@@ -280,5 +285,55 @@ func TestDiskTypeUdev(t *testing.T) {
 	pt = diskPartTypeUdev(paths, "sda", "sda2")
 	if pt != util.UNKNOWN {
 		t.Fatalf("Got partition type %s, but expected %s", pt, util.UNKNOWN)
+	}
+}
+
+// TestLoopDevicesWithOption tests to see if we find loop devices when the option is activated
+func TestLoopDevicesWithOption(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New(option.WithNullAlerter(), option.WithDisableTools())
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+	fsType := "ext4"
+	expectedLoopName := "loop0"
+	loopNotUsed := "loop1"
+	loopPartitionName := "loop0p1"
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a loop device with one partition and another loop deviced not used
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, loopNotUsed), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, "queue"), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, loopNotUsed, "queue"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "queue", "rotational"), []byte("1\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "size"), []byte("62810112\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, loopNotUsed, "size"), []byte("0\n"), 0644)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("102400\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
+	d := disks(ctx, paths)
+	// There should be one disk, the other should be ignored due to 0 size
+	if len(d) != 1 {
+		t.Fatalf("expected one disk device but the function reported %d", len(d))
+	}
+	foundDisk := d[0]
+	// Should be the one we faked
+	if foundDisk.Name != expectedLoopName {
+		t.Fatalf("got loop device %s but expected %s", foundDisk.Name, expectedLoopName)
+	}
+	// Should have only one partition
+	if len(foundDisk.Partitions) != 1 {
+		t.Fatalf("expected one partition but the function reported %d", len(foundDisk.Partitions))
+	}
+	// Name should match
+	if foundDisk.Partitions[0].Name != loopPartitionName {
+		t.Fatalf("got partition %s but expected %s", foundDisk.Partitions[0], loopPartitionName)
 	}
 }
