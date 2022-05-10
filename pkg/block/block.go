@@ -175,14 +175,15 @@ type Disk struct {
 
 // Partition describes a logical division of a Disk.
 type Partition struct {
-	Disk       *Disk  `json:"-"`
-	Name       string `json:"name"`
-	Label      string `json:"label"`
-	MountPoint string `json:"mount_point"`
-	SizeBytes  uint64 `json:"size_bytes"`
-	Type       string `json:"type"`
-	IsReadOnly bool   `json:"read_only"`
-	UUID       string `json:"uuid"` // This would be volume UUID on macOS, PartUUID on linux, empty on Windows
+	Disk            *Disk  `json:"-"`
+	Name            string `json:"name"`
+	Label           string `json:"label"`
+	MountPoint      string `json:"mount_point"`
+	SizeBytes       uint64 `json:"size_bytes"`
+	Type            string `json:"type"`
+	IsReadOnly      bool   `json:"read_only"`
+	UUID            string `json:"uuid"` // This would be volume UUID on macOS, PartUUID on linux, empty on Windows
+	FilesystemLabel string `json:"filesystem_label"`
 }
 
 // Info describes all disk drives and partitions in the host system.
