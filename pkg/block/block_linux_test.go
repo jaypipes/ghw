@@ -288,6 +288,37 @@ func TestDiskTypeUdev(t *testing.T) {
 	}
 }
 
+func TestDiskPartUUID(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := ioutil.TempDir("", "test")
+	defer os.RemoveAll(baseDir)
+	ctx := context.New()
+	ctx.Chroot = baseDir
+	paths := linuxpath.New(ctx)
+	partUUID := "11111111-1111-1111-1111-111111111111"
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a disk with one partition with uuid
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
+	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_PART_ENTRY_UUID=%s\n", partUUID)), 0644)
+	uuid := diskPartUUID(paths, "sda", "sda1")
+	if uuid != partUUID {
+		t.Fatalf("Got uuid %s but expected %s", uuid, partUUID)
+	}
+
+	// Check empty uuid if not found
+	uuid = diskPartUUID(paths, "sda", "sda2")
+	if uuid != util.UNKNOWN {
+		t.Fatalf("Got uuid %s, but expected %s label", uuid, util.UNKNOWN)
+	}
+}
+
 // TestLoopDevicesWithOption tests to see if we find loop devices when the option is activated
 func TestLoopDevicesWithOption(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {

@@ -546,8 +546,10 @@ Each `ghw.Partition` struct contains these fields:
 * `ghw.Partition.Disk` is a pointer to the `ghw.Disk` object associated with
   the partition. This will be `nil` if the `ghw.Partition` struct was returned
   by the `ghw.DiskPartitions()` library function.
-* `ghw.Partition.UUID` is a string containing the volume UUID on Linux, the
-  partition UUID on MacOS and nothing on Windows.
+* `ghw.Partition.UUID` is a string containing the partition UUID on Linux, the
+  partition UUID on MacOS and nothing on Windows.On Linux
+  systems, this is derived from the `ID_PART_ENTRY_UUID` udev entry for the
+  partition.
 
 ```go
 package main
