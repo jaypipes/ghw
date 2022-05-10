@@ -6,21 +6,15 @@
 package net
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/safchain/ethtool"
+
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-)
-
-const (
-	_WARN_ETHTOOL_NOT_INSTALLED = `ethtool not installed. Cannot grab NIC capabilities`
 )
 
 func (i *Info) load() error {
@@ -35,14 +29,6 @@ func nics(ctx *context.Context) []*NIC {
 	files, err := ioutil.ReadDir(paths.SysClassNet)
 	if err != nil {
 		return nics
-	}
-
-	etAvailable := ctx.EnableTools
-	if etAvailable {
-		if etInstalled := ethtoolInstalled(); !etInstalled {
-			ctx.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
-			etAvailable = false
-		}
 	}
 
 	for _, file := range files {
@@ -66,12 +52,7 @@ func nics(ctx *context.Context) []*NIC {
 
 		mac := netDeviceMacAddress(paths, filename)
 		nic.MacAddress = mac
-		if etAvailable {
-			nic.Capabilities = netDeviceCapabilities(ctx, filename)
-		} else {
-			nic.Capabilities = []*NICCapability{}
-		}
-
+		nic.Capabilities = netDeviceCapabilities(ctx, filename)
 		nic.PCIAddress = netDevicePCIAddress(paths.SysClassNet, filename)
 
 		nics = append(nics, nic)
@@ -100,74 +81,30 @@ func netDeviceMacAddress(paths *linuxpath.Paths, dev string) string {
 	return strings.TrimSpace(string(contents))
 }
 
-func ethtoolInstalled() bool {
-	_, err := exec.LookPath("ethtool")
-	return err == nil
-}
-
 func netDeviceCapabilities(ctx *context.Context, dev string) []*NICCapability {
-	caps := make([]*NICCapability, 0)
-	path, _ := exec.LookPath("ethtool")
-	cmd := exec.Command(path, "-k", dev)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	caps := []*NICCapability{}
+
+	ethHandle, err := ethtool.NewEthtool()
 	if err != nil {
-		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
-		ctx.Warn(msg)
+		// TODO: warn
+		return caps
+	}
+	defer ethHandle.Close()
+
+	feats, err := ethHandle.FeaturesWithState(dev)
+	if err != nil {
+		// TODO: warn
 		return caps
 	}
 
-	// The out variable will now contain something that looks like the
-	// following.
-	//
-	// Features for enp58s0f1:
-	// rx-checksumming: on
-	// tx-checksumming: off
-	//     tx-checksum-ipv4: off
-	//     tx-checksum-ip-generic: off [fixed]
-	//     tx-checksum-ipv6: off
-	//     tx-checksum-fcoe-crc: off [fixed]
-	//     tx-checksum-sctp: off [fixed]
-	// scatter-gather: off
-	//     tx-scatter-gather: off
-	//     tx-scatter-gather-fraglist: off [fixed]
-	// tcp-segmentation-offload: off
-	//     tx-tcp-segmentation: off
-	//     tx-tcp-ecn-segmentation: off [fixed]
-	//     tx-tcp-mangleid-segmentation: off
-	//     tx-tcp6-segmentation: off
-	// < snipped >
-	scanner := bufio.NewScanner(&out)
-	// Skip the first line...
-	scanner.Scan()
-	for scanner.Scan() {
-		line := strings.TrimPrefix(scanner.Text(), "\t")
-		caps = append(caps, netParseEthtoolFeature(line))
+	for key, state := range feats {
+		caps = append(caps, &NICCapability{
+			Name:      key,
+			IsEnabled: state.Active,
+			CanEnable: state.Available,
+		})
 	}
 	return caps
-}
-
-// netParseEthtoolFeature parses a line from the ethtool -k output and returns
-// a NICCapability.
-//
-// The supplied line will look like the following:
-//
-// tx-checksum-ip-generic: off [fixed]
-//
-// [fixed] indicates that the feature may not be turned on/off. Note: it makes
-// no difference whether a privileged user runs `ethtool -k` when determining
-// whether [fixed] appears for a feature.
-func netParseEthtoolFeature(line string) *NICCapability {
-	parts := strings.Fields(line)
-	cap := strings.TrimSuffix(parts[0], ":")
-	enabled := parts[1] == "on"
-	fixed := len(parts) == 3 && parts[2] == "[fixed]"
-	return &NICCapability{
-		Name:      cap,
-		IsEnabled: enabled,
-		CanEnable: !fixed,
-	}
 }
 
 func netDevicePCIAddress(netDevDir, netDevName string) *string {

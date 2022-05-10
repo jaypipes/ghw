@@ -11,6 +11,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/safchain/ethtool v0.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.2 // indirect
 	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
@@ -18,3 +19,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	howett.net/plist v1.0.0
 )
+
+replace github.com/safchain/ethtool => github.com/fromanirh/ethtool-ioctl v0.2.1-0.20220510154755-7ca867c90cb0
