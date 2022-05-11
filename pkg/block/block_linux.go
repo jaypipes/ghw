@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -209,7 +208,7 @@ func diskPartitions(ctx *context.Context, paths *linuxpath.Paths, disk string) [
 		}
 		size := partitionSizeBytes(paths, disk, fname)
 		mp, pt, ro := partitionInfo(paths, fname)
-		du := diskPartUUID(ctx, fname)
+		du := diskPartUUID(paths, disk, fname)
 		label := diskPartLabel(paths, disk, fname)
 		if pt == "" {
 			pt = diskPartTypeUdev(paths, disk, fname)
@@ -268,37 +267,16 @@ func diskPartTypeUdev(paths *linuxpath.Paths, disk string, partition string) str
 	return util.UNKNOWN
 }
 
-func diskPartUUID(ctx *context.Context, part string) string {
-	if !ctx.EnableTools {
-		ctx.Warn("EnableTools=false disables partition UUID detection.")
-		return ""
-	}
-	if !strings.HasPrefix(part, "/dev") {
-		part = "/dev/" + part
-	}
-	args := []string{
-		"blkid",
-		"-s",
-		"PARTUUID",
-		part,
-	}
-	out, err := exec.Command(args[0], args[1:]...).Output()
+func diskPartUUID(paths *linuxpath.Paths, disk string, partition string) string {
+	info, err := udevInfoPartition(paths, disk, partition)
 	if err != nil {
-		ctx.Warn("failed to read disk partuuid of %s : %s\n", part, err.Error())
-		return ""
+		return util.UNKNOWN
 	}
 
-	if len(out) == 0 {
-		return ""
+	if pType, ok := info["ID_PART_ENTRY_UUID"]; ok {
+		return pType
 	}
-
-	parts := strings.Split(string(out), "PARTUUID=")
-	if len(parts) != 2 {
-		ctx.Warn("failed to parse the partuuid of %s\n", part)
-		return ""
-	}
-
-	return strings.ReplaceAll(strings.TrimSpace(parts[1]), `"`, "")
+	return util.UNKNOWN
 }
 
 func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
