@@ -17,6 +17,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/util"
 
 	"github.com/jaypipes/ghw/testdata"
 )
@@ -228,7 +229,7 @@ func TestPCIModaliasWithUpperCaseClassID(t *testing.T) {
 	if dev == nil {
 		t.Fatalf("Failed to parse valid modalias")
 	}
-	if dev.Class.Name == "unknown" {
+	if dev.Class.Name == util.UNKNOWN {
 		t.Fatalf("Failed to lookup class name")
 	}
 }
