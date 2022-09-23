@@ -133,7 +133,10 @@ func TestPCIMarshalJSON(t *testing.T) {
 		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
 	}
 
-	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02")
+	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02\n")
+	if dev == nil {
+		t.Fatalf("Failed to parse valid modalias")
+	}
 	s := marshal.SafeJSON(context.FromEnv(), dev, true)
 	if s == "" {
 		t.Fatalf("Error marshalling device: %v", dev)
