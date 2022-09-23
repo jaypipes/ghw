@@ -214,3 +214,21 @@ func TestPCIMarshalUnmarshal(t *testing.T) {
 		t.Fatalf("Expected no error unmarshaling pci.Info, but got %v", err)
 	}
 }
+
+func TestPCIModaliasWithUpperCaseClassID(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
+		t.Skip("Skipping PCI tests.")
+	}
+	info, err := pci.New()
+	if err != nil {
+		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
+	}
+
+	dev := info.ParseDevice("0000:00:1f.4", "pci:v00008086d00009D23sv00001028sd000007EAbc0Csc05i00\n")
+	if dev == nil {
+		t.Fatalf("Failed to parse valid modalias")
+	}
+	if dev.Class.Name == "unknown" {
+		t.Fatalf("Failed to lookup class name")
+	}
+}
