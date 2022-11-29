@@ -160,9 +160,9 @@ func parseModaliasData(data string) *deviceModaliasInfo {
 	productID := strings.ToLower(data[18:22])
 	subvendorID := strings.ToLower(data[28:32])
 	subproductID := strings.ToLower(data[38:42])
-	classID := data[44:46]
-	subclassID := data[48:50]
-	progIfaceID := data[51:53]
+	classID := strings.ToLower(data[44:46])
+	subclassID := strings.ToLower(data[48:50])
+	progIfaceID := strings.ToLower(data[51:53])
 	return &deviceModaliasInfo{
 		vendorID:     vendorID,
 		productID:    productID,

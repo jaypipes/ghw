@@ -17,6 +17,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/util"
 
 	"github.com/jaypipes/ghw/testdata"
 )
@@ -133,7 +134,10 @@ func TestPCIMarshalJSON(t *testing.T) {
 		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
 	}
 
-	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02")
+	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02\n")
+	if dev == nil {
+		t.Fatalf("Failed to parse valid modalias")
+	}
 	s := marshal.SafeJSON(context.FromEnv(), dev, true)
 	if s == "" {
 		t.Fatalf("Error marshalling device: %v", dev)
@@ -209,5 +213,23 @@ func TestPCIMarshalUnmarshal(t *testing.T) {
 	err = json.Unmarshal(jdata, &topo)
 	if err != nil {
 		t.Fatalf("Expected no error unmarshaling pci.Info, but got %v", err)
+	}
+}
+
+func TestPCIModaliasWithUpperCaseClassID(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
+		t.Skip("Skipping PCI tests.")
+	}
+	info, err := pci.New()
+	if err != nil {
+		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
+	}
+
+	dev := info.ParseDevice("0000:00:1f.4", "pci:v00008086d00009D23sv00001028sd000007EAbc0Csc05i00\n")
+	if dev == nil {
+		t.Fatalf("Failed to parse valid modalias")
+	}
+	if dev.Class.Name == util.UNKNOWN {
+		t.Fatalf("Failed to lookup class name")
 	}
 }
