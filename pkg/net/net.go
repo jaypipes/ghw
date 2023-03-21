@@ -20,12 +20,36 @@ type NICCapability struct {
 	CanEnable bool   `json:"can_enable"`
 }
 
+type NICLinkInfo struct {
+	Speed						string		`json:"speed"`
+	Duplex						string		`json:"duplex"`
+	AutoNegotiation				*bool		`json:"auto-negotiation,omitempty"`
+	Port						string		`json:"port,omitempty"`
+	PHYAD						string		`json:"phyad,omitempty"`
+	Transceiver					string		`json:"transceiver,omitempty"`
+	MDIX						[]string	`json:"mdi-x,omitempty"`
+	SupportsWakeOn				string		`json:"supports_wake-on,omitempty"`
+	WakeOn						string		`json:"wake-on,omitempty"`
+	LinkDetected				*bool		`json:"link_detected"`
+	SupportedPorts				[]string	`json:"supported_ports,omitempty"`
+	SupportedLinkModes			[]string	`json:"supported_link_modes,omitempty"`
+	SupportedPauseFrameUse		*bool		`json:"supported_pause_frame_use,omitempty"`
+	SupportsAutoNegotiation		*bool		`json:"supports_auto-negotiation,omitempty"`
+	SupportedFECModes			[]string	`json:"supported_fec_modes,omitempty"`
+	AdvertisedLinkModes			[]string	`json:"advertised_link_modes,omitempty"`
+	AdvertisedPauseFrameUse		*bool		`json:"advertised_pause_frame_use,omitempty"`
+	AdvertisedAutoNegotiation	*bool		`json:"advertised_auto-negotiation,omitempty"`
+	AdvertisedFECModes			[]string	`json:"advertised_fec_modes,omitempty"`
+	NETIFMsgLevel				[]string	`json:"netif_msg_level,omitempty"`
+}
+
 type NIC struct {
 	Name         string           `json:"name"`
 	MacAddress   string           `json:"mac_address"`
 	IsVirtual    bool             `json:"is_virtual"`
 	Capabilities []*NICCapability `json:"capabilities"`
 	PCIAddress   *string          `json:"pci_address,omitempty"`
+	LinkInfo     *NICLinkInfo     `json:"link_info"`
 	// TODO(fromani): add other hw addresses (USB) when we support them
 }
 

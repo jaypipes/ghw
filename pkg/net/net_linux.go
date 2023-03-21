@@ -17,6 +17,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -68,8 +69,10 @@ func nics(ctx *context.Context) []*NIC {
 		nic.MacAddress = mac
 		if etAvailable {
 			nic.Capabilities = netDeviceCapabilities(ctx, filename)
+			nic.LinkInfo = netDeviceLinkInfo(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
+			nic.LinkInfo = netDeviceLimittedLinkInfo(paths, filename)
 		}
 
 		nic.PCIAddress = netDevicePCIAddress(paths.SysClassNet, filename)
@@ -219,4 +222,115 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 	pciAddr := filepath.Base(devPath)
 	return &pciAddr
+}
+
+func netDeviceLimittedLinkInfo(paths *linuxpath.Paths, dev string) *NICLinkInfo {
+	// Get speed, duplex, and link detected from /sys/class/net/$DEVICE/ directory
+	speed	:= readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
+	duplex	:= readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
+	carrier	:= readFile(filepath.Join(paths.SysClassNet, dev, "carrier"))
+	return &NICLinkInfo{
+		Speed:			speed,
+		Duplex:			duplex,
+		LinkDetected:	util.ParseBool(carrier),
+	}
+}
+
+func readFile(path string) string {
+	contents, err = ioutil.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(contents))
+}
+
+func netDeviceLinkInfo(ctx *context.Context, dev string) *NICLinkInfo {
+	path, _ := exec.LookPath("ethtool")
+	cmd := exec.Command(path, dev)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
+		ctx.Warn(msg)
+		return &NICLinkInfo{}
+	}
+	return netParseEthtoolLinkInfo(&out)
+}
+
+func netParseEthtoolLinkInfo(out *string) *NICLinkInfo {
+
+	// The out variable will now contain something that looks like the
+	// following.
+	//
+	//Settings for eth0:
+	//	Supported ports: [ TP ]
+	//	Supported link modes:   10baseT/Half 10baseT/Full
+	//	                        100baseT/Half 100baseT/Full
+	//	                        1000baseT/Full
+	//	Supported pause frame use: No
+	//	Supports auto-negotiation: Yes
+	//	Supported FEC modes: Not reported
+	//	Advertised link modes:  10baseT/Half 10baseT/Full
+	//	                        100baseT/Half 100baseT/Full
+	//	                        1000baseT/Full
+	//	Advertised pause frame use: No
+	//	Advertised auto-negotiation: Yes
+	//	Advertised FEC modes: Not reported
+	//	Speed: 1000Mb/s
+	//	Duplex: Full
+	//	Auto-negotiation: on
+	//	Port: Twisted Pair
+	//	PHYAD: 1
+	//	Transceiver: internal
+	//	MDI-X: off (auto)
+	//	Supports Wake-on: pumbg
+	//	Wake-on: d
+	//        Current message level: 0x00000007 (7)
+	//                               drv probe link
+	//	Link detected: yes
+
+	scanner := bufio.NewScanner(&out)
+	// Skip the first line
+	scanner.Scan()
+	m := make(map[string][]string)
+	var name string
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), ":") {
+			line	:= strings.Split(scanner.Text(), ":")
+			name	= strings.TrimSpace(line[0])
+			fields	:= strings.Fields(line[1])
+			for _, f := range fields {
+				m[name] = append(m[name], strings.TrimSpace(f))
+			}
+		} else {
+			fields := strings.Fields(scanner.Text())
+			for _, f := range fields {
+				m[name] = append(m[name], strings.TrimSpace(f))
+			}
+
+		}
+	}
+	return &NICLinkInfo {
+		Speed:						strings.Join(m["Speed"]),
+		Duplex:						strings.Join(m["Duplex"]),
+		AutoNegotiation:			util.ParseBool(m["Auto-negotiation"]),
+		Port:						strings.Join(m["Port"]),
+		PHYAD:						strings.Join(m["PHYAD"]),
+		Transceiver:				strings.Join(m["Transceiver"]),
+		MDIX:						m["MDI-X"],
+		SupportsWakeOn:				strings.Join(m["Supports Wake-on"]),
+		WakeOn:						strings.Join(m["Wake-on"]),
+		LinkDetected:				util.ParseBool(m["Link detected"]),
+		SupportedPorts:				m["Supported ports"],
+		SupportedLinkModes:			m["Supported link modes"],
+		SupportedPauseFrameUse:		util.ParseBool(m["Supported pause frame use"]),
+		SupportsAutoNegotiation:	util.ParseBool(m["Supports auto-negotiation"]),
+		SupportedFECModes:			m["Supported FEC modes"],
+		AdvertisedLinkModes:		m["Advertised link modes"],
+		AdvertisedPauseFrameUse:	util.ParseBool(m["Advertised pause frame use"]),
+		AdvertisedAutoNegotiation:	util.ParseBool(m["Advertised auto-negotiation"]),
+		AdvertisedFECModes:			m["Advertised FEC modes"],
+		NETIFMsgLevel:				m["Current message level"],
+	}
 }
