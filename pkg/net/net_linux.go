@@ -226,18 +226,26 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 func netDeviceLimittedLinkInfo(paths *linuxpath.Paths, dev string) *NICLinkInfo {
 	// Get speed, duplex, and link detected from /sys/class/net/$DEVICE/ directory
-	speed	:= readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
-	duplex	:= readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
-	carrier	:= readFile(filepath.Join(paths.SysClassNet, dev, "carrier"))
-	return &NICLinkInfo{
-		Speed:			speed,
-		Duplex:			duplex,
-		LinkDetected:	util.ParseBool(carrier),
+	speed     := readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
+	duplex    := readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
+	carrier   := readFile(filepath.Join(paths.SysClassNet, dev, "carrier"))
+	link, err := util.ParseBool(carrier)
+	if err == nil {
+		return &NICLinkInfo{
+			Speed:        speed,
+			Duplex:       duplex,
+			LinkDetected: &link,
+		}
+	} else {
+		return &NICLinkInfo{
+			Speed:        speed,
+			Duplex:       duplex,
+		}
 	}
 }
 
 func readFile(path string) string {
-	contents, err = ioutil.ReadFile(path)
+	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		return ""
 	}
@@ -258,7 +266,7 @@ func netDeviceLinkInfo(ctx *context.Context, dev string) *NICLinkInfo {
 	return netParseEthtoolLinkInfo(&out)
 }
 
-func netParseEthtoolLinkInfo(out *string) *NICLinkInfo {
+func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 
 	// The out variable will now contain something that looks like the
 	// following.
@@ -290,47 +298,103 @@ func netParseEthtoolLinkInfo(out *string) *NICLinkInfo {
 	//                               drv probe link
 	//	Link detected: yes
 
-	scanner := bufio.NewScanner(&out)
+	scanner := bufio.NewScanner(out)
 	// Skip the first line
 	scanner.Scan()
 	m := make(map[string][]string)
 	var name string
 	for scanner.Scan() {
+		var fields []string
 		if strings.Contains(scanner.Text(), ":") {
-			line	:= strings.Split(scanner.Text(), ":")
-			name	= strings.TrimSpace(line[0])
-			fields	:= strings.Fields(line[1])
-			for _, f := range fields {
-				m[name] = append(m[name], strings.TrimSpace(f))
+			line := strings.Split(scanner.Text(), ":")
+			name  = strings.TrimSpace(line[0])
+			str  := strings.Trim(strings.TrimSpace(line[1]), "[]")
+			switch str {
+				case
+				"Not reported",
+				"Unknown":
+				continue
 			}
+			fields = strings.Fields(str)
 		} else {
-			fields := strings.Fields(scanner.Text())
-			for _, f := range fields {
-				m[name] = append(m[name], strings.TrimSpace(f))
-			}
+			fields = strings.Fields(strings.Trim(strings.TrimSpace(scanner.Text()), "[]"))
+		}
 
+		for _, f := range fields {
+			m[name] = append(m[name], strings.TrimSpace(f))
 		}
 	}
+
+	var nilBool *bool
+
+	var autoNegotiation *bool
+	an, err	:=	util.ParseBool(strings.Join(m["Auto-negotiation"],""))
+	if err != nil {
+		autoNegotiation	= nilBool
+	} else {
+		autoNegotiation	= &an
+	}
+
+	var linkDetected *bool
+	ld, err	:=	util.ParseBool(strings.Join(m["Link detected"],""))
+	if err != nil {
+		linkDetected = nilBool
+	} else {
+		linkDetected = &ld
+	}
+
+	var supportedPauseFrameUse *bool
+	spfu, err := util.ParseBool(strings.Join(m["Supported pause frame use"],""))
+	if err != nil {
+		supportedPauseFrameUse = nilBool
+	} else {
+		supportedPauseFrameUse = &spfu
+	}
+
+	var supportsAutoNegotiation *bool
+	san, err := util.ParseBool(strings.Join(m["Supports auto-negotiation"],""))
+	if err != nil {
+		supportsAutoNegotiation = nilBool
+	} else {
+		supportsAutoNegotiation = &san
+	}
+
+	var advertisedPauseFrameUse *bool
+	apfu, err := util.ParseBool(strings.Join(m["Advertised pause frame use"],""))
+	if err != nil {
+		advertisedPauseFrameUse = nilBool
+	} else {
+		advertisedPauseFrameUse = &apfu
+	}
+
+	var advertisedAutoNegotiation *bool
+	aan, err := util.ParseBool(strings.Join(m["Advertised auto-negotiation"],""))
+	if err != nil {
+		advertisedAutoNegotiation = nilBool
+	} else {
+		advertisedAutoNegotiation = &aan
+	}
+
 	return &NICLinkInfo {
-		Speed:						strings.Join(m["Speed"]),
-		Duplex:						strings.Join(m["Duplex"]),
-		AutoNegotiation:			util.ParseBool(m["Auto-negotiation"]),
-		Port:						strings.Join(m["Port"]),
-		PHYAD:						strings.Join(m["PHYAD"]),
-		Transceiver:				strings.Join(m["Transceiver"]),
-		MDIX:						m["MDI-X"],
-		SupportsWakeOn:				strings.Join(m["Supports Wake-on"]),
-		WakeOn:						strings.Join(m["Wake-on"]),
-		LinkDetected:				util.ParseBool(m["Link detected"]),
-		SupportedPorts:				m["Supported ports"],
-		SupportedLinkModes:			m["Supported link modes"],
-		SupportedPauseFrameUse:		util.ParseBool(m["Supported pause frame use"]),
-		SupportsAutoNegotiation:	util.ParseBool(m["Supports auto-negotiation"]),
-		SupportedFECModes:			m["Supported FEC modes"],
-		AdvertisedLinkModes:		m["Advertised link modes"],
-		AdvertisedPauseFrameUse:	util.ParseBool(m["Advertised pause frame use"]),
-		AdvertisedAutoNegotiation:	util.ParseBool(m["Advertised auto-negotiation"]),
-		AdvertisedFECModes:			m["Advertised FEC modes"],
-		NETIFMsgLevel:				m["Current message level"],
+		Speed:                     strings.Join(m["Speed"],""),
+		Duplex:                    strings.Join(m["Duplex"],""),
+		AutoNegotiation:           autoNegotiation,
+		Port:                      strings.Join(m["Port"],""),
+		PHYAD:                     strings.Join(m["PHYAD"],""),
+		Transceiver:               strings.Join(m["Transceiver"],""),
+		MDIX:                      m["MDI-X"],
+		SupportsWakeOn:            strings.Join(m["Supports Wake-on"],""),
+		WakeOn:                    strings.Join(m["Wake-on"],""),
+		LinkDetected:              linkDetected,
+		SupportedPorts:            m["Supported ports"],
+		SupportedLinkModes:        m["Supported link modes"],
+		SupportedPauseFrameUse:	   supportedPauseFrameUse,
+		SupportsAutoNegotiation:   supportsAutoNegotiation,
+		SupportedFECModes:         m["Supported FEC modes"],
+		AdvertisedLinkModes:       m["Advertised link modes"],
+		AdvertisedPauseFrameUse:   advertisedPauseFrameUse,
+		AdvertisedAutoNegotiation: advertisedAutoNegotiation,
+		AdvertisedFECModes:        m["Advertised FEC modes"],
+		NETIFMsgLevel:             m["Current message level"],
 	}
 }

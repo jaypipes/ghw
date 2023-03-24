@@ -10,6 +10,7 @@
 package net
 
 import (
+	"bytes"
 	"os"
 	"reflect"
 	"testing"
@@ -63,11 +64,11 @@ func TestParseEthtoolLinkInfo(t *testing.T) {
 		t.Skip("Skipping network tests.")
 	}
 
-	truePtr		:= true
-	falsePtr	:= false
-	tests := []struct {
-		input		string
-		expected	*NICLinkInfo
+	truePtr  := true
+	falsePtr := false
+	tests    := []struct {
+		input    string
+		expected *NICLinkInfo
 	}{
 		{
 			input: `Settings for eth0:
@@ -98,46 +99,50 @@ func TestParseEthtoolLinkInfo(t *testing.T) {
 	Link detected: yes
 `,
 			expected: &NICLinkInfo{
-				Speed:						"1000Mb/s",
-				Duplex:						"Full",
-				AutoNegotiation:			&truePtr,
-				Port:						"Twisted Pair",
-				PHYAD:						"1",
-				Transceiver:				"internal",
-				MDIX:						[]string{"off", "(auto)"},
-				SupportsWakeOn:				"pumbg",
-				WakeOn:						"d",
-				LinkDetected:				&truePtr,
-				SupportedPorts:				[]string{"[", "TP", "]"},
-				SupportedLinkModes:			[]string{
-												"10baseT/Half",
-												"10baseT/Full",
-												"100baseT/Half",
-												"100baseT/Full",
-												"1000baseT/Full",
-											},
-				SupportedPauseFrameUse:		&falsePtr,
-				SupportsAutoNegotiation:	&truePtr,
-				SupportedFECModes:			[]string{"Not", "reported"},
-				AdvertisedLinkModes:		[]string{
-												"10baseT/Half",
-												"10baseT/Full",
-												"100baseT/Half",
-												"100baseT/Full",
-												"1000baseT/Full",
-											},
-				AdvertisedPauseFrameUse:	&falsePtr,
-				AdvertisedAutoNegotiation:	&truePtr,
-				AdvertisedFECModes:			[]string{"Not", "reported"},
-				NETIFMsgLevel:				[]string{"0x00000007", "(7)", "drv", "probe", "link"},
+				Speed:                     "1000Mb/s",
+				Duplex:                    "Full",
+				AutoNegotiation:           &truePtr,
+				Port:                      "TwistedPair",
+				PHYAD:                     "1",
+				Transceiver:               "internal",
+				MDIX:                      []string{"off", "(auto)"},
+				SupportsWakeOn:            "pumbg",
+				WakeOn:                    "d",
+				LinkDetected:              &truePtr,
+				SupportedPorts:            []string{"TP"},
+				SupportedLinkModes:        []string{
+					"10baseT/Half",
+					"10baseT/Full",
+					"100baseT/Half",
+					"100baseT/Full",
+					"1000baseT/Full",
+				},
+				SupportedPauseFrameUse:    &falsePtr,
+				SupportsAutoNegotiation:   &truePtr,
+				AdvertisedLinkModes:       []string{
+					"10baseT/Half",
+					"10baseT/Full",
+					"100baseT/Half",
+					"100baseT/Full",
+					"1000baseT/Full",
+				},
+				AdvertisedPauseFrameUse:   &falsePtr,
+				AdvertisedAutoNegotiation: &truePtr,
+				NETIFMsgLevel:             []string{
+					"0x00000007",
+					"(7)",
+					"drv",
+					"probe",
+					"link",
+				},
 			},
 		},
 	}
 
 	for x, test := range tests {
-		actual := netParseEthtoolLinkInfo(test.input)
+		actual := netParseEthtoolLinkInfo(bytes.NewBufferString(test.input))
 		if !reflect.DeepEqual(test.expected, actual) {
-			t.Fatalf("In test %d, expected %v == %v", x, test.expected, actual)
+			t.Fatalf("In test %d\nExpected:\n%v\nActual:\n%v\n", x, test.expected, actual)
 		}
 	}
 }

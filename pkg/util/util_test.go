@@ -64,36 +64,36 @@ func TestParseBool(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			item:		"False",
-			expected:	false,
+			item:     "False",
+			expected: false,
 		},
 		{
-			item:		"F",
-			expected:	false,
+			item:     "F",
+			expected: false,
 		},
 		{
-			item:		"1",
-			expected:	true,
+			item:     "1",
+			expected: true,
 		},
 		{
-			item:		"",
-			expected:	false,
+			item:     "",
+			expected: false,
 		},
 		{
-			item:		"on",
-			expected:	true,
+			item:     "on",
+			expected: true,
 		},
 		{
-			item:		"Off",
-			expected:	false,
+			item:     "Off",
+			expected: false,
 		},
 		{
-			item:		"Yes",
-			expected:	true,
+			item:     "Yes",
+			expected: true,
 		},
 		{
-			item:		"no",
-			expected:	false,
+			item:     "no",
+			expected: false,
 		},
 	}
 

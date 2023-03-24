@@ -67,13 +67,13 @@ func ParseBool(str string) (bool, error) {
 		return b, err
 	} else {
 		ExtraBools := map[string]bool{
-			"on":	true,
-			"off":	false,
-			"yes":	true,
-			"no":	false,
+			"on":  true,
+			"off": false,
+			"yes": true,
+			"no":  false,
 			// Return false instead of an error on empty strings
 			// For example from empty files in SysClassNet/Device
-			"":		false,
+			"":    false,
 		}
 		if b, ok := ExtraBools[strings.ToLower(str)]; ok {
 			return b, nil

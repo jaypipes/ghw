@@ -715,6 +715,11 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.PCIAddress` is the PCI device address of the device backing the NIC.
   this is not-nil only if the backing device is indeed a PCI device; more backing
   devices (e.g. USB) will be added in future versions.
+* `ghw.NIC.LinkInfo` is a pointer to a `ghw.NICLinkInfo` struct, which describes 
+  parameters of the NIC's link information and status.  This will contain the 
+  fields returned by `ethtool <DEVICE>` call on Linux, but will fall back to 
+  returning link information available in the /sys/class/net/<DEVICE>/ directory
+  if ethtool is not available.
 
 The `ghw.NICCapability` struct contains the following fields:
 
@@ -724,6 +729,47 @@ The `ghw.NICCapability` struct contains the following fields:
   is currently enabled/active on the NIC
 * `ghw.NICCapability.CanEnable` is a boolean indicating whether the capability
   may be enabled
+
+The `gwh.NICLinkInfo` struct contains the following fields:
+* `ghw.NICLinkInfo.Speed` is a string showing the current link speed.  This 
+  field will be present even if ethtool is not available.
+* `ghw.NICLinkInfo.Duplex` is a string showing the current link duplex.  This 
+  field will be present even if ethtool is not available.
+* `ghw.NICLinkInfo.AutoNegotiation` is a boolean indicating whether 
+  Auto-Negotiation is enabled
+* `ghw.NICLinkInfo.Port` is a string showing the current link port type
+* `ghw.NICLinkInfo.PHYAD` is a string showing the device driver's setting
+* `ghw.NICLinkInfo.Transceiver` is a string showing the transceiver's state
+* `ghw.NICLinkInfo.MDIX` is a string slice indicating the state of MDI-X capability
+  of the interface.
+* `ghw.NICLinkInfo.SupportsWakeOn` is a string containing a list of supported 
+  WakeOnLAN events.
+* `ghw.NICLinkInfo.WakeOn` is a string indicating which WakeOnLAN events are 
+  will trigger wake up.
+* `ghw.NICLinkInfo.LinkDetected` is a boolean indicating whether there is an active
+  link detected on this interface.  This field will be present even if ethtool is
+  not available.
+* `ghw.NICLinkInfo.SupportedPorts` is a string slice containing the list of 
+  supported port types (MII, TP, FIBRE)
+* `ghw.NICLinkInfo.SupportedLinkModes` is a string slice containing a list of
+  supported link modes
+* `ghw.NICLinkInfo.SupportedPauseFrameUse` is a boolean indicating if pause
+  frame use is enabled.
+* `ghw.NICLinkInfo.SupportsAutoNegotiation` is a boolean indicating if the 
+  network device supports Auto Negotiation.
+* `ghw.NICLinkInfo.SupportedFECModes` is a string slice containing a list of 
+  supported FEC Modes.
+* `ghw.NICLinkInfo.AdvertisedLinkModes` is a string slice containing the
+  link modes being advertised during auto negotiation.
+* `ghw.NICLinkInfo.AdvertisedPauseFrameUse` is a boolean indicating if pause
+  frame use is being advertised durinig auto negotiation.
+* `ghw.NICLinkInfo.AdvertisedAutoNegotiation` is a boolean indicating if 
+  auto negotiation is advertised.
+* `ghw.NICLinkInfo.AdvertisedFECModes` is a string slice containing the FEC
+  modes advertised during auto negotiation.
+* `ghw.NICLinkInfo.NETIFMsgLevel` is a string slice containing the network
+  driver's debug level and other misc driver information from the kernel.
+
 
 ```go
 package main
@@ -744,7 +790,15 @@ func main() {
 
     for _, nic := range net.NICs {
         fmt.Printf(" %v\n", nic)
-
+        if *nic.LinkInfo.LinkDetected {
+                fmt.Printf("  Speed:%s Duplex:%s\n", nic.LinkInfo.Speed, nic.LinkInfo.Duplex)
+        }
+        if len(nic.LinkInfo.SupportedLinkModes) > 0 {
+                fmt.Printf("  Supported Link Modes:\n")
+                for _, x := range nic.LinkInfo.SupportedLinkModes {
+                    fmt.Printf("   - %s\n", x)
+                }
+        }
         enabledCaps := make([]int, 0)
         for x, cap := range nic.Capabilities {
             if cap.IsEnabled {
@@ -797,6 +851,13 @@ net (3 NICs)
    - tx-esp-segmentation
    - tx-vlan-stag-hw-insert
  enp58s0f1
+  Speed:1000Mb/s Duplex:Full
+  Supported Link Modes:
+   - 10baseT/Half
+   - 10baseT/Full
+   - 100baseT/Half
+   - 100baseT/Full
+   - 1000baseT/Full
   enabled capabilities:
    - rx-checksumming
    - generic-receive-offload
