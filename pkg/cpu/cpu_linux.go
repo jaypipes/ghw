@@ -20,6 +20,10 @@ import (
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
+var (
+	regexForCpulCore = regexp.MustCompile("^cpu([0-9]+)$")
+)
+
 func (i *Info) load() error {
 	i.Processors = processorsGet(i.ctx)
 	var totCores uint32
@@ -90,8 +94,7 @@ func processorsGet(ctx *context.Context) []*Processor {
 		return nil
 	}
 	for _, lcore := range Entries {
-		reg := regexp.MustCompile("^cpu([0-9]+)$")
-		matches := reg.FindStringSubmatch(lcore.Name())
+		matches := regexForCpulCore.FindStringSubmatch(lcore.Name())
 		if len(matches) < 2 {
 			continue
 		}
