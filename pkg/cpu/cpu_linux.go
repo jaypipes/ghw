@@ -91,11 +91,12 @@ func processorsGet(ctx *context.Context) []*Processor {
 	}
 	for _, lcore := range Entries {
 		reg := regexp.MustCompile("^cpu([0-9]+)$")
-		if !reg.MatchString(lcore.Name()) {
+		matches := reg.FindStringSubmatch(lcore.Name())
+		if len(matches) < 2 {
 			continue
 		}
 
-		lcoreID, error := strconv.Atoi(lcore.Name()[3:]) // get "N" out of "cpuN"
+		lcoreID, error := strconv.Atoi(matches[1])
 		if error != nil {
 			continue
 		}
