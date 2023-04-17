@@ -58,8 +58,8 @@ func TestConcatStrings(t *testing.T) {
 
 func TestParseBool(t *testing.T) {
 	type testCase struct {
-		item		string
-		expected	bool
+		item     string
+		expected bool
 	}
 
 	testCases := []testCase{

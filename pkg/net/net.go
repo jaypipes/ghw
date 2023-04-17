@@ -7,8 +7,8 @@
 package net
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
@@ -34,7 +34,7 @@ type NICLinkInfo struct {
 	LinkDetected              *bool    `json:"link_detected"`
 	SupportedPorts            []string `json:"supported_ports,omitempty"`
 	SupportedLinkModes        []string `json:"supported_link_modes,omitempty"`
-	SupportedPauseFrameUse    *bool     `json:"supported_pause_frame_use,omitempty"`
+	SupportedPauseFrameUse    *bool    `json:"supported_pause_frame_use,omitempty"`
 	SupportsAutoNegotiation   *bool    `json:"supports_auto-negotiation,omitempty"`
 	SupportedFECModes         []string `json:"supported_fec_modes,omitempty"`
 	AdvertisedLinkModes       []string `json:"advertised_link_modes,omitempty"`
@@ -45,8 +45,8 @@ type NICLinkInfo struct {
 }
 
 func (h *NICLinkInfo) String() string {
-    s, _ := json.Marshal(h)
-    return string(s)
+	s, _ := json.Marshal(h)
+	return string(s)
 }
 
 type NIC struct {

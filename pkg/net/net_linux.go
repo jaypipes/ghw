@@ -226,9 +226,9 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 func netDeviceLimittedLinkInfo(paths *linuxpath.Paths, dev string) *NICLinkInfo {
 	// Get speed, duplex, and link detected from /sys/class/net/$DEVICE/ directory
-	speed     := readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
-	duplex    := readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
-	carrier   := readFile(filepath.Join(paths.SysClassNet, dev, "carrier"))
+	speed := readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
+	duplex := readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
+	carrier := readFile(filepath.Join(paths.SysClassNet, dev, "carrier"))
 	link, err := util.ParseBool(carrier)
 	if err == nil {
 		return &NICLinkInfo{
@@ -238,8 +238,8 @@ func netDeviceLimittedLinkInfo(paths *linuxpath.Paths, dev string) *NICLinkInfo 
 		}
 	} else {
 		return &NICLinkInfo{
-			Speed:        speed,
-			Duplex:       duplex,
+			Speed:  speed,
+			Duplex: duplex,
 		}
 	}
 }
@@ -307,10 +307,10 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 		var fields []string
 		if strings.Contains(scanner.Text(), ":") {
 			line := strings.Split(scanner.Text(), ":")
-			name  = strings.TrimSpace(line[0])
-			str  := strings.Trim(strings.TrimSpace(line[1]), "[]")
+			name = strings.TrimSpace(line[0])
+			str := strings.Trim(strings.TrimSpace(line[1]), "[]")
 			switch str {
-				case
+			case
 				"Not reported",
 				"Unknown":
 				continue
@@ -328,7 +328,7 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	var nilBool *bool
 
 	var autoNegotiation *bool
-	an, err	:=	util.ParseBool(strings.Join(m["Auto-negotiation"],""))
+	an, err	:= util.ParseBool(strings.Join(m["Auto-negotiation"], ""))
 	if err != nil {
 		autoNegotiation	= nilBool
 	} else {
@@ -336,7 +336,7 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	}
 
 	var linkDetected *bool
-	ld, err	:=	util.ParseBool(strings.Join(m["Link detected"],""))
+	ld, err	:= util.ParseBool(strings.Join(m["Link detected"], ""))
 	if err != nil {
 		linkDetected = nilBool
 	} else {
@@ -344,7 +344,7 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	}
 
 	var supportedPauseFrameUse *bool
-	spfu, err := util.ParseBool(strings.Join(m["Supported pause frame use"],""))
+	spfu, err := util.ParseBool(strings.Join(m["Supported pause frame use"], ""))
 	if err != nil {
 		supportedPauseFrameUse = nilBool
 	} else {
@@ -352,7 +352,7 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	}
 
 	var supportsAutoNegotiation *bool
-	san, err := util.ParseBool(strings.Join(m["Supports auto-negotiation"],""))
+	san, err := util.ParseBool(strings.Join(m["Supports auto-negotiation"], ""))
 	if err != nil {
 		supportsAutoNegotiation = nilBool
 	} else {
@@ -360,7 +360,7 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	}
 
 	var advertisedPauseFrameUse *bool
-	apfu, err := util.ParseBool(strings.Join(m["Advertised pause frame use"],""))
+	apfu, err := util.ParseBool(strings.Join(m["Advertised pause frame use"], ""))
 	if err != nil {
 		advertisedPauseFrameUse = nilBool
 	} else {
@@ -368,7 +368,7 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	}
 
 	var advertisedAutoNegotiation *bool
-	aan, err := util.ParseBool(strings.Join(m["Advertised auto-negotiation"],""))
+	aan, err := util.ParseBool(strings.Join(m["Advertised auto-negotiation"], ""))
 	if err != nil {
 		advertisedAutoNegotiation = nilBool
 	} else {
@@ -376,15 +376,15 @@ func netParseEthtoolLinkInfo(out *bytes.Buffer) *NICLinkInfo {
 	}
 
 	return &NICLinkInfo {
-		Speed:                     strings.Join(m["Speed"],""),
-		Duplex:                    strings.Join(m["Duplex"],""),
+		Speed:                     strings.Join(m["Speed"], ""),
+		Duplex:                    strings.Join(m["Duplex"], ""),
 		AutoNegotiation:           autoNegotiation,
-		Port:                      strings.Join(m["Port"],""),
-		PHYAD:                     strings.Join(m["PHYAD"],""),
-		Transceiver:               strings.Join(m["Transceiver"],""),
+		Port:                      strings.Join(m["Port"], ""),
+		PHYAD:                     strings.Join(m["PHYAD"], ""),
+		Transceiver:               strings.Join(m["Transceiver"], ""),
 		MDIX:                      m["MDI-X"],
-		SupportsWakeOn:            strings.Join(m["Supports Wake-on"],""),
-		WakeOn:                    strings.Join(m["Wake-on"],""),
+		SupportsWakeOn:            strings.Join(m["Supports Wake-on"], ""),
+		WakeOn:                    strings.Join(m["Wake-on"], ""),
 		LinkDetected:              linkDetected,
 		SupportedPorts:            m["Supported ports"],
 		SupportedLinkModes:        m["Supported link modes"],

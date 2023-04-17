@@ -64,9 +64,9 @@ func TestParseEthtoolLinkInfo(t *testing.T) {
 		t.Skip("Skipping network tests.")
 	}
 
-	truePtr  := true
+	truePtr := true
 	falsePtr := false
-	tests    := []struct {
+	tests := []struct {
 		input    string
 		expected *NICLinkInfo
 	}{
@@ -99,41 +99,41 @@ func TestParseEthtoolLinkInfo(t *testing.T) {
 	Link detected: yes
 `,
 			expected: &NICLinkInfo{
-				Speed:                     "1000Mb/s",
-				Duplex:                    "Full",
+				AdvertisedAutoNegotiation: &truePtr,
+				AdvertisedPauseFrameUse:   &falsePtr,
 				AutoNegotiation:           &truePtr,
+				Duplex:                    "Full",
+				LinkDetected:              &truePtr,
+				MDIX:                      []string{"off", "(auto)"},
 				Port:                      "TwistedPair",
 				PHYAD:                     "1",
-				Transceiver:               "internal",
-				MDIX:                      []string{"off", "(auto)"},
-				SupportsWakeOn:            "pumbg",
-				WakeOn:                    "d",
-				LinkDetected:              &truePtr,
-				SupportedPorts:            []string{"TP"},
-				SupportedLinkModes:        []string{
-					"10baseT/Half",
-					"10baseT/Full",
-					"100baseT/Half",
-					"100baseT/Full",
-					"1000baseT/Full",
-				},
+				Speed:                     "1000Mb/s",
 				SupportedPauseFrameUse:    &falsePtr,
+				SupportedPorts:            []string{"TP"},
 				SupportsAutoNegotiation:   &truePtr,
-				AdvertisedLinkModes:       []string{
+				SupportsWakeOn:            "pumbg",
+				Transceiver:               "internal",
+				WakeOn:                    "d",
+				AdvertisedLinkModes: []string{
 					"10baseT/Half",
 					"10baseT/Full",
 					"100baseT/Half",
 					"100baseT/Full",
 					"1000baseT/Full",
 				},
-				AdvertisedPauseFrameUse:   &falsePtr,
-				AdvertisedAutoNegotiation: &truePtr,
-				NETIFMsgLevel:             []string{
+				NETIFMsgLevel: []string{
 					"0x00000007",
 					"(7)",
 					"drv",
 					"probe",
 					"link",
+				},
+				SupportedLinkModes: []string{
+					"10baseT/Half",
+					"10baseT/Full",
+					"100baseT/Half",
+					"100baseT/Full",
+					"1000baseT/Full",
 				},
 			},
 		},

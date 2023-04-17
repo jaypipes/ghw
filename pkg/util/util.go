@@ -73,7 +73,7 @@ func ParseBool(str string) (bool, error) {
 			"no":  false,
 			// Return false instead of an error on empty strings
 			// For example from empty files in SysClassNet/Device
-			"":    false,
+			"": false,
 		}
 		if b, ok := ExtraBools[strings.ToLower(str)]; ok {
 			return b, nil
