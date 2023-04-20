@@ -72,7 +72,7 @@ func nics(ctx *context.Context) []*NIC {
 			nic.LinkInfo = netDeviceLinkInfo(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
-			nic.LinkInfo = netDeviceLimittedLinkInfo(paths, filename)
+			nic.LinkInfo = netDeviceLimitedLinkInfo(paths, filename)
 		}
 
 		nic.PCIAddress = netDevicePCIAddress(paths.SysClassNet, filename)
@@ -224,7 +224,7 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 	return &pciAddr
 }
 
-func netDeviceLimittedLinkInfo(paths *linuxpath.Paths, dev string) *NICLinkInfo {
+func netDeviceLimitedLinkInfo(paths *linuxpath.Paths, dev string) *NICLinkInfo {
 	// Get speed, duplex, and link detected from /sys/class/net/$DEVICE/ directory
 	speed := readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
 	duplex := readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))

@@ -718,7 +718,7 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.LinkInfo` is a pointer to a `ghw.NICLinkInfo` struct, which describes 
   parameters of the NIC's link information and status.  This will contain the 
   fields returned by `ethtool <DEVICE>` call on Linux, but will fall back to 
-  returning link information available in the /sys/class/net/<DEVICE>/ directory
+  returning link information available in the `/sys/class/net/<DEVICE>/` directory
   if ethtool is not available.
 
 The `ghw.NICCapability` struct contains the following fields:
@@ -762,7 +762,7 @@ The `gwh.NICLinkInfo` struct contains the following fields:
 * `ghw.NICLinkInfo.AdvertisedLinkModes` is a string slice containing the
   link modes being advertised during auto negotiation.
 * `ghw.NICLinkInfo.AdvertisedPauseFrameUse` is a boolean indicating if pause
-  frame use is being advertised durinig auto negotiation.
+  frame use is being advertised during auto negotiation.
 * `ghw.NICLinkInfo.AdvertisedAutoNegotiation` is a boolean indicating if 
   auto negotiation is advertised.
 * `ghw.NICLinkInfo.AdvertisedFECModes` is a string slice containing the FEC
