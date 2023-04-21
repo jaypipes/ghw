@@ -64,19 +64,31 @@ func AreaForNode(ctx *context.Context, nodeID int) (*Area, error) {
 		fmt.Sprintf("node%d", nodeID),
 	)
 
-	blockSizeBytes, err := memoryBlockSizeBytes(paths.SysDevicesSystemMemory)
+	var err error
+	var blockSizeBytes uint64
+	var totPhys int64
+	var totUsable int64
+
+	totUsable, err = memoryTotalUsableBytesFromPath(filepath.Join(path, "meminfo"))
 	if err != nil {
 		return nil, err
 	}
 
-	totPhys, err := memoryTotalPhysicalBytesFromPath(path, blockSizeBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	totUsable, err := memoryTotalUsableBytesFromPath(filepath.Join(path, "meminfo"))
-	if err != nil {
-		return nil, err
+	blockSizeBytes, err = memoryBlockSizeBytes(paths.SysDevicesSystemMemory)
+	if err == nil {
+		totPhys, err = memoryTotalPhysicalBytesFromPath(path, blockSizeBytes)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// NOTE(jaypipes): Some platforms (e.g. ARM) will not have a
+		// /sys/device/system/memory/block_size_bytes file. If this is the
+		// case, we set physical bytes equal to either the physical memory
+		// determined from syslog or the usable bytes
+		//
+		// see: https://bugzilla.redhat.com/show_bug.cgi?id=1794160
+		// see: https://github.com/jaypipes/ghw/issues/336
+		totPhys = memTotalPhysicalBytesFromSyslog(paths)
 	}
 
 	supportedHP, err := memorySupportedPageSizes(filepath.Join(path, "hugepages"))
