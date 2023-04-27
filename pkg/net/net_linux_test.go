@@ -66,7 +66,7 @@ func TestParseNicAttrEthtool(t *testing.T) {
 
 	tests := []struct {
 		input    string
-		expected []*NICCapability
+		expected *NIC
 	}{
 		{
 			input: `Settings for eth0:
@@ -96,16 +96,35 @@ func TestParseNicAttrEthtool(t *testing.T) {
                                drv probe link
 	Link detected: yes
 `,
-			expected: []*NICCapability{
-				{
-					Name:      "auto-negotiation",
-					IsEnabled: true,
-					CanEnable: true,
+			expected: &NIC{
+				Speed:          "1000Mb/s",
+				Duplex:         "Full",
+				SupportedPorts: []string{"TP"},
+				AdvertisedLinkModes: []string{
+					"10baseT/Half",
+					"10baseT/Full",
+					"100baseT/Half",
+					"100baseT/Full",
+					"1000baseT/Full",
 				},
-				{
-					Name:      "pause-frame-use",
-					IsEnabled: false,
-					CanEnable: false,
+				SupportedLinkModes: []string{
+					"10baseT/Half",
+					"10baseT/Full",
+					"100baseT/Half",
+					"100baseT/Full",
+					"1000baseT/Full",
+				},
+				Capabilities: []*NICCapability{
+					{
+						Name:      "auto-negotiation",
+						IsEnabled: true,
+						CanEnable: true,
+					},
+					{
+						Name:      "pause-frame-use",
+						IsEnabled: false,
+						CanEnable: false,
+					},
 				},
 			},
 		},
@@ -113,9 +132,16 @@ func TestParseNicAttrEthtool(t *testing.T) {
 
 	for x, test := range tests {
 		m := parseNicAttrEthtool(bytes.NewBufferString(test.input))
-		actual := make([]*NICCapability, 0)
-		actual = append(actual, autoNegCap(m))
-		actual = append(actual, pauseFrameUseCap(m))
+		actual := &NIC{}
+		actual.Speed = strings.Join(m["Speed"], "")
+		actual.Duplex = strings.Join(m["Duplex"], "")
+		actual.SupportedLinkModes = m["Supported link modes"]
+		actual.SupportedPorts = m["Supported ports"]
+		actual.SupportedFECModes = m["Supported FEC modes"]
+		actual.AdvertisedLinkModes = m["Advertised link modes"]
+		actual.AdvertisedFECModes = m["Advertised FEC modes"]
+		actual.Capabilities = append(actual.Capabilities, autoNegCap(m))
+		actual.Capabilities = append(actual.Capabilities, pauseFrameUseCap(m))
 		if !reflect.DeepEqual(test.expected, actual) {
 			t.Fatalf("In test %d\nExpected:\n%+v\nActual:\n%+v\n", x, test.expected, actual)
 		}

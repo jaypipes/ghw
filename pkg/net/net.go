@@ -21,11 +21,20 @@ type NICCapability struct {
 }
 
 type NIC struct {
-	Name         string           `json:"name"`
-	MacAddress   string           `json:"mac_address"`
-	IsVirtual    bool             `json:"is_virtual"`
-	Capabilities []*NICCapability `json:"capabilities"`
-	PCIAddress   *string          `json:"pci_address,omitempty"`
+	Name                  string           `json:"name"`
+	MacAddress            string           `json:"mac_address"`
+	IsVirtual             bool             `json:"is_virtual"`
+	Capabilities          []*NICCapability `json:"capabilities"`
+	PCIAddress            *string          `json:"pci_address,omitempty"`
+	Speed                 string           `json:"speed"`
+	Duplex                string           `json:"duplex"`
+	SupportedLinkModes    []string         `json:"supported_link_modes,omitempty"`
+	SupportedPorts        []string         `json:"supported_ports,omitempty"`
+	SupportedFECModes     []string         `json:"supported_fec_modes,omitempty"`
+	AdvertisedLinkModes   []string         `json:"advertised_link_modes,omitempty"`
+	AdvertisedFECModes    []string         `json:"advertised_fec_modes,omitempty"`
+	SupportedWakeOnModes  []string         `json:"supported_wake_on_modes,omitempty"`
+	AdvertisedWakeOnModes []string         `json:"advertised_wake_on_modes,omitempty"`
 	// TODO(fromani): add other hw addresses (USB) when we support them
 }
 
