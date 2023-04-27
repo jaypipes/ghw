@@ -59,14 +59,14 @@ func TestParseEthtoolFeature(t *testing.T) {
 	}
 }
 
-func TestParseEthtoolLinkInfo(t *testing.T) {
+func TestParseNicAttrEthtool(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_NET"); ok {
 		t.Skip("Skipping network tests.")
 	}
 
 	tests := []struct {
 		input    string
-		expected *NIC
+		expected []*NICCapability
 	}{
 		{
 			input: `Settings for eth0:
@@ -96,18 +96,16 @@ func TestParseEthtoolLinkInfo(t *testing.T) {
                                drv probe link
 	Link detected: yes
 `,
-			expected: &NIC{
-				Capabilities: []*NICCapability{
-					&NICCapability{
-						Name:      "auto-negotiation",
-						IsEnabled: true,
-						CanEnable: true,
-					},
-					&NICCapability{
-						Name:      "pause-frame-use",
-						IsEnabled: false,
-						CanEnable: false,
-					},
+			expected: []*NICCapability{
+				&NICCapability{
+					Name:      "auto-negotiation",
+					IsEnabled: true,
+					CanEnable: true,
+				},
+				&NICCapability{
+					Name:      "pause-frame-use",
+					IsEnabled: false,
+					CanEnable: false,
 				},
 			},
 		},
@@ -115,10 +113,11 @@ func TestParseEthtoolLinkInfo(t *testing.T) {
 
 	for x, test := range tests {
 		m := parseNicAttrEthtool(bytes.NewBufferString(test.input))
-		actual := &NIC{}
-		actual.updateNicAttrEthtool(m)
+		actual := make([]*NICCapability, 0)
+		actual = append(actual, autoNegCap(m))
+		actual = append(actual, pauseFrameUseCap(m))
 		if !reflect.DeepEqual(test.expected, actual) {
-			t.Fatalf("In test %d\nExpected:\n%+v\nActual:\n%+v\n", x, *test.expected, *actual)
+			t.Fatalf("In test %d\nExpected:\n%+v\nActual:\n%+v\n", x, test.expected, actual)
 		}
 	}
 }

@@ -69,8 +69,6 @@ func nics(ctx *context.Context) []*NIC {
 		nic.MacAddress = mac
 		if etAvailable {
 			nic.Capabilities = netDeviceCapabilities(ctx, filename)
-			// Sets NIC struct fields and appends NICCapability from ethtool output
-			nic.setNicAttrEthtool(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
 		}
@@ -110,45 +108,62 @@ func ethtoolInstalled() bool {
 
 func netDeviceCapabilities(ctx *context.Context, dev string) []*NICCapability {
 	caps := make([]*NICCapability, 0)
-	path, _ := exec.LookPath("ethtool")
-	cmd := exec.Command(path, "-k", dev)
 	var out bytes.Buffer
+	path, _ := exec.LookPath("ethtool")
+
+	// Get auto-negotiation and pause-frame-use capabilities from "ethtool" (with no options)
+	cmd := exec.Command(path, dev)
 	cmd.Stdout = &out
 	err := cmd.Run()
-	if err != nil {
-		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
+	if err == nil {
+		m := parseNicAttrEthtool(&out)
+		caps = append(caps, autoNegCap(m))
+		caps = append(caps, pauseFrameUseCap(m))
+	} else {
+		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
 		ctx.Warn(msg)
-		return caps
 	}
 
-	// The out variable will now contain something that looks like the
-	// following.
-	//
-	// Features for enp58s0f1:
-	// rx-checksumming: on
-	// tx-checksumming: off
-	//     tx-checksum-ipv4: off
-	//     tx-checksum-ip-generic: off [fixed]
-	//     tx-checksum-ipv6: off
-	//     tx-checksum-fcoe-crc: off [fixed]
-	//     tx-checksum-sctp: off [fixed]
-	// scatter-gather: off
-	//     tx-scatter-gather: off
-	//     tx-scatter-gather-fraglist: off [fixed]
-	// tcp-segmentation-offload: off
-	//     tx-tcp-segmentation: off
-	//     tx-tcp-ecn-segmentation: off [fixed]
-	//     tx-tcp-mangleid-segmentation: off
-	//     tx-tcp6-segmentation: off
-	// < snipped >
-	scanner := bufio.NewScanner(&out)
-	// Skip the first line...
-	scanner.Scan()
-	for scanner.Scan() {
-		line := strings.TrimPrefix(scanner.Text(), "\t")
-		caps = append(caps, netParseEthtoolFeature(line))
+	// Get all other capabilities from "ethtool -k"
+	cmd = exec.Command(path, "-k", dev)
+	cmd.Stdout = &out
+	err = cmd.Run()
+	if err == nil {
+		// The out variable will now contain something that looks like the
+		// following.
+		//
+		// Features for enp58s0f1:
+		// rx-checksumming: on
+		// tx-checksumming: off
+		//     tx-checksum-ipv4: off
+		//     tx-checksum-ip-generic: off [fixed]
+		//     tx-checksum-ipv6: off
+		//     tx-checksum-fcoe-crc: off [fixed]
+		//     tx-checksum-sctp: off [fixed]
+		// scatter-gather: off
+		//     tx-scatter-gather: off
+		//     tx-scatter-gather-fraglist: off [fixed]
+		// tcp-segmentation-offload: off
+		//     tx-tcp-segmentation: off
+		//     tx-tcp-ecn-segmentation: off [fixed]
+		//     tx-tcp-mangleid-segmentation: off
+		//     tx-tcp6-segmentation: off
+		// < snipped >
+		scanner := bufio.NewScanner(&out)
+		// Skip the first line...
+		scanner.Scan()
+		for scanner.Scan() {
+			line := strings.TrimPrefix(scanner.Text(), "\t")
+			caps = append(caps, netParseEthtoolFeature(line))
+		}
+
+	} else {
+		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
+		ctx.Warn(msg)
 	}
+
 	return caps
+
 }
 
 // netParseEthtoolFeature parses a line from the ethtool -k output and returns
@@ -224,26 +239,7 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 	return &pciAddr
 }
 
-func (nic *NIC) setNicAttrEthtool(ctx *context.Context, dev string) error {
-	path, _ := exec.LookPath("ethtool")
-	cmd := exec.Command(path, dev)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
-		ctx.Warn(msg)
-		return err
-	}
-
-	m := parseNicAttrEthtool(&out)
-	nic.updateNicAttrEthtool(m)
-
-	return nil
-}
-
-func (nic *NIC) updateNicAttrEthtool(m map[string][]string) {
-	// AutoNegotiation Capability
+func autoNegCap(m map[string][]string) *NICCapability {
 	autoNegotiation := NICCapability{Name: "auto-negotiation", IsEnabled: false, CanEnable: false}
 
 	an, anErr := util.ParseBool(strings.Join(m["Auto-negotiation"], ""))
@@ -257,9 +253,10 @@ func (nic *NIC) updateNicAttrEthtool(m map[string][]string) {
 		autoNegotiation.CanEnable = true
 	}
 
-	nic.Capabilities = append(nic.Capabilities, &autoNegotiation)
+	return &autoNegotiation
+}
 
-	// Pause Frame Use Capability
+func pauseFrameUseCap(m map[string][]string) *NICCapability {
 	pauseFrameUse := NICCapability{Name: "pause-frame-use", IsEnabled: false, CanEnable: false}
 
 	apfu, err := util.ParseBool(strings.Join(m["Advertised pause frame use"], ""))
@@ -272,7 +269,7 @@ func (nic *NIC) updateNicAttrEthtool(m map[string][]string) {
 		pauseFrameUse.CanEnable = true
 	}
 
-	nic.Capabilities = append(nic.Capabilities, &pauseFrameUse)
+	return &pauseFrameUse
 }
 
 func parseNicAttrEthtool(out *bytes.Buffer) map[string][]string {
