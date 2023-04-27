@@ -17,6 +17,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -245,14 +246,14 @@ func (nic *NIC) updateNicAttrEthtool(m map[string][]string) {
 	// AutoNegotiation Capability
 	autoNegotiation := NICCapability{Name: "auto-negotiation", IsEnabled: false, CanEnable: false}
 
-	an := strings.Join(m["Auto-negotiation"], "")
-	aan := strings.Join(m["Advertised auto-negotiation"], "")
-	if an && aan {
+	an, anErr := util.ParseBool(strings.Join(m["Auto-negotiation"], ""))
+	aan, aanErr := util.ParseBool(strings.Join(m["Advertised auto-negotiation"], ""))
+	if an && aan && aanErr == nil && anErr == nil {
 		autoNegotiation.IsEnabled = true
 	}
 
-	san := strings.Join(m["Supports auto-negotiation"], "")
-	if san {
+	san, err := util.ParseBool(strings.Join(m["Supports auto-negotiation"], ""))
+	if san && err == nil {
 		autoNegotiation.CanEnable = true
 	}
 
@@ -261,13 +262,13 @@ func (nic *NIC) updateNicAttrEthtool(m map[string][]string) {
 	// Pause Frame Use Capability
 	pauseFrameUse := NICCapability{Name: "pause-frame-use", IsEnabled: false, CanEnable: false}
 
-	apfu := strings.Join(m["Advertised pause frame use"], "")
-	if apfu {
+	apfu, err := util.ParseBool(strings.Join(m["Advertised pause frame use"], ""))
+	if apfu && err == nil {
 		pauseFrameUse.IsEnabled = true
 	}
 
-	spfu := strings.Join(m["Supports pause frame use"], "")
-	if spfu {
+	spfu, err := util.ParseBool(strings.Join(m["Supports pause frame use"], ""))
+	if spfu && err == nil {
 		pauseFrameUse.CanEnable = true
 	}
 
