@@ -71,6 +71,8 @@ func nics(ctx *context.Context) []*NIC {
 			nic.netDeviceParseEthtool(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
+			// Sets NIC struct fields from data in SysFs
+			nic.setNicAttrSysFs(paths, filename)
 		}
 
 		nic.PCIAddress = netDevicePCIAddress(paths.SysClassNet, filename)
@@ -246,6 +248,38 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 	pciAddr := filepath.Base(devPath)
 	return &pciAddr
+}
+
+func (nic *NIC) setNicAttrSysFs(paths *linuxpath.Paths, dev string) {
+	// Get speed and duplex from /sys/class/net/$DEVICE/ directory
+	nic.Speed = readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
+	nic.Duplex = readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
+}
+
+func readFile(path string) string {
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(contents))
+}
+
+func (nic *NIC) setNicAttrEthtool(ctx *context.Context, dev string) error {
+	path, _ := exec.LookPath("ethtool")
+	cmd := exec.Command(path, dev)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
+		ctx.Warn(msg)
+		return err
+	}
+
+	m := parseNicAttrEthtool(&out)
+	nic.updateNicAttrEthtool(m)
+
+	return nil
 }
 
 func autoNegCap(m map[string][]string) *NICCapability {

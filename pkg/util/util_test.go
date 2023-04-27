@@ -76,6 +76,10 @@ func TestParseBool(t *testing.T) {
 			expected: true,
 		},
 		{
+			item:     "",
+			expected: false,
+		},
+		{
 			item:     "on",
 			expected: true,
 		},
