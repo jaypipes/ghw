@@ -68,6 +68,8 @@ func nics(ctx *context.Context) []*NIC {
 		nic.MacAddress = mac
 		if etAvailable {
 			nic.Capabilities = netDeviceCapabilities(ctx, filename)
+			// Sets NIC struct fields and appends NICCapability from ethtool output
+			nic.setNicAttrEthtool(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
 		}
@@ -219,4 +221,116 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 	pciAddr := filepath.Base(devPath)
 	return &pciAddr
+}
+
+func (nic *NIC) setNicAttrEthtool(ctx *context.Context, dev string) error {
+	path, _ := exec.LookPath("ethtool")
+	cmd := exec.Command(path, dev)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
+		ctx.Warn(msg)
+		return err
+	}
+
+	m := parseNicAttrEthtool(&out)
+	nic.updateNicAttrEthtool(m)
+
+	return nil
+}
+
+func (nic *NIC) updateNicAttrEthtool(m map[string][]string) {
+	// AutoNegotiation Capability
+	autoNegotiation := NICCapability{Name: "auto-negotiation", IsEnabled: false, CanEnable: false}
+
+	an := strings.Join(m["Auto-negotiation"], "")
+	aan := strings.Join(m["Advertised auto-negotiation"], "")
+	if an && aan {
+		autoNegotiation.IsEnabled = true
+	}
+
+	san := strings.Join(m["Supports auto-negotiation"], "")
+	if san {
+		autoNegotiation.CanEnable = true
+	}
+
+	nic.Capabilities = append(nic.Capabilities, &autoNegotiation)
+
+	// Pause Frame Use Capability
+	pauseFrameUse := NICCapability{Name: "pause-frame-use", IsEnabled: false, CanEnable: false}
+
+	apfu := strings.Join(m["Advertised pause frame use"], "")
+	if apfu {
+		pauseFrameUse.IsEnabled = true
+	}
+
+	spfu := strings.Join(m["Supports pause frame use"], "")
+	if spfu {
+		pauseFrameUse.CanEnable = true
+	}
+
+	nic.Capabilities = append(nic.Capabilities, &pauseFrameUse)
+}
+
+func parseNicAttrEthtool(out *bytes.Buffer) map[string][]string {
+	// The out variable will now contain something that looks like the
+	// following.
+	//
+	//Settings for eth0:
+	//	Supported ports: [ TP ]
+	//	Supported link modes:   10baseT/Half 10baseT/Full
+	//	                        100baseT/Half 100baseT/Full
+	//	                        1000baseT/Full
+	//	Supported pause frame use: No
+	//	Supports auto-negotiation: Yes
+	//	Supported FEC modes: Not reported
+	//	Advertised link modes:  10baseT/Half 10baseT/Full
+	//	                        100baseT/Half 100baseT/Full
+	//	                        1000baseT/Full
+	//	Advertised pause frame use: No
+	//	Advertised auto-negotiation: Yes
+	//	Advertised FEC modes: Not reported
+	//	Speed: 1000Mb/s
+	//	Duplex: Full
+	//	Auto-negotiation: on
+	//	Port: Twisted Pair
+	//	PHYAD: 1
+	//	Transceiver: internal
+	//	MDI-X: off (auto)
+	//	Supports Wake-on: pumbg
+	//	Wake-on: d
+	//        Current message level: 0x00000007 (7)
+	//                               drv probe link
+	//	Link detected: yes
+
+	scanner := bufio.NewScanner(out)
+	// Skip the first line
+	scanner.Scan()
+	m := make(map[string][]string)
+	var name string
+	for scanner.Scan() {
+		var fields []string
+		if strings.Contains(scanner.Text(), ":") {
+			line := strings.Split(scanner.Text(), ":")
+			name = strings.TrimSpace(line[0])
+			str := strings.Trim(strings.TrimSpace(line[1]), "[]")
+			switch str {
+			case
+				"Not reported",
+				"Unknown":
+				continue
+			}
+			fields = strings.Fields(str)
+		} else {
+			fields = strings.Fields(strings.Trim(strings.TrimSpace(scanner.Text()), "[]"))
+		}
+
+		for _, f := range fields {
+			m[name] = append(m[name], strings.TrimSpace(f))
+		}
+	}
+
+	return m
 }
