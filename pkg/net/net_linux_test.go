@@ -97,12 +97,12 @@ func TestParseNicAttrEthtool(t *testing.T) {
 	Link detected: yes
 `,
 			expected: []*NICCapability{
-				&NICCapability{
+				{
 					Name:      "auto-negotiation",
 					IsEnabled: true,
 					CanEnable: true,
 				},
-				&NICCapability{
+				{
 					Name:      "pause-frame-use",
 					IsEnabled: false,
 					CanEnable: false,
