@@ -803,6 +803,7 @@ net (3 NICs)
    - rx-vlan-offload
    - tx-vlan-offload
    - highdma
+   - auto-negotiation
  wlp59s0
   enabled capabilities:
    - scatter-gather

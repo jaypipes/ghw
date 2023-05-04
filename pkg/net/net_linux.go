@@ -17,6 +17,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
@@ -107,45 +108,62 @@ func ethtoolInstalled() bool {
 
 func netDeviceCapabilities(ctx *context.Context, dev string) []*NICCapability {
 	caps := make([]*NICCapability, 0)
-	path, _ := exec.LookPath("ethtool")
-	cmd := exec.Command(path, "-k", dev)
 	var out bytes.Buffer
+	path, _ := exec.LookPath("ethtool")
+
+	// Get auto-negotiation and pause-frame-use capabilities from "ethtool" (with no options)
+	cmd := exec.Command(path, dev)
 	cmd.Stdout = &out
 	err := cmd.Run()
-	if err != nil {
-		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
+	if err == nil {
+		m := parseNicAttrEthtool(&out)
+		caps = append(caps, autoNegCap(m))
+		caps = append(caps, pauseFrameUseCap(m))
+	} else {
+		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
 		ctx.Warn(msg)
-		return caps
 	}
 
-	// The out variable will now contain something that looks like the
-	// following.
-	//
-	// Features for enp58s0f1:
-	// rx-checksumming: on
-	// tx-checksumming: off
-	//     tx-checksum-ipv4: off
-	//     tx-checksum-ip-generic: off [fixed]
-	//     tx-checksum-ipv6: off
-	//     tx-checksum-fcoe-crc: off [fixed]
-	//     tx-checksum-sctp: off [fixed]
-	// scatter-gather: off
-	//     tx-scatter-gather: off
-	//     tx-scatter-gather-fraglist: off [fixed]
-	// tcp-segmentation-offload: off
-	//     tx-tcp-segmentation: off
-	//     tx-tcp-ecn-segmentation: off [fixed]
-	//     tx-tcp-mangleid-segmentation: off
-	//     tx-tcp6-segmentation: off
-	// < snipped >
-	scanner := bufio.NewScanner(&out)
-	// Skip the first line...
-	scanner.Scan()
-	for scanner.Scan() {
-		line := strings.TrimPrefix(scanner.Text(), "\t")
-		caps = append(caps, netParseEthtoolFeature(line))
+	// Get all other capabilities from "ethtool -k"
+	cmd = exec.Command(path, "-k", dev)
+	cmd.Stdout = &out
+	err = cmd.Run()
+	if err == nil {
+		// The out variable will now contain something that looks like the
+		// following.
+		//
+		// Features for enp58s0f1:
+		// rx-checksumming: on
+		// tx-checksumming: off
+		//     tx-checksum-ipv4: off
+		//     tx-checksum-ip-generic: off [fixed]
+		//     tx-checksum-ipv6: off
+		//     tx-checksum-fcoe-crc: off [fixed]
+		//     tx-checksum-sctp: off [fixed]
+		// scatter-gather: off
+		//     tx-scatter-gather: off
+		//     tx-scatter-gather-fraglist: off [fixed]
+		// tcp-segmentation-offload: off
+		//     tx-tcp-segmentation: off
+		//     tx-tcp-ecn-segmentation: off [fixed]
+		//     tx-tcp-mangleid-segmentation: off
+		//     tx-tcp6-segmentation: off
+		// < snipped >
+		scanner := bufio.NewScanner(&out)
+		// Skip the first line...
+		scanner.Scan()
+		for scanner.Scan() {
+			line := strings.TrimPrefix(scanner.Text(), "\t")
+			caps = append(caps, netParseEthtoolFeature(line))
+		}
+
+	} else {
+		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
+		ctx.Warn(msg)
 	}
+
 	return caps
+
 }
 
 // netParseEthtoolFeature parses a line from the ethtool -k output and returns
@@ -219,4 +237,98 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 	pciAddr := filepath.Base(devPath)
 	return &pciAddr
+}
+
+func autoNegCap(m map[string][]string) *NICCapability {
+	autoNegotiation := NICCapability{Name: "auto-negotiation", IsEnabled: false, CanEnable: false}
+
+	an, anErr := util.ParseBool(strings.Join(m["Auto-negotiation"], ""))
+	aan, aanErr := util.ParseBool(strings.Join(m["Advertised auto-negotiation"], ""))
+	if an && aan && aanErr == nil && anErr == nil {
+		autoNegotiation.IsEnabled = true
+	}
+
+	san, err := util.ParseBool(strings.Join(m["Supports auto-negotiation"], ""))
+	if san && err == nil {
+		autoNegotiation.CanEnable = true
+	}
+
+	return &autoNegotiation
+}
+
+func pauseFrameUseCap(m map[string][]string) *NICCapability {
+	pauseFrameUse := NICCapability{Name: "pause-frame-use", IsEnabled: false, CanEnable: false}
+
+	apfu, err := util.ParseBool(strings.Join(m["Advertised pause frame use"], ""))
+	if apfu && err == nil {
+		pauseFrameUse.IsEnabled = true
+	}
+
+	spfu, err := util.ParseBool(strings.Join(m["Supports pause frame use"], ""))
+	if spfu && err == nil {
+		pauseFrameUse.CanEnable = true
+	}
+
+	return &pauseFrameUse
+}
+
+func parseNicAttrEthtool(out *bytes.Buffer) map[string][]string {
+	// The out variable will now contain something that looks like the
+	// following.
+	//
+	//Settings for eth0:
+	//	Supported ports: [ TP ]
+	//	Supported link modes:   10baseT/Half 10baseT/Full
+	//	                        100baseT/Half 100baseT/Full
+	//	                        1000baseT/Full
+	//	Supported pause frame use: No
+	//	Supports auto-negotiation: Yes
+	//	Supported FEC modes: Not reported
+	//	Advertised link modes:  10baseT/Half 10baseT/Full
+	//	                        100baseT/Half 100baseT/Full
+	//	                        1000baseT/Full
+	//	Advertised pause frame use: No
+	//	Advertised auto-negotiation: Yes
+	//	Advertised FEC modes: Not reported
+	//	Speed: 1000Mb/s
+	//	Duplex: Full
+	//	Auto-negotiation: on
+	//	Port: Twisted Pair
+	//	PHYAD: 1
+	//	Transceiver: internal
+	//	MDI-X: off (auto)
+	//	Supports Wake-on: pumbg
+	//	Wake-on: d
+	//        Current message level: 0x00000007 (7)
+	//                               drv probe link
+	//	Link detected: yes
+
+	scanner := bufio.NewScanner(out)
+	// Skip the first line
+	scanner.Scan()
+	m := make(map[string][]string)
+	var name string
+	for scanner.Scan() {
+		var fields []string
+		if strings.Contains(scanner.Text(), ":") {
+			line := strings.Split(scanner.Text(), ":")
+			name = strings.TrimSpace(line[0])
+			str := strings.Trim(strings.TrimSpace(line[1]), "[]")
+			switch str {
+			case
+				"Not reported",
+				"Unknown":
+				continue
+			}
+			fields = strings.Fields(str)
+		} else {
+			fields = strings.Fields(strings.Trim(strings.TrimSpace(scanner.Text()), "[]"))
+		}
+
+		for _, f := range fields {
+			m[name] = append(m[name], strings.TrimSpace(f))
+		}
+	}
+
+	return m
 }

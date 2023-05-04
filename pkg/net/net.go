@@ -29,6 +29,15 @@ type NIC struct {
 	// TODO(fromani): add other hw addresses (USB) when we support them
 }
 
+func (nc *NICCapability) String() string {
+	return fmt.Sprintf(
+		"{Name:%s IsEnabled:%t CanEnable:%t}",
+		nc.Name,
+		nc.IsEnabled,
+		nc.CanEnable,
+	)
+}
+
 func (n *NIC) String() string {
 	isVirtualStr := ""
 	if n.IsVirtual {
