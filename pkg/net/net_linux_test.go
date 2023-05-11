@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -143,7 +144,7 @@ func TestParseNicAttrEthtool(t *testing.T) {
 		actual.Capabilities = append(actual.Capabilities, autoNegCap(m))
 		actual.Capabilities = append(actual.Capabilities, pauseFrameUseCap(m))
 		if !reflect.DeepEqual(test.expected, actual) {
-			t.Fatalf("In test %d\nExpected:\n%+v\nActual:\n%+v\n", x, test.expected, actual)
+			t.Fatalf("In test %d\nExpected:\n%+v\nActual:\n%+v\n", x, *test.expected, *actual)
 		}
 	}
 }
