@@ -718,8 +718,8 @@ Each `ghw.NIC` struct contains the following fields:
   devices (e.g. USB) will be added in future versions.
 * `ghw.NIC.Speed` is a string showing the current link speed.  On Linux, this 
   field will be present even if `ethtool` is not available.
-* `ghw.NIC.Duplex` is a string showing the current link duplex.  This 
-  field will be present even if ethtool is not available.
+* `ghw.NIC.Duplex` is a string showing the current link duplex. On Linux, this 
+  field will be present even if `ethtool` is not available.
 * `ghw.NIC.SupportedLinkModes` is a string slice containing a list of
   supported link modes
 * `ghw.NIC.SupportedPorts` is a string slice containing the list of 
