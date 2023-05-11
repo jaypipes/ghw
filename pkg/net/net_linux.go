@@ -174,7 +174,6 @@ func (n *NIC) netDeviceParseEthtool(ctx *context.Context, dev string) {
 		ctx.Warn(msg)
 	}
 
-
 }
 
 // netParseEthtoolFeature parses a line from the ethtool -k output and returns
@@ -262,24 +261,6 @@ func readFile(path string) string {
 		return ""
 	}
 	return strings.TrimSpace(string(contents))
-}
-
-func (nic *NIC) setNicAttrEthtool(ctx *context.Context, dev string) error {
-	path, _ := exec.LookPath("ethtool")
-	cmd := exec.Command(path, dev)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
-		ctx.Warn(msg)
-		return err
-	}
-
-	m := parseNicAttrEthtool(&out)
-	nic.updateNicAttrEthtool(m)
-
-	return nil
 }
 
 func autoNegCap(m map[string][]string) *NICCapability {
