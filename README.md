@@ -716,8 +716,8 @@ Each `ghw.NIC` struct contains the following fields:
 * `ghw.NIC.PCIAddress` is the PCI device address of the device backing the NIC.
   this is not-nil only if the backing device is indeed a PCI device; more backing
   devices (e.g. USB) will be added in future versions.
-* `ghw.NIC.Speed` is a string showing the current link speed.  This 
-  field will be present even if ethtool is not available.
+* `ghw.NIC.Speed` is a string showing the current link speed.  On Linux, this 
+  field will be present even if `ethtool` is not available.
 * `ghw.NIC.Duplex` is a string showing the current link duplex.  This 
   field will be present even if ethtool is not available.
 * `ghw.NIC.SupportedLinkModes` is a string slice containing a list of
