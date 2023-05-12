@@ -68,9 +68,11 @@ func nics(ctx *context.Context) []*NIC {
 		mac := netDeviceMacAddress(paths, filename)
 		nic.MacAddress = mac
 		if etAvailable {
-			nic.Capabilities = netDeviceCapabilities(ctx, filename)
+			nic.netDeviceParseEthtool(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
+			// Sets NIC struct fields from data in SysFs
+			nic.setNicAttrSysFs(paths, filename)
 		}
 
 		nic.PCIAddress = netDevicePCIAddress(paths.SysClassNet, filename)
@@ -106,19 +108,29 @@ func ethtoolInstalled() bool {
 	return err == nil
 }
 
-func netDeviceCapabilities(ctx *context.Context, dev string) []*NICCapability {
-	caps := make([]*NICCapability, 0)
+func (n *NIC) netDeviceParseEthtool(ctx *context.Context, dev string) {
 	var out bytes.Buffer
 	path, _ := exec.LookPath("ethtool")
 
 	// Get auto-negotiation and pause-frame-use capabilities from "ethtool" (with no options)
+	// Populate Speed, Duplex, SupportedLinkModes, SupportedPorts, SupportedFECModes,
+	// AdvertisedLinkModes, and AdvertisedFECModes attributes from "ethtool" output.
 	cmd := exec.Command(path, dev)
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err == nil {
 		m := parseNicAttrEthtool(&out)
-		caps = append(caps, autoNegCap(m))
-		caps = append(caps, pauseFrameUseCap(m))
+		n.Capabilities = append(n.Capabilities, autoNegCap(m))
+		n.Capabilities = append(n.Capabilities, pauseFrameUseCap(m))
+
+		// Update NIC Attributes with ethtool output
+		n.Speed = strings.Join(m["Speed"], "")
+		n.Duplex = strings.Join(m["Duplex"], "")
+		n.SupportedLinkModes = m["Supported link modes"]
+		n.SupportedPorts = m["Supported ports"]
+		n.SupportedFECModes = m["Supported FEC modes"]
+		n.AdvertisedLinkModes = m["Advertised link modes"]
+		n.AdvertisedFECModes = m["Advertised FEC modes"]
 	} else {
 		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
 		ctx.Warn(msg)
@@ -154,15 +166,13 @@ func netDeviceCapabilities(ctx *context.Context, dev string) []*NICCapability {
 		scanner.Scan()
 		for scanner.Scan() {
 			line := strings.TrimPrefix(scanner.Text(), "\t")
-			caps = append(caps, netParseEthtoolFeature(line))
+			n.Capabilities = append(n.Capabilities, netParseEthtoolFeature(line))
 		}
 
 	} else {
 		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
 		ctx.Warn(msg)
 	}
-
-	return caps
 
 }
 
@@ -237,6 +247,20 @@ func netDevicePCIAddress(netDevDir, netDevName string) *string {
 
 	pciAddr := filepath.Base(devPath)
 	return &pciAddr
+}
+
+func (nic *NIC) setNicAttrSysFs(paths *linuxpath.Paths, dev string) {
+	// Get speed and duplex from /sys/class/net/$DEVICE/ directory
+	nic.Speed = readFile(filepath.Join(paths.SysClassNet, dev, "speed"))
+	nic.Duplex = readFile(filepath.Join(paths.SysClassNet, dev, "duplex"))
+}
+
+func readFile(path string) string {
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(contents))
 }
 
 func autoNegCap(m map[string][]string) *NICCapability {
