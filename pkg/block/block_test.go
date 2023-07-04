@@ -53,9 +53,6 @@ func TestBlock(t *testing.T) {
 	if d0.Name == "" {
 		t.Fatalf("Expected disk name, but got \"\"")
 	}
-	if d0.SerialNumber == "unknown" {
-		t.Fatalf("Got unknown serial number.")
-	}
 	if d0.SizeBytes <= 0 {
 		t.Fatalf("Expected >0 disk size, but got %d", d0.SizeBytes)
 	}

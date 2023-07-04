@@ -408,12 +408,13 @@ A `ghw.ProcessorCore` has the following fields:
   core. Note that this does *not* necessarily equate to a zero-based index of
   the core within a physical package. For example, the core IDs for an Intel Core
   i7 are 0, 1, 2, 8, 9, and 10
-* `ghw.ProcessorCore.Index` is the zero-based index of the core on the physical
-  processor package
 * `ghw.ProcessorCore.NumThreads` is the number of hardware threads associated
   with the core
-* `ghw.ProcessorCore.LogicalProcessors` is an array of logical processor IDs
-  assigned to any processing unit for the core
+* `ghw.ProcessorCore.LogicalProcessors` is an array of ints representing the
+  logical processor IDs assigned to any processing unit for the core. These are
+  sometimes called the "thread siblings". Logical processor IDs are the
+  *zero-based* index of the processor on the host and are *not* related to the
+  core ID.
 
 ```go
 package main
