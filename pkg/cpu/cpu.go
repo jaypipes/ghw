@@ -23,13 +23,12 @@ type ProcessorCore struct {
 	// within a physical package. For example, the core IDs for an Intel Core
 	// i7 are 0, 1, 2, 8, 9, and 10
 	ID int `json:"id"`
-	// Index is the zero-based index of the core on the physical processor
-	// package
-	Index int `json:"index"`
 	// NumThreads is the number of hardware threads associated with the core
 	NumThreads uint32 `json:"total_threads"`
 	// LogicalProcessors is a slice of ints representing the logical processor
-	// IDs assigned to any processing unit for the core
+	// IDs assigned to any processing unit for the core. These are sometimes
+	// called the "thread siblings". Logical processor IDs are the *zero-based*
+	// index of the processor on the host and are *not* related to the core ID.
 	LogicalProcessors []int `json:"logical_processors"`
 }
 
@@ -38,7 +37,7 @@ type ProcessorCore struct {
 func (c *ProcessorCore) String() string {
 	return fmt.Sprintf(
 		"processor core #%d (%d threads), logical processors %v",
-		c.Index,
+		c.ID,
 		c.NumThreads,
 		c.LogicalProcessors,
 	)
@@ -62,6 +61,16 @@ type Processor struct {
 	// Cores is a slice of ProcessorCore` struct pointers that are packed onto
 	// this physical processor
 	Cores []*ProcessorCore `json:"cores"`
+}
+
+// CoreByID returns the ProcessorCore having the supplied ID.
+func (p *Processor) CoreByID(coreID int) *ProcessorCore {
+	for _, core := range p.Cores {
+		if core.ID == coreID {
+			return core
+		}
+	}
+	return nil
 }
 
 // HasCapability returns true if the Processor has the supplied cpuid

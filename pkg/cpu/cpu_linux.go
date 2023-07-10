@@ -37,117 +37,111 @@ func (i *Info) load() error {
 	return nil
 }
 
-func ProcByID(procs []*Processor, id int) *Processor {
-	for pid := range procs {
-		if procs[pid].ID == id {
-			return procs[pid]
-		}
-	}
-	return nil
-}
-
-func CoreByID(cores []*ProcessorCore, id int) *ProcessorCore {
-	for cid := range cores {
-		if cores[cid].Index == id {
-			return cores[cid]
-		}
-	}
-	return nil
-}
-
 func processorsGet(ctx *context.Context) []*Processor {
-	procs := make([]*Processor, 0)
 	paths := linuxpath.New(ctx)
 
-	r, err := os.Open(paths.ProcCpuinfo)
+	lps := logicalProcessorsFromProcCPUInfo(ctx)
+	// keyed by processor ID (physical_package_id)
+	procs := map[int]*Processor{}
+
+	// /sys/devices/system/cpu pseudodir contains N number of pseudodirs with
+	// information about the logical processors on the host. These logical
+	// processor pseudodirs are of the pattern /sys/devices/system/cpu/cpu{N}
+	fnames, err := ioutil.ReadDir(paths.SysDevicesSystemCPU)
 	if err != nil {
-		return nil
+		ctx.Warn("failed to read /sys/devices/system/cpu: %s", err)
+		return []*Processor{}
 	}
-	defer util.SafeClose(r)
-
-	// An array of maps of attributes describing the logical processor
-	procAttrs := make([]map[string]string, 0)
-	curProcAttrs := make(map[string]string)
-
-	// Parse /proc/cpuinfo
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			// Output of /proc/cpuinfo has a blank newline to separate logical
-			// processors, so here we collect up all the attributes we've
-			// collected for this logical processor block
-			procAttrs = append(procAttrs, curProcAttrs)
-			// Reset the current set of processor attributes...
-			curProcAttrs = make(map[string]string)
-			continue
-		}
-		parts := strings.Split(line, ":")
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-		curProcAttrs[key] = value
-	}
-
-	// Iterate on /sys/devices/system/cpu/cpuN, not on /proc/cpuinfo
-	Entries, err := ioutil.ReadDir(paths.SysDevicesSystemCPU)
-	if err != nil {
-		return nil
-	}
-	for _, lcore := range Entries {
-		matches := regexForCpulCore.FindStringSubmatch(lcore.Name())
+	for _, fname := range fnames {
+		matches := regexForCpulCore.FindStringSubmatch(fname.Name())
 		if len(matches) < 2 {
 			continue
 		}
 
-		lcoreID, error := strconv.Atoi(matches[1])
-		if error != nil {
+		lpID, err := strconv.Atoi(matches[1])
+		if err != nil {
+			ctx.Warn("failed to find numeric logical processor ID: %s", err)
 			continue
 		}
 
-		// Fetch CPU ID
-		physIdPath := filepath.Join(paths.SysDevicesSystemCPU, fmt.Sprintf("cpu%d", lcoreID), "topology", "physical_package_id")
-		cpuID := util.SafeIntFromFile(ctx, physIdPath)
+		procID := processorIDFromLogicalProcessorID(ctx, lpID)
+		proc, found := procs[procID]
+		if !found {
+			proc = &Processor{ID: procID}
+			lp, ok := lps[lpID]
+			if !ok {
+				ctx.Warn(
+					"failed to find attributes for logical processor %d",
+					lpID,
+				)
+				continue
+			}
 
-		proc := ProcByID(procs, cpuID)
-		if proc == nil {
-			proc = &Processor{ID: cpuID}
-			// Assumes /proc/cpuinfo is in order of logical cpu id, then
-			// procAttrs[lcoreID] describes logical cpu `lcoreID`.
+			// Assumes /proc/cpuinfo is in order of logical processor id, then
+			// lps[lpID] describes logical processor `lpID`.
 			// Once got a more robust way of fetching the following info,
 			// can we drop /proc/cpuinfo.
-			if len(procAttrs[lcoreID]["flags"]) != 0 { // x86
-				proc.Capabilities = strings.Split(procAttrs[lcoreID]["flags"], " ")
-			} else if len(procAttrs[lcoreID]["Features"]) != 0 { // ARM64
-				proc.Capabilities = strings.Split(procAttrs[lcoreID]["Features"], " ")
+			if len(lp.Attrs["flags"]) != 0 { // x86
+				proc.Capabilities = strings.Split(lp.Attrs["flags"], " ")
+			} else if len(lp.Attrs["Features"]) != 0 { // ARM64
+				proc.Capabilities = strings.Split(lp.Attrs["Features"], " ")
 			}
-			if len(procAttrs[lcoreID]["model name"]) != 0 {
-				proc.Model = procAttrs[lcoreID]["model name"]
-			} else if len(procAttrs[lcoreID]["uarch"]) != 0 { // SiFive
-				proc.Model = procAttrs[lcoreID]["uarch"]
+			if len(lp.Attrs["model name"]) != 0 {
+				proc.Model = lp.Attrs["model name"]
+			} else if len(lp.Attrs["uarch"]) != 0 { // SiFive
+				proc.Model = lp.Attrs["uarch"]
 			}
-			if len(procAttrs[lcoreID]["vendor_id"]) != 0 {
-				proc.Vendor = procAttrs[lcoreID]["vendor_id"]
-			} else if len(procAttrs[lcoreID]["isa"]) != 0 { // RISCV64
-				proc.Vendor = procAttrs[lcoreID]["isa"]
+			if len(lp.Attrs["vendor_id"]) != 0 {
+				proc.Vendor = lp.Attrs["vendor_id"]
+			} else if len(lp.Attrs["isa"]) != 0 { // RISCV64
+				proc.Vendor = lp.Attrs["isa"]
 			}
-			procs = append(procs, proc)
+			procs[procID] = proc
 		}
 
-		// Fetch Core ID
-		coreIdPath := filepath.Join(paths.SysDevicesSystemCPU, fmt.Sprintf("cpu%d", lcoreID), "topology", "core_id")
-		coreID := util.SafeIntFromFile(ctx, coreIdPath)
-		core := CoreByID(proc.Cores, coreID)
+		coreID := coreIDFromLogicalProcessorID(ctx, lpID)
+		core := proc.CoreByID(coreID)
 		if core == nil {
-			core = &ProcessorCore{Index: coreID, NumThreads: 1}
+			core = &ProcessorCore{ID: coreID, NumThreads: 1}
 			proc.Cores = append(proc.Cores, core)
 			proc.NumCores += 1
 		} else {
 			core.NumThreads += 1
 		}
 		proc.NumThreads += 1
-		core.LogicalProcessors = append(core.LogicalProcessors, lcoreID)
+		core.LogicalProcessors = append(core.LogicalProcessors, lpID)
 	}
-	return procs
+	res := []*Processor{}
+	for _, p := range procs {
+		res = append(res, p)
+	}
+	return res
+}
+
+// processorIDFromLogicalProcessorID returns the processor physical package ID
+// for the supplied logical processor ID
+func processorIDFromLogicalProcessorID(ctx *context.Context, lpID int) int {
+	paths := linuxpath.New(ctx)
+	// Fetch CPU ID
+	path := filepath.Join(
+		paths.SysDevicesSystemCPU,
+		fmt.Sprintf("cpu%d", lpID),
+		"topology", "physical_package_id",
+	)
+	return util.SafeIntFromFile(ctx, path)
+}
+
+// coreIDFromLogicalProcessorID returns the core ID for the supplied logical
+// processor ID
+func coreIDFromLogicalProcessorID(ctx *context.Context, lpID int) int {
+	paths := linuxpath.New(ctx)
+	// Fetch CPU ID
+	path := filepath.Join(
+		paths.SysDevicesSystemCPU,
+		fmt.Sprintf("cpu%d", lpID),
+		"topology", "core_id",
+	)
+	return util.SafeIntFromFile(ctx, path)
 }
 
 func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
@@ -172,8 +166,7 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 
 		c := &ProcessorCore{
 			ID:                coreID,
-			Index:             len(cores),
-			LogicalProcessors: make([]int, 0),
+			LogicalProcessors: []int{},
 		}
 		cores = append(cores, c)
 		return c
@@ -199,8 +192,7 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 		cpuPath := filepath.Join(path, filename)
 		procID, err := strconv.Atoi(filename[3:])
 		if err != nil {
-			_, _ = fmt.Fprintf(
-				os.Stderr,
+			ctx.Warn(
 				"failed to determine procID from %s. Expected integer after 3rd char.",
 				filename,
 			)
@@ -220,4 +212,127 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 	}
 
 	return cores, nil
+}
+
+// logicalProcessor contains information about a single logical processor
+// on the host.
+type logicalProcessor struct {
+	// This is the logical processor ID assigned by the host. In /proc/cpuinfo,
+	// this is the zero-based index of the logical processor as it appears in
+	// the /proc/cpuinfo file and matches the "processor" attribute. In
+	// /sys/devices/system/cpu/cpu{N} pseudodir entries, this is the N value.
+	ID int
+	// The entire collection of string attribute name/value pairs for the
+	// logical processor.
+	Attrs map[string]string
+}
+
+// logicalProcessorsFromProcCPUInfo reads the `/proc/cpuinfo` pseudofile and
+// returns a map, keyed by logical processor ID, of logical processor structs.
+//
+// `/proc/cpuinfo` files look like the following:
+//
+// ```
+// processor	: 0
+// vendor_id	: AuthenticAMD
+// cpu family	: 23
+// model		: 8
+// model name	: AMD Ryzen 7 2700X Eight-Core Processor
+// stepping	: 2
+// microcode	: 0x800820d
+// cpu MHz		: 2200.000
+// cache size	: 512 KB
+// physical id	: 0
+// siblings	: 16
+// core id		: 0
+// cpu cores	: 8
+// apicid		: 0
+// initial apicid	: 0
+// fpu		: yes
+// fpu_exception	: yes
+// cpuid level	: 13
+// wp		: yes
+// flags		: fpu vme de pse tsc msr pae mce <snip...>
+// bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb
+// bogomips	: 7386.41
+// TLB size	: 2560 4K pages
+// clflush size	: 64
+// cache_alignment	: 64
+// address sizes	: 43 bits physical, 48 bits virtual
+// power management: ts ttp tm hwpstate cpb eff_freq_ro [13] [14]
+//
+// processor	: 1
+// vendor_id	: AuthenticAMD
+// cpu family	: 23
+// model		: 8
+// model name	: AMD Ryzen 7 2700X Eight-Core Processor
+// stepping	: 2
+// microcode	: 0x800820d
+// cpu MHz		: 1885.364
+// cache size	: 512 KB
+// physical id	: 0
+// siblings	: 16
+// core id		: 1
+// cpu cores	: 8
+// apicid		: 2
+// initial apicid	: 2
+// fpu		: yes
+// fpu_exception	: yes
+// cpuid level	: 13
+// wp		: yes
+// flags		: fpu vme de pse tsc msr pae mce <snip...>
+// bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb
+// bogomips	: 7386.41
+// TLB size	: 2560 4K pages
+// clflush size	: 64
+// cache_alignment	: 64
+// address sizes	: 43 bits physical, 48 bits virtual
+// power management: ts ttp tm hwpstate cpb eff_freq_ro [13] [14]
+// ```
+//
+// with blank line-separated blocks of colon-delimited attribute name/value
+// pairs for a specific logical processor on the host.
+func logicalProcessorsFromProcCPUInfo(
+	ctx *context.Context,
+) map[int]*logicalProcessor {
+	paths := linuxpath.New(ctx)
+	r, err := os.Open(paths.ProcCpuinfo)
+	if err != nil {
+		return nil
+	}
+	defer util.SafeClose(r)
+
+	lps := map[int]*logicalProcessor{}
+
+	// A map of attributes describing the logical processor
+	lpAttrs := map[string]string{}
+
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			// Output of /proc/cpuinfo has a blank newline to separate logical
+			// processors, so here we collect up all the attributes we've
+			// collected for this logical processor block
+			lpIDstr, ok := lpAttrs["processor"]
+			if !ok {
+				ctx.Warn("expected to find 'processor' key in /proc/cpuinfo attributes")
+				continue
+			}
+			lpID, _ := strconv.Atoi(lpIDstr)
+			lp := &logicalProcessor{
+				ID:    lpID,
+				Attrs: lpAttrs,
+			}
+			lps[lpID] = lp
+			// Reset the current set of processor attributes...
+			lpAttrs = map[string]string{}
+			continue
+		}
+		parts := strings.Split(line, ":")
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+		lpAttrs[key] = value
+	}
+	return lps
 }
