@@ -7,7 +7,7 @@ require (
 	github.com/jaypipes/pcidb v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.3
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.0
 )
 

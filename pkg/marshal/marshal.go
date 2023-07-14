@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/jaypipes/ghw/pkg/context"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // SafeYAML returns a string after marshalling the supplied parameter into YAML.
