@@ -15,16 +15,9 @@ import (
 	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
-	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
-
-// backward compatibility, to be removed in 1.0.0
-type Address pciaddr.Address
-
-// backward compatibility, to be removed in 1.0.0
-var AddressFromString = pciaddr.FromString
 
 type Device struct {
 	// The PCI address of the device
@@ -123,22 +116,11 @@ func (d *Device) String() string {
 }
 
 type Info struct {
+	db   *pcidb.PCIDB
 	arch topology.Architecture
 	ctx  *context.Context
 	// All PCI devices on the host system
 	Devices []*Device
-	// hash of class ID -> class information
-	// DEPRECATED. Will be removed in v1.0. Please use
-	// github.com/jaypipes/pcidb to explore PCIDB information
-	Classes map[string]*pcidb.Class `json:"-"`
-	// hash of vendor ID -> vendor information
-	// DEPRECATED. Will be removed in v1.0. Please use
-	// github.com/jaypipes/pcidb to explore PCIDB information
-	Vendors map[string]*pcidb.Vendor `json:"-"`
-	// hash of vendor ID + product/device ID -> product information
-	// DEPRECATED. Will be removed in v1.0. Please use
-	// github.com/jaypipes/pcidb to explore PCIDB information
-	Products map[string]*pcidb.Product `json:"-"`
 }
 
 func (i *Info) String() string {

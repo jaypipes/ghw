@@ -44,10 +44,8 @@ func (i *Info) load() error {
 	if err != nil {
 		return err
 	}
-	i.Classes = db.Classes
-	i.Vendors = db.Vendors
-	i.Products = db.Products
-	i.Devices = i.ListDevices()
+	i.db = db
+	i.Devices = i.getDevices()
 	return nil
 }
 
@@ -179,7 +177,7 @@ func parseModaliasData(data string) *deviceModaliasInfo {
 // pcidb.Vendor struct populated with "unknown" vendor Name attribute and
 // empty Products attribute.
 func findPCIVendor(info *Info, vendorID string) *pcidb.Vendor {
-	vendor := info.Vendors[vendorID]
+	vendor := info.db.Vendors[vendorID]
 	if vendor == nil {
 		return &pcidb.Vendor{
 			ID:       vendorID,
@@ -199,7 +197,7 @@ func findPCIProduct(
 	vendorID string,
 	productID string,
 ) *pcidb.Product {
-	product := info.Products[vendorID+productID]
+	product := info.db.Products[vendorID+productID]
 	if product == nil {
 		return &pcidb.Product{
 			ID:         productID,
@@ -221,8 +219,8 @@ func findPCISubsystem(
 	subvendorID string,
 	subproductID string,
 ) *pcidb.Product {
-	product := info.Products[vendorID+productID]
-	subvendor := info.Vendors[subvendorID]
+	product := info.db.Products[vendorID+productID]
+	subvendor := info.db.Vendors[subvendorID]
 	if subvendor != nil && product != nil {
 		for _, p := range product.Subsystems {
 			if p.ID == subproductID {
@@ -242,7 +240,7 @@ func findPCISubsystem(
 // pcidb.Class struct populated with "unknown" class Name attribute and
 // empty Subclasses attribute.
 func findPCIClass(info *Info, classID string) *pcidb.Class {
-	class := info.Classes[classID]
+	class := info.db.Classes[classID]
 	if class == nil {
 		return &pcidb.Class{
 			ID:         classID,
@@ -262,7 +260,7 @@ func findPCISubclass(
 	classID string,
 	subclassID string,
 ) *pcidb.Subclass {
-	class := info.Classes[classID]
+	class := info.db.Classes[classID]
 	if class != nil {
 		for _, sc := range class.Subclasses {
 			if sc.ID == subclassID {
@@ -346,7 +344,10 @@ func (info *Info) ParseDevice(address, modalias string) *Device {
 	return info.getDeviceFromModaliasInfo(address, modaliasInfo)
 }
 
-func (info *Info) getDeviceFromModaliasInfo(address string, modaliasInfo *deviceModaliasInfo) *Device {
+func (info *Info) getDeviceFromModaliasInfo(
+	address string,
+	modaliasInfo *deviceModaliasInfo,
+) *Device {
 	vendor := findPCIVendor(info, modaliasInfo.vendorID)
 	product := findPCIProduct(
 		info,
@@ -384,11 +385,9 @@ func (info *Info) getDeviceFromModaliasInfo(address string, modaliasInfo *device
 	}
 }
 
-// ListDevices returns a list of pointers to Device structs present on the
+// getDevices returns a list of pointers to Device structs present on the
 // host system
-// DEPRECATED. Will be removed in v1.0. Please use
-// github.com/jaypipes/pcidb to explore PCIDB information
-func (info *Info) ListDevices() []*Device {
+func (info *Info) getDevices() []*Device {
 	paths := linuxpath.New(info.ctx)
 	devs := make([]*Device, 0)
 	// We scan the /sys/bus/pci/devices directory which contains a collection
