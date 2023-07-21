@@ -8,7 +8,6 @@ package option
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -35,7 +34,7 @@ type Alerter interface {
 }
 
 var (
-	NullAlerter = log.New(ioutil.Discard, "", 0)
+	NullAlerter = log.New(io.Discard, "", 0)
 )
 
 // EnvOrDefaultAlerter returns the default instance ghw will use to emit
@@ -45,7 +44,7 @@ var (
 func EnvOrDefaultAlerter() Alerter {
 	var dest io.Writer
 	if _, exists := os.LookupEnv(envKeyDisableWarnings); exists {
-		dest = ioutil.Discard
+		dest = io.Discard
 	} else {
 		// default
 		dest = os.Stderr

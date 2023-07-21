@@ -10,7 +10,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -39,7 +38,7 @@ func Cleanup(targetRoot string) error {
 
 // Unpack expands the given snapshot in a temporary directory managed by `ghw`. Returns the path of that directory.
 func Unpack(snapshotName string) (string, error) {
-	targetRoot, err := ioutil.TempDir("", TargetRoot)
+	targetRoot, err := os.MkdirTemp("", TargetRoot)
 	if err != nil {
 		return "", err
 	}
@@ -121,7 +120,7 @@ func Untar(root string, r io.Reader) error {
 }
 
 func isEmptyDir(name string) bool {
-	entries, err := ioutil.ReadDir(name)
+	entries, err := os.ReadDir(name)
 	if err != nil {
 		return false
 	}

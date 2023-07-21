@@ -8,7 +8,6 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -37,7 +36,7 @@ func SafeClose(c closer) {
 // message is printed to STDERR and -1 is returned.
 func SafeIntFromFile(ctx *context.Context, path string) int {
 	msg := "failed to read int from file: %s\n"
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		ctx.Warn(msg, err)
 		return -1

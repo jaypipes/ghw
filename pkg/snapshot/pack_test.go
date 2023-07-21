@@ -7,7 +7,6 @@
 package snapshot_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -26,7 +25,7 @@ func TestPackUnpack(t *testing.T) {
 	}
 	defer os.RemoveAll(root)
 
-	tmpfile, err := ioutil.TempFile("", "ght-test-snapshot-*.tgz")
+	tmpfile, err := os.CreateTemp("", "ght-test-snapshot-*.tgz")
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

@@ -8,7 +8,6 @@ package block_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -112,7 +111,7 @@ func TestBlockUnmarshal(t *testing.T) {
 		t.Fatalf("Expected nil err when detecting the samples directory, but got %v", err)
 	}
 
-	data, err := ioutil.ReadFile(filepath.Join(testdataPath, "dell-r610-block.json"))
+	data, err := os.ReadFile(filepath.Join(testdataPath, "dell-r610-block.json"))
 	if err != nil {
 		t.Fatalf("Expected nil err when reading the sample data, but got %v", err)
 	}

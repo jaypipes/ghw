@@ -8,7 +8,6 @@ package snapshot_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -41,7 +40,7 @@ func TestUnpack(t *testing.T) {
 
 // nolint: gocyclo
 func TestUnpackInto(t *testing.T) {
-	testRoot, err := ioutil.TempDir("", "ghw-test-snapshot-*")
+	testRoot, err := os.MkdirTemp("", "ghw-test-snapshot-*")
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -68,12 +67,12 @@ func TestUnpackInto(t *testing.T) {
 
 // nolint: gocyclo
 func TestUnpackIntoPresrving(t *testing.T) {
-	testRoot, err := ioutil.TempDir("", "ghw-test-snapshot-*")
+	testRoot, err := os.MkdirTemp("", "ghw-test-snapshot-*")
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(testRoot, "canary"), []byte(""), 0644)
+	err = os.WriteFile(filepath.Join(testRoot, "canary"), []byte(""), 0644)
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -83,7 +82,7 @@ func TestUnpackIntoPresrving(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	entries, err := ioutil.ReadDir(testRoot)
+	entries, err := os.ReadDir(testRoot)
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -117,7 +116,7 @@ func verifyTestData(t *testing.T, root string) {
 }
 
 func verifyFileContent(t *testing.T, path, expected string) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

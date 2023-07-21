@@ -6,7 +6,6 @@
 package gpu
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -55,7 +54,7 @@ func (i *Info) load() error {
 	// subsystem (we query the modalias file of the PCI device's sysfs
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
 	paths := linuxpath.New(i.ctx)
-	links, err := ioutil.ReadDir(paths.SysClassDRM)
+	links, err := os.ReadDir(paths.SysClassDRM)
 	if err != nil {
 		i.ctx.Warn(_WARN_NO_SYS_CLASS_DRM)
 		return nil

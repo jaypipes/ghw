@@ -8,7 +8,6 @@ package gpu_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,7 +38,7 @@ func TestGPUWithoutNUMANodeInfo(t *testing.T) {
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-amd-ryzen-1600.tar.gz" ghwc gpu
 
-	tmpRoot, err := ioutil.TempDir("", "ghw-gpu-testing-*")
+	tmpRoot, err := os.MkdirTemp("", "ghw-gpu-testing-*")
 	if err != nil {
 		t.Fatalf("Unable to create temporary directory: %v", err)
 	}

@@ -6,7 +6,6 @@
 package pci
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +68,7 @@ func getDeviceRevision(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	if _, err := os.Stat(revisionPath); err != nil {
 		return ""
 	}
-	revision, err := ioutil.ReadFile(revisionPath)
+	revision, err := os.ReadFile(revisionPath)
 	if err != nil {
 		return ""
 	}
@@ -123,7 +122,7 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 	if _, err := os.Stat(fp); err != nil {
 		return nil
 	}
-	data, err := ioutil.ReadFile(fp)
+	data, err := os.ReadFile(fp)
 	if err != nil {
 		return nil
 	}
@@ -394,7 +393,7 @@ func (info *Info) getDevices() []*Device {
 	// of symlinks. The names of the symlinks are all the known PCI addresses
 	// for the host. For each address, we grab a *Device matching the
 	// address and append to the returned array.
-	links, err := ioutil.ReadDir(paths.SysBusPciDevices)
+	links, err := os.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
 		info.ctx.Warn("failed to read /sys/bus/pci/devices")
 		return nil

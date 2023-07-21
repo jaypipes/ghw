@@ -8,7 +8,6 @@ package cpu
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -47,7 +46,7 @@ func processorsGet(ctx *context.Context) []*Processor {
 	// /sys/devices/system/cpu pseudodir contains N number of pseudodirs with
 	// information about the logical processors on the host. These logical
 	// processor pseudodirs are of the pattern /sys/devices/system/cpu/cpu{N}
-	fnames, err := ioutil.ReadDir(paths.SysDevicesSystemCPU)
+	fnames, err := os.ReadDir(paths.SysDevicesSystemCPU)
 	if err != nil {
 		ctx.Warn("failed to read /sys/devices/system/cpu: %s", err)
 		return []*Processor{}
@@ -172,7 +171,7 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 		return c
 	}
 
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}

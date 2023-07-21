@@ -6,7 +6,7 @@
 package linuxdmi
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -19,7 +19,7 @@ func Item(ctx *context.Context, value string) string {
 	paths := linuxpath.New(ctx)
 	path := filepath.Join(paths.SysClassDMI, "id", value)
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		ctx.Warn("Unable to read %s: %s\n", value, err)
 		return util.UNKNOWN
