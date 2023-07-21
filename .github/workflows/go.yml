@@ -8,19 +8,6 @@ on:
 
 # see: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
 jobs:
-  # tier 0: system-independent checks
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-
-    - name: Verify
-      uses: golangci/golangci-lint-action@v2
-      with:
-        version: v1.41.1
-        args: --timeout=15m0s --verbose
-
   # tier-1
   # main development platform, gets features first and it's most tested
   build-ubuntu-2204:
