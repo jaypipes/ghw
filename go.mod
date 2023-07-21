@@ -1,6 +1,6 @@
 module github.com/jaypipes/ghw
 
-go 1.18
+go 1.19
 
 require (
 	github.com/StackExchange/wmi v1.2.1
