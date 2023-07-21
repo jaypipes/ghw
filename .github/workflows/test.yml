@@ -1,0 +1,164 @@
+name: test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+# see: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+jobs:
+  # tier-1
+  # main development platform, gets features first and it's most tested
+  ubuntu-latest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.19', '1.20']
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+     - name: checkout code
+       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+     - name: setup go
+       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       with:
+         go-version: ${{ matrix.go }}
+     - name: run tests
+       env:
+         GHW_TESTING_SKIP_BLOCK: "1"
+         GHW_TESTING_SKIP_GPU: "1"
+       run: go test -v ./...
+
+  ubuntu-2004:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        go: [ '1.18', '1.19']
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+     - name: checkout code
+       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+     - name: setup go
+       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       with:
+         go-version: ${{ matrix.go }}
+     - name: run tests
+       env:
+         GHW_TESTING_SKIP_BLOCK: "1"
+         GHW_TESTING_SKIP_GPU: "1"
+       run: go test -v ./...
+
+  windows-2022:
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        go: [ '1.19' ]
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+     - name: checkout code
+       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+     - name: setup go
+       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       with:
+         go-version: ${{ matrix.go }}
+     - name: run tests
+       env:
+         GHW_TESTING_SKIP_BLOCK: "1"
+         GHW_TESTING_SKIP_GPU: "1"
+         GHW_TESTING_SKIP_CPU: "1"
+         GHW_TESTING_SKIP_MEMORY: "1"
+         GHW_TESTING_SKIP_HOST: "1"
+         GHW_TESTING_SKIP_NET: "1"
+         GHW_TESTING_SKIP_PCI: "1"
+         GHW_TESTING_SKIP_TOPOLOGY: "1"
+       run: go test -v ./...
+
+  windows-2019:
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        go: [ '1.18' ]
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+     - name: checkout code
+       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+     - name: setup go
+       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       with:
+         go-version: ${{ matrix.go }}
+     - name: run tests
+       env:
+         GHW_TESTING_SKIP_BLOCK: "1"
+         GHW_TESTING_SKIP_GPU: "1"
+         GHW_TESTING_SKIP_CPU: "1"
+         GHW_TESTING_SKIP_MEMORY: "1"
+         GHW_TESTING_SKIP_HOST: "1"
+         GHW_TESTING_SKIP_NET: "1"
+         GHW_TESTING_SKIP_PCI: "1"
+         GHW_TESTING_SKIP_TOPOLOGY: "1"
+       run: go test -v ./...
+
+  # tier-2
+  # best-effort support, limited to most recent platforms (OS+go)
+
+  # NOTE(jaypipes): We currently only support block information on MacOS, and
+  # the tests have block skipped because we cannot get meaningful information
+  # about the block devices in the Github Actions Runner virtual machines. So
+  # this is really just a test of whether the library builds on MacOS 12.
+  macos-12:
+    runs-on: macos-12
+    strategy:
+      matrix:
+        go: [ '1.18' ]
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+     - name: checkout code
+       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+     - name: setup go
+       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       with:
+         go-version: ${{ matrix.go }}
+     - name: run tests
+       env:
+         GHW_TESTING_SKIP_BLOCK: "1"
+         GHW_TESTING_SKIP_CPU: "1"
+         GHW_TESTING_SKIP_GPU: "1"
+         GHW_TESTING_SKIP_HOST: "1"
+         GHW_TESTING_SKIP_MEMORY: "1"
+         GHW_TESTING_SKIP_NET: "1"
+         GHW_TESTING_SKIP_PCI: "1"
+         GHW_TESTING_SKIP_TOPOLOGY: "1"
+       run: go test -v ./...
