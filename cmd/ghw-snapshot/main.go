@@ -13,7 +13,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"runtime"
 
@@ -65,7 +64,7 @@ func defaultOutPath() (string, error) {
 }
 
 func execute(cmd *cobra.Command, args []string) error {
-	scratchDir, err := ioutil.TempDir("", "ghw-snapshot")
+	scratchDir, err := os.MkdirTemp("", "ghw-snapshot")
 	if err != nil {
 		return err
 	}

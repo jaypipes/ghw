@@ -7,7 +7,6 @@
 package snapshot_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -30,7 +29,7 @@ func TestCloneTree(t *testing.T) {
 	}
 	defer os.RemoveAll(root)
 
-	cloneRoot, err := ioutil.TempDir("", "ghw-test-clonetree-*")
+	cloneRoot, err := os.MkdirTemp("", "ghw-test-clonetree-*")
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -74,7 +73,7 @@ func TestCloneSystemTree(t *testing.T) {
 	// sensible. To really do a meaningful test we need a more advanced functional test, starting with from
 	// a ghw snapshot.
 
-	cloneRoot, err := ioutil.TempDir("", "ghw-test-clonetree-*")
+	cloneRoot, err := os.MkdirTemp("", "ghw-test-clonetree-*")
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

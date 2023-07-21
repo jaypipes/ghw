@@ -9,7 +9,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,7 +32,7 @@ func nics(ctx *context.Context) []*NIC {
 	nics := make([]*NIC, 0)
 
 	paths := linuxpath.New(ctx)
-	files, err := ioutil.ReadDir(paths.SysClassNet)
+	files, err := os.ReadDir(paths.SysClassNet)
 	if err != nil {
 		return nics
 	}
@@ -88,7 +87,7 @@ func netDeviceMacAddress(paths *linuxpath.Paths, dev string) string {
 	// that have addr_assign_type != 0, return None since the MAC address is
 	// random.
 	aatPath := filepath.Join(paths.SysClassNet, dev, "addr_assign_type")
-	contents, err := ioutil.ReadFile(aatPath)
+	contents, err := os.ReadFile(aatPath)
 	if err != nil {
 		return ""
 	}
@@ -96,7 +95,7 @@ func netDeviceMacAddress(paths *linuxpath.Paths, dev string) string {
 		return ""
 	}
 	addrPath := filepath.Join(paths.SysClassNet, dev, "address")
-	contents, err = ioutil.ReadFile(addrPath)
+	contents, err = os.ReadFile(addrPath)
 	if err != nil {
 		return ""
 	}
@@ -256,7 +255,7 @@ func (nic *NIC) setNicAttrSysFs(paths *linuxpath.Paths, dev string) {
 }
 
 func readFile(path string) string {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		return ""
 	}

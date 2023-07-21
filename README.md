@@ -1333,7 +1333,6 @@ package.
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/jaypipes/ghw/pkg/snapshot"
@@ -1341,7 +1340,7 @@ import (
 
 // ...
 
-scratchDir, err := ioutil.TempDir("", "ghw-snapshot-*")
+scratchDir, err := os.MkdirTemp("", "ghw-snapshot-*")
 if err != nil {
 	fmt.Printf("Error creating clone directory: %v", err)
 }

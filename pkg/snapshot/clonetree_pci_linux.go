@@ -8,7 +8,6 @@ package snapshot
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -70,7 +69,7 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		"revision",
 		"vendor",
 	}
-	entries, err := ioutil.ReadDir(root)
+	entries, err := os.ReadDir(root)
 	if err != nil {
 		return []string{}, []string{}
 	}
@@ -124,7 +123,7 @@ func findPCIEntryFromPath(root, entryName string) (string, error) {
 }
 
 func isPCIBridge(entryPath string) bool {
-	subNodes, err := ioutil.ReadDir(entryPath)
+	subNodes, err := os.ReadDir(entryPath)
 	if err != nil {
 		// this is so unlikely we don't even return error. But we trace just in case.
 		trace("error scanning device entry path %q: %v", entryPath, err)

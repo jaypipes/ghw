@@ -8,7 +8,6 @@ package snapshot
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +17,7 @@ func createBlockDevices(buildDir string) error {
 	// Grab all the block device pseudo-directories from /sys/block symlinks
 	// (excluding loopback devices) and inject them into our build filesystem
 	// with all but the circular symlink'd subsystem directories
-	devLinks, err := ioutil.ReadDir("/sys/block")
+	devLinks, err := os.ReadDir("/sys/block")
 	if err != nil {
 		return err
 	}
@@ -78,7 +77,7 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 	// Populate the supplied directory (in our build filesystem) with all the
 	// appropriate information pseudofile contents for the block device.
 	devName := filepath.Base(srcDeviceDir)
-	devFiles, err := ioutil.ReadDir(srcDeviceDir)
+	devFiles, err := os.ReadDir(srcDeviceDir)
 	if err != nil {
 		return err
 	}
@@ -119,7 +118,7 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 			// Regular files in the block device directory are both regular and
 			// pseudofiles containing information such as the size (in sectors)
 			// and whether the device is read-only
-			buf, err := ioutil.ReadFile(fp)
+			buf, err := os.ReadFile(fp)
 			if err != nil {
 				if errors.Is(err, os.ErrPermission) {
 					// example: /sys/devices/virtual/block/zram0/compact is 0400
@@ -156,7 +155,7 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 		return err
 	}
 	fp := filepath.Join(srcQueueDir, "rotational")
-	buf, err := ioutil.ReadFile(fp)
+	buf, err := os.ReadFile(fp)
 	if err != nil {
 		return err
 	}
@@ -177,7 +176,7 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error {
 	// Populate the supplied directory (in our build filesystem) with all the
 	// appropriate information pseudofile contents for the partition.
-	partFiles, err := ioutil.ReadDir(srcPartitionDir)
+	partFiles, err := os.ReadDir(srcPartitionDir)
 	if err != nil {
 		return err
 	}
@@ -201,7 +200,7 @@ func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error 
 			// Regular files in the block device directory are both regular and
 			// pseudofiles containing information such as the size (in sectors)
 			// and whether the device is read-only
-			buf, err := ioutil.ReadFile(fp)
+			buf, err := os.ReadFile(fp)
 			if err != nil {
 				return err
 			}

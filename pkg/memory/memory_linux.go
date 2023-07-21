@@ -10,7 +10,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -111,7 +110,7 @@ func memoryBlockSizeBytes(dir string) (uint64, error) {
 	// get the memory block size in byte in hexadecimal notation
 	blockSize := filepath.Join(dir, "block_size_bytes")
 
-	d, err := ioutil.ReadFile(blockSize)
+	d, err := os.ReadFile(blockSize)
 	if err != nil {
 		return 0, err
 	}
@@ -149,7 +148,7 @@ func memTotalPhysicalBytes(paths *linuxpath.Paths) (total int64) {
 // size in bytes
 func memoryTotalPhysicalBytesFromPath(dir string, blockSizeBytes uint64) (int64, error) {
 	var total int64
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return -1, err
 	}
@@ -165,7 +164,7 @@ func memoryTotalPhysicalBytesFromPath(dir string, blockSizeBytes uint64) (int64,
 		if !regexMemoryBlockDirname.MatchString(fname) {
 			continue
 		}
-		s, err := ioutil.ReadFile(filepath.Join(dir, fname, "state"))
+		s, err := os.ReadFile(filepath.Join(dir, fname, "state"))
 		if err != nil {
 			return -1, err
 		}
@@ -202,7 +201,7 @@ func memTotalPhysicalBytesFromSyslog(paths *linuxpath.Paths) int64 {
 	// search each, stopping when we match a system log record line that
 	// contains physical memory information.
 	logDir := paths.VarLog
-	logFiles, err := ioutil.ReadDir(logDir)
+	logFiles, err := os.ReadDir(logDir)
 	if err != nil {
 		return -1
 	}
@@ -304,7 +303,7 @@ func memorySupportedPageSizes(hpDir string) ([]uint64, error) {
 	// 'hugepages-{pagesize}kb'
 	out := make([]uint64, 0)
 
-	files, err := ioutil.ReadDir(hpDir)
+	files, err := os.ReadDir(hpDir)
 	if err != nil {
 		return out, err
 	}
