@@ -27,9 +27,9 @@ func TestPCI(t *testing.T) {
 	// being tested (and we haven't built in fixtures/mocks for things yet)
 	// about all we can do is verify that the returned list of pointers to
 	// PCIDevice structs is non-empty
-	devs := info.ListDevices()
+	devs := info.Devices
 	if len(devs) == 0 {
-		t.Fatalf("Expected to find >0 PCI devices from PCIInfo.ListDevices() but got 0.")
+		t.Fatalf("Expected to find >0 PCI devices in PCIInfo.Devices but got 0.")
 	}
 
 	// Ensure that the data fields are at least populated, even if we don't yet
