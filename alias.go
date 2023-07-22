@@ -47,13 +47,20 @@ var (
 
 type MemoryArea = memory.Area
 type MemoryInfo = memory.Info
+type MemoryCache = memory.Cache
 type MemoryCacheType = memory.CacheType
 type MemoryModule = memory.Module
 
 const (
-	MEMORY_CACHE_TYPE_UNIFIED     = memory.CACHE_TYPE_UNIFIED
+	MemoryCacheTypeUnified = memory.CacheTypeUnified
+	// DEPRECATED: Please use MemoryCacheTypeUnified
+	MEMORY_CACHE_TYPE_UNIFIED  = memory.CACHE_TYPE_UNIFIED
+	MemoryCacheTypeInstruction = memory.CacheTypeInstruction
+	// DEPRECATED: Please use MemoryCacheTypeInstruction
 	MEMORY_CACHE_TYPE_INSTRUCTION = memory.CACHE_TYPE_INSTRUCTION
-	MEMORY_CACHE_TYPE_DATA        = memory.CACHE_TYPE_DATA
+	MemoryCacheTypeData           = memory.CacheTypeData
+	// DEPRECATED: Please use MemoryCacheTypeData
+	MEMORY_CACHE_TYPE_DATA = memory.CACHE_TYPE_DATA
 )
 
 var (

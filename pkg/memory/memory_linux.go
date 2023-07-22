@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY = `
+	warnCannotDeterminePhysicalMemory = `
 Could not determine total physical bytes of memory. This may
 be due to the host being a virtual machine or container with no
 /var/log/syslog file or /sys/devices/system/memory directory, or
@@ -36,7 +36,7 @@ the total usable amount of memory
 var (
 	// System log lines will look similar to the following:
 	// ... kernel: [0.000000] Memory: 24633272K/25155024K ...
-	_REGEX_SYSLOG_MEMLINE = regexp.MustCompile(`Memory:\s+\d+K\/(\d+)K`)
+	regexSyslogMemline = regexp.MustCompile(`Memory:\s+\d+K\/(\d+)K`)
 	// regexMemoryBlockDirname matches a subdirectory in either
 	// /sys/devices/system/memory or /sys/devices/system/node/nodeX that
 	// represents information on a specific memory cell/block
@@ -53,7 +53,7 @@ func (i *Info) load() error {
 	tpb := memTotalPhysicalBytes(paths)
 	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		i.ctx.Warn(_WARN_CANNOT_DETERMINE_PHYSICAL_MEMORY)
+		i.ctx.Warn(warnCannotDeterminePhysicalMemory)
 		i.TotalPhysicalBytes = tub
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)
@@ -185,7 +185,7 @@ func memTotalPhysicalBytesFromSyslog(paths *linuxpath.Paths) int64 {
 	// so instead we examine the system logs for startup information containing
 	// total physical memory and cache the results of this.
 	findPhysicalKb := func(line string) int64 {
-		matches := _REGEX_SYSLOG_MEMLINE.FindStringSubmatch(line)
+		matches := regexSyslogMemline.FindStringSubmatch(line)
 		if len(matches) == 2 {
 			i, err := strconv.Atoi(matches[1])
 			if err != nil {

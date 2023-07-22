@@ -161,15 +161,15 @@ func memoryCacheType(ctx *context.Context, paths *linuxpath.Paths, nodeID int, l
 	cacheTypeContents, err := os.ReadFile(typePath)
 	if err != nil {
 		ctx.Warn("%s", err)
-		return CACHE_TYPE_UNIFIED
+		return CacheTypeUnified
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
 	case "Data":
-		return CACHE_TYPE_DATA
+		return CacheTypeData
 	case "Instruction":
-		return CACHE_TYPE_INSTRUCTION
+		return CacheTypeInstruction
 	default:
-		return CACHE_TYPE_UNIFIED
+		return CacheTypeUnified
 	}
 }
 
