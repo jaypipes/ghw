@@ -91,10 +91,10 @@ Each `ghw.Processor` struct contains a number of fields:
   package
 * `ghw.Processor.Vendor` is a string containing the vendor name
 * `ghw.Processor.Model` is a string containing the vendor's model name
-* `ghw.Processor.Capabilities` is an array of strings indicating the features
-  the processor has enabled
-* `ghw.Processor.Cores` is an array of `ghw.ProcessorCore` structs that are
-  packed onto this physical processor
+* `ghw.Processor.Capabilities` (Linux only) is an array of strings indicating
+  the features the processor has enabled
+* `ghw.Processor.Cores` (Linux only) is an array of `ghw.ProcessorCore` structs
+  that are packed onto this physical processor
 
 A `ghw.ProcessorCore` has the following fields:
 
