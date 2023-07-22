@@ -25,11 +25,12 @@ const (
 func (i *Info) load() error {
 	paths := linuxpath.New(i.ctx)
 	i.Disks = disks(i.ctx, paths)
-	var tpb uint64
+	var tsb uint64
 	for _, d := range i.Disks {
-		tpb += d.SizeBytes
+		tsb += d.SizeBytes
 	}
-	i.TotalPhysicalBytes = tpb
+	i.TotalSizeBytes = tsb
+	i.TotalPhysicalBytes = tsb
 	return nil
 }
 
@@ -357,34 +358,34 @@ func diskTypes(dname string) (
 	// The conditionals below which set the controller and drive type are
 	// based on information listed here:
 	// https://en.wikipedia.org/wiki/Device_file
-	driveType := DRIVE_TYPE_UNKNOWN
-	storageController := STORAGE_CONTROLLER_UNKNOWN
+	driveType := DriveTypeUnknown
+	storageController := StorageControllerUnknown
 	if strings.HasPrefix(dname, "fd") {
-		driveType = DRIVE_TYPE_FDD
+		driveType = DriveTypeFDD
 	} else if strings.HasPrefix(dname, "sd") {
-		driveType = DRIVE_TYPE_HDD
-		storageController = STORAGE_CONTROLLER_SCSI
+		driveType = DriveTypeHDD
+		storageController = StorageControllerSCSI
 	} else if strings.HasPrefix(dname, "hd") {
-		driveType = DRIVE_TYPE_HDD
-		storageController = STORAGE_CONTROLLER_IDE
+		driveType = DriveTypeHDD
+		storageController = StorageControllerIDE
 	} else if strings.HasPrefix(dname, "vd") {
-		driveType = DRIVE_TYPE_HDD
-		storageController = STORAGE_CONTROLLER_VIRTIO
+		driveType = DriveTypeHDD
+		storageController = StorageControllerVirtIO
 	} else if strings.HasPrefix(dname, "nvme") {
-		driveType = DRIVE_TYPE_SSD
-		storageController = STORAGE_CONTROLLER_NVME
+		driveType = DriveTypeSSD
+		storageController = StorageControllerNVMe
 	} else if strings.HasPrefix(dname, "sr") {
-		driveType = DRIVE_TYPE_ODD
-		storageController = STORAGE_CONTROLLER_SCSI
+		driveType = DriveTypeODD
+		storageController = StorageControllerSCSI
 	} else if strings.HasPrefix(dname, "xvd") {
-		driveType = DRIVE_TYPE_HDD
-		storageController = STORAGE_CONTROLLER_SCSI
+		driveType = DriveTypeHDD
+		storageController = StorageControllerSCSI
 	} else if strings.HasPrefix(dname, "mmc") {
-		driveType = DRIVE_TYPE_SSD
-		storageController = STORAGE_CONTROLLER_MMC
+		driveType = DriveTypeSSD
+		storageController = StorageControllerMMC
 	} else if strings.HasPrefix(dname, "loop") {
-		driveType = DRIVE_TYPE_VIRTUAL
-		storageController = STORAGE_CONTROLLER_LOOP
+		driveType = DriveTypeVirtual
+		storageController = StorageControllerLoop
 	}
 
 	return driveType, storageController

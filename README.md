@@ -288,8 +288,8 @@ information about the block storage on the host system.
 
 `ghw.BlockInfo` contains the following fields:
 
-* `ghw.BlockInfo.TotalPhysicalBytes` contains the amount of physical block
-  storage on the host
+* `ghw.BlockInfo.TotalSizeBytes` contains the amount of physical block storage
+  on the host.
 * `ghw.BlockInfo.Disks` is an array of pointers to `ghw.Disk` structs, one for
   each disk found by the system
 
@@ -298,7 +298,8 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.Name` contains a string with the short name of the disk, e.g. "sda"
 * `ghw.Disk.SizeBytes` contains the amount of storage the disk provides
 * `ghw.Disk.PhysicalBlockSizeBytes` contains the size of the physical blocks
-  used on the disk, in bytes
+  used on the disk, in bytes. This is typically the minimum amount of data that
+  will be written in a single write operation for the disk.
 * `ghw.Disk.IsRemovable` contains a boolean indicating if the disk drive is
   removable
 * `ghw.Disk.DriveType` is the type of drive. It is of type `ghw.DriveType`
@@ -310,8 +311,11 @@ Each `ghw.Disk` struct contains the following fields:
   `ghw.StorageController` which has a `ghw.StorageController.String()` method
   that can be called to return a string representation of the bus. This string
   will be `SCSI`, `IDE`, `virtio`, `MMC`, or `NVMe`
-* `ghw.Disk.NUMANodeID` is the numeric index of the NUMA node this disk is
-  local to, or -1 if the host system is not a NUMA system.
+* `ghw.Disk.BusPath` (Linux, Darwin only) is the filepath to the bus used by
+  the disk.
+* `ghw.Disk.NUMANodeID` (Linux only) is the numeric index of the NUMA node this
+  disk is local to, or -1 if the host system is not a NUMA system or is not
+  Linux.
 * `ghw.Disk.Vendor` contains a string with the name of the hardware vendor for
   the disk
 * `ghw.Disk.Model` contains a string with the vendor-assigned disk model name
