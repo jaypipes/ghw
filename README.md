@@ -91,10 +91,10 @@ Each `ghw.Processor` struct contains a number of fields:
   package
 * `ghw.Processor.Vendor` is a string containing the vendor name
 * `ghw.Processor.Model` is a string containing the vendor's model name
-* `ghw.Processor.Capabilities` is an array of strings indicating the features
-  the processor has enabled
-* `ghw.Processor.Cores` is an array of `ghw.ProcessorCore` structs that are
-  packed onto this physical processor
+* `ghw.Processor.Capabilities` (Linux only) is an array of strings indicating
+  the features the processor has enabled
+* `ghw.Processor.Cores` (Linux only) is an array of `ghw.ProcessorCore` structs
+  that are packed onto this physical processor
 
 A `ghw.ProcessorCore` has the following fields:
 
@@ -288,8 +288,8 @@ information about the block storage on the host system.
 
 `ghw.BlockInfo` contains the following fields:
 
-* `ghw.BlockInfo.TotalPhysicalBytes` contains the amount of physical block
-  storage on the host
+* `ghw.BlockInfo.TotalSizeBytes` contains the amount of physical block storage
+  on the host.
 * `ghw.BlockInfo.Disks` is an array of pointers to `ghw.Disk` structs, one for
   each disk found by the system
 
@@ -298,7 +298,8 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.Name` contains a string with the short name of the disk, e.g. "sda"
 * `ghw.Disk.SizeBytes` contains the amount of storage the disk provides
 * `ghw.Disk.PhysicalBlockSizeBytes` contains the size of the physical blocks
-  used on the disk, in bytes
+  used on the disk, in bytes. This is typically the minimum amount of data that
+  will be written in a single write operation for the disk.
 * `ghw.Disk.IsRemovable` contains a boolean indicating if the disk drive is
   removable
 * `ghw.Disk.DriveType` is the type of drive. It is of type `ghw.DriveType`
@@ -310,8 +311,11 @@ Each `ghw.Disk` struct contains the following fields:
   `ghw.StorageController` which has a `ghw.StorageController.String()` method
   that can be called to return a string representation of the bus. This string
   will be `SCSI`, `IDE`, `virtio`, `MMC`, or `NVMe`
-* `ghw.Disk.NUMANodeID` is the numeric index of the NUMA node this disk is
-  local to, or -1 if the host system is not a NUMA system.
+* `ghw.Disk.BusPath` (Linux, Darwin only) is the filepath to the bus used by
+  the disk.
+* `ghw.Disk.NUMANodeID` (Linux only) is the numeric index of the NUMA node this
+  disk is local to, or -1 if the host system is not a NUMA system or is not
+  Linux.
 * `ghw.Disk.Vendor` contains a string with the name of the hardware vendor for
   the disk
 * `ghw.Disk.Model` contains a string with the vendor-assigned disk model name
@@ -520,30 +524,32 @@ The `ghw.NetworkInfo` struct contains one field:
 Each `ghw.NIC` struct contains the following fields:
 
 * `ghw.NIC.Name` is the system's identifier for the NIC
-* `ghw.NIC.MacAddress` is the MAC address for the NIC, if any
+* `ghw.NIC.MACAddress` is the Media Access Control (MAC) address for the NIC,
+  if any
 * `ghw.NIC.IsVirtual` is a boolean indicating if the NIC is a virtualized
   device
-* `ghw.NIC.Capabilities` is an array of pointers to `ghw.NICCapability` structs
-  that can describe the things the NIC supports. These capabilities match the
-  returned values from the `ethtool -k <DEVICE>` call on Linux as well as the 
-  AutoNegotiation and PauseFrameUse capabilities from `ethtool`.
-* `ghw.NIC.PCIAddress` is the PCI device address of the device backing the NIC.
-  this is not-nil only if the backing device is indeed a PCI device; more backing
-  devices (e.g. USB) will be added in future versions.
-* `ghw.NIC.Speed` is a string showing the current link speed.  On Linux, this 
-  field will be present even if `ethtool` is not available.
-* `ghw.NIC.Duplex` is a string showing the current link duplex. On Linux, this 
-  field will be present even if `ethtool` is not available.
-* `ghw.NIC.SupportedLinkModes` is a string slice containing a list of
-  supported link modes
-* `ghw.NIC.SupportedPorts` is a string slice containing the list of 
-  supported port types (MII, TP, FIBRE)
-* `ghw.NIC.SupportedFECModes` is a string slice containing a list of 
-  supported FEC Modes.
-* `ghw.NIC.AdvertisedLinkModes` is a string slice containing the
+* `ghw.NIC.Capabilities` (Linux only) is an array of pointers to
+  `ghw.NICCapability` structs that can describe the things the NIC supports.
+  These capabilities match the returned values from the `ethtool -k <DEVICE>`
+  call on Linux as well as the AutoNegotiation and PauseFrameUse capabilities
+  from `ethtool`.
+* `ghw.NIC.PCIAddress` (Linux only) is the PCI device address of the device
+  backing the NIC.  this is not-nil only if the backing device is indeed a PCI
+  device; more backing devices (e.g. USB) will be added in future versions.
+* `ghw.NIC.Speed` (Linux only) is a string showing the current link speed.  On
+  Linux, this field will be present even if `ethtool` is not available.
+* `ghw.NIC.Duplex` (Linux only) is a string showing the current link duplex. On
+  Linux, this field will be present even if `ethtool` is not available.
+* `ghw.NIC.SupportedLinkModes` (Linux only) is a string slice containing a list
+  of supported link modes, e.g. "10baseT/Half", "1000baseT/Full".
+* `ghw.NIC.SupportedPorts` (Linux only) is a string slice containing the list
+  of supported port types, e.g. "MII", "TP", "FIBRE", "Twisted Pair".
+* `ghw.NIC.SupportedFECModes` (Linux only) is a string slice containing a list
+  of supported Forward Error Correction (FEC) Modes.
+* `ghw.NIC.AdvertisedLinkModes` (Linux only) is a string slice containing the
   link modes being advertised during auto negotiation.
-* `ghw.NIC.AdvertisedFECModes` is a string slice containing the FEC
-  modes advertised during auto negotiation.
+* `ghw.NIC.AdvertisedFECModes` (Linux only) is a string slice containing the
+  Forward Error Correction (FEC) modes advertised during auto negotiation.
 
 The `ghw.NICCapability` struct contains the following fields:
 

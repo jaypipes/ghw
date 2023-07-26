@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	_WARN_ETHTOOL_NOT_INSTALLED = `ethtool not installed. Cannot grab NIC capabilities`
+	warnEthtoolNotInstalled = `ethtool not installed. Cannot grab NIC capabilities`
 )
 
 func (i *Info) load() error {
@@ -40,7 +40,7 @@ func nics(ctx *context.Context) []*NIC {
 	etAvailable := ctx.EnableTools
 	if etAvailable {
 		if etInstalled := ethtoolInstalled(); !etInstalled {
-			ctx.Warn(_WARN_ETHTOOL_NOT_INSTALLED)
+			ctx.Warn(warnEthtoolNotInstalled)
 			etAvailable = false
 		}
 	}
@@ -66,6 +66,7 @@ func nics(ctx *context.Context) []*NIC {
 
 		mac := netDeviceMacAddress(paths, filename)
 		nic.MacAddress = mac
+		nic.MACAddress = mac
 		if etAvailable {
 			nic.netDeviceParseEthtool(ctx, filename)
 		} else {

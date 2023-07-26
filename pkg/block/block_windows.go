@@ -17,24 +17,24 @@ import (
 type physicalDiskMediaType int
 
 const (
-	PHYSICAL_DISK_MEDIA_TYPE_UNSPECIFIED physicalDiskMediaType = 0
-	PHYSICAL_DISK_MEDIA_TYPE_HDD         physicalDiskMediaType = 3
-	PHYSICAL_DISK_MEDIA_TYPE_SSD         physicalDiskMediaType = 4
-	PHYSICAL_DISK_MEDIA_TYPE_SCM         physicalDiskMediaType = 5
+	physicalDiskMediaTypeUnspecified physicalDiskMediaType = 0
+	physicalDiskMediaTypeHDD         physicalDiskMediaType = 3
+	physicalDiskMediaTypeSSD         physicalDiskMediaType = 4
+	physicalDiskMediaTypeSCM         physicalDiskMediaType = 5
 )
 
 func (dt physicalDiskMediaType) ToDriveType() DriveType {
 	switch dt {
-	case PHYSICAL_DISK_MEDIA_TYPE_UNSPECIFIED:
-		return DRIVE_TYPE_UNKNOWN
-	case PHYSICAL_DISK_MEDIA_TYPE_HDD:
-		return DRIVE_TYPE_HDD
-	case PHYSICAL_DISK_MEDIA_TYPE_SSD:
-		return DRIVE_TYPE_SSD
-	case PHYSICAL_DISK_MEDIA_TYPE_SCM:
-		return DRIVE_TYPE_UNKNOWN
+	case physicalDiskMediaTypeUnspecified:
+		return DriveTypeUnknown
+	case physicalDiskMediaTypeHDD:
+		return DriveTypeHDD
+	case physicalDiskMediaTypeSSD:
+		return DriveTypeSSD
+	case physicalDiskMediaTypeSCM:
+		return DriveTypeUnknown
 	}
-	return DRIVE_TYPE_UNKNOWN
+	return DriveTypeUnknown
 }
 
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
@@ -191,11 +191,12 @@ func (i *Info) load() error {
 	}
 
 	i.Disks = disks
-	var tpb uint64
+	var tsb uint64
 	for _, d := range i.Disks {
-		tpb += d.SizeBytes
+		tsb += d.SizeBytes
 	}
-	i.TotalPhysicalBytes = tpb
+	i.TotalSizeBytes = tsb
+	i.TotalPhysicalBytes = tsb
 	return nil
 }
 
@@ -245,18 +246,18 @@ func getPhysicalDisks() ([]win32PhysicalDisk, error) {
 }
 
 func toDriveType(physicalDiskMediaType physicalDiskMediaType, mediaType string, caption string) DriveType {
-	if driveType := physicalDiskMediaType.ToDriveType(); driveType != DRIVE_TYPE_UNKNOWN {
+	if driveType := physicalDiskMediaType.ToDriveType(); driveType != DriveTypeUnknown {
 		return driveType
 	}
 
 	mediaType = strings.ToLower(mediaType)
 	caption = strings.ToLower(caption)
 	if strings.Contains(mediaType, "fixed") || strings.Contains(mediaType, "ssd") || strings.Contains(caption, "ssd") {
-		return DRIVE_TYPE_SSD
+		return DriveTypeSSD
 	} else if strings.ContainsAny(mediaType, "hdd") {
-		return DRIVE_TYPE_HDD
+		return DriveTypeHDD
 	}
-	return DRIVE_TYPE_UNKNOWN
+	return DriveTypeUnknown
 }
 
 // TODO: improve
@@ -264,11 +265,11 @@ func toStorageController(interfaceType string) StorageController {
 	var storageController StorageController
 	switch interfaceType {
 	case "SCSI":
-		storageController = STORAGE_CONTROLLER_SCSI
+		storageController = StorageControllerSCSI
 	case "IDE":
-		storageController = STORAGE_CONTROLLER_IDE
+		storageController = StorageControllerIDE
 	default:
-		storageController = STORAGE_CONTROLLER_UNKNOWN
+		storageController = StorageControllerUnknown
 	}
 	return storageController
 }

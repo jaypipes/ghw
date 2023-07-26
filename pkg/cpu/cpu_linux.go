@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -112,6 +113,9 @@ func processorsGet(ctx *context.Context) []*Processor {
 	}
 	res := []*Processor{}
 	for _, p := range procs {
+		for _, c := range p.Cores {
+			sort.Ints(c.LogicalProcessors)
+		}
 		res = append(res, p)
 	}
 	return res
