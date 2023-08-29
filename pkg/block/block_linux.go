@@ -147,6 +147,16 @@ func diskSerialNumber(paths *linuxpath.Paths, disk string) string {
 		return util.UNKNOWN
 	}
 
+	// First try to use the serial from sg3_utils
+	if serial, ok := info["SCSI_IDENT_SERIAL"]; ok {
+		return serial
+	}
+
+	// Fall back to ID_SCSI_SERIAL
+	if serial, ok := info["ID_SCSI_SERIAL"]; ok {
+		return serial
+	}
+
 	// There are two serial number keys, ID_SERIAL and ID_SERIAL_SHORT The
 	// non-_SHORT version often duplicates vendor information collected
 	// elsewhere, so use _SHORT and fall back to ID_SERIAL if missing...
