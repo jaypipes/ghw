@@ -20,6 +20,10 @@ import (
 )
 
 func CachesForNode(ctx *context.Context, nodeID int) ([]*Cache, error) {
+	if ctx.DisableNodeCaches {
+		ctx.Warn("Node caches disabled. Returning empty cache list.")
+		return nil, nil
+	}
 	// The /sys/devices/node/nodeX directory contains a subdirectory called
 	// 'cpuX' for each logical processor assigned to the node. Each of those
 	// subdirectories containers a 'cache' subdirectory which contains a number

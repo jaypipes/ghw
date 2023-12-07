@@ -46,18 +46,21 @@ func topologyNodes(ctx *context.Context) []*Node {
 		nodeID, err := strconv.Atoi(filename[4:])
 		if err != nil {
 			ctx.Warn("failed to determine node ID: %s\n", err)
+			ctx.Err = err
 			return nodes
 		}
 		node.ID = nodeID
 		cores, err := cpu.CoresForNode(ctx, nodeID)
 		if err != nil {
 			ctx.Warn("failed to determine cores for node: %s\n", err)
+			ctx.Err = err
 			return nodes
 		}
 		node.Cores = cores
 		caches, err := memory.CachesForNode(ctx, nodeID)
 		if err != nil {
 			ctx.Warn("failed to determine caches for node: %s\n", err)
+			ctx.Err = err
 			return nodes
 		}
 		node.Caches = caches
@@ -65,6 +68,7 @@ func topologyNodes(ctx *context.Context) []*Node {
 		distances, err := distancesForNode(ctx, nodeID)
 		if err != nil {
 			ctx.Warn("failed to determine node distances for node: %s\n", err)
+			ctx.Err = err
 			return nodes
 		}
 		node.Distances = distances
@@ -72,6 +76,7 @@ func topologyNodes(ctx *context.Context) []*Node {
 		area, err := memory.AreaForNode(ctx, nodeID)
 		if err != nil {
 			ctx.Warn("failed to determine memory area for node: %s\n", err)
+			ctx.Err = err
 			return nodes
 		}
 		node.Memory = area
@@ -82,6 +87,10 @@ func topologyNodes(ctx *context.Context) []*Node {
 }
 
 func distancesForNode(ctx *context.Context, nodeID int) ([]int, error) {
+	if ctx.DisableNodeDistances {
+		ctx.Warn("Node distances disabled. Returning empty distances list.")
+		return nil, nil
+	}
 	paths := linuxpath.New(ctx)
 	path := filepath.Join(
 		paths.SysDevicesSystemNode,

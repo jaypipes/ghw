@@ -61,6 +61,10 @@ func (i *Info) load() error {
 }
 
 func AreaForNode(ctx *context.Context, nodeID int) (*Area, error) {
+	if ctx.DisableNodeAreas {
+		ctx.Warn("Node areas disabled. Returning nil area.")
+		return nil, nil
+	}
 	paths := linuxpath.New(ctx)
 	path := filepath.Join(
 		paths.SysDevicesSystemNode,
