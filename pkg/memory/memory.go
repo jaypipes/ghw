@@ -36,6 +36,7 @@ type Module struct {
 type Area struct {
 	TotalPhysicalBytes int64 `json:"total_physical_bytes"`
 	TotalUsableBytes   int64 `json:"total_usable_bytes"`
+	TotalUsedBytes     int64 `json:"total_used_bytes"`
 	// An array of sizes, in bytes, of memory pages supported in this area
 	SupportedPageSizes []uint64  `json:"supported_page_sizes"`
 	Modules            []*Module `json:"modules"`
@@ -44,21 +45,28 @@ type Area struct {
 // String returns a short string with a summary of information for this memory
 // area
 func (a *Area) String() string {
-	tpbs := util.UNKNOWN
+	physs := util.UNKNOWN
 	if a.TotalPhysicalBytes > 0 {
 		tpb := a.TotalPhysicalBytes
 		unit, unitStr := unitutil.AmountString(tpb)
 		tpb = int64(math.Ceil(float64(a.TotalPhysicalBytes) / float64(unit)))
-		tpbs = fmt.Sprintf("%d%s", tpb, unitStr)
+		physs = fmt.Sprintf("%d%s", tpb, unitStr)
 	}
-	tubs := util.UNKNOWN
+	usables := util.UNKNOWN
 	if a.TotalUsableBytes > 0 {
 		tub := a.TotalUsableBytes
 		unit, unitStr := unitutil.AmountString(tub)
 		tub = int64(math.Ceil(float64(a.TotalUsableBytes) / float64(unit)))
-		tubs = fmt.Sprintf("%d%s", tub, unitStr)
+		usables = fmt.Sprintf("%d%s", tub, unitStr)
 	}
-	return fmt.Sprintf("memory (%s physical, %s usable)", tpbs, tubs)
+	useds := ""
+	if a.TotalUsedBytes > 0 {
+		tub := a.TotalUsedBytes
+		unit, unitStr := unitutil.AmountString(tub)
+		tub = int64(math.Ceil(float64(a.TotalUsedBytes) / float64(unit)))
+		useds = fmt.Sprintf(", %d%s used", tub, unitStr)
+	}
+	return fmt.Sprintf("memory (%s physical, %s usable%s)", physs, usables, useds)
 }
 
 // Info contains information about the memory on a host system.

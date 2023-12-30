@@ -17,6 +17,7 @@ import (
 // execution context when calling internal discovery methods
 type Context struct {
 	Chroot               string
+	CollectUsage         bool
 	EnableTools          bool
 	SnapshotPath         string
 	SnapshotRoot         string
@@ -73,6 +74,10 @@ func New(opts ...*option.Option) *Context {
 
 	if merged.Alerter != nil {
 		ctx.alert = merged.Alerter
+	}
+
+	if merged.CollectUsage != nil {
+		ctx.CollectUsage = *merged.CollectUsage
 	}
 
 	if merged.EnableTools != nil {

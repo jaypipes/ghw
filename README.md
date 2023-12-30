@@ -1,4 +1,4 @@
-# `ghw` - Go HardWare discovery/inspection library
+# `ghw` - Go HardWare library
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/jaypipes/ghw.svg)](https://pkg.go.dev/github.com/jaypipes/ghw)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jaypipes/ghw)](https://goreportcard.com/report/github.com/jaypipes/ghw)
@@ -9,6 +9,10 @@
 
 `ghw` is a Go library providing hardware inspection and discovery for Linux and
 Windows. There currently exists partial support for MacOSX.
+
+`ghw` gathers information about your hardware's **capacity** and
+**capabilities**. It can also be used to query for your hardware's **current
+resource usage**.
 
 ## Design Principles
 
@@ -34,18 +38,6 @@ Windows. There currently exists partial support for MacOSX.
   the structs returned by various library functions should have consistent
   attribute and method names.
 
-## Inspecting != Monitoring
-
-`ghw` is a tool for gathering information about your hardware's **capacity**
-and **capabilities**.
-
-It is important to point out that `ghw` does **NOT** report information that is
-temporary or variable. It is **NOT** a system monitor nor is it an appropriate
-tool for gathering data points for metrics that change over time.  If you are
-looking for a system that tracks **usage** of CPU, memory, network I/O or disk
-I/O, there are plenty of great open source tools that do this! Check out the
-[Prometheus project](https://prometheus.io/) for a great example.
-
 ## Usage
 
 `ghw` has functions that return an `Info` object about a particular hardware
@@ -67,7 +59,18 @@ hardware:
 * [`ghw.Baseboard()`](#baseboard)
 * [`ghw.Product()`](#product)
 
-### CPU
+Each top-level function has the same signature. The top-level functions accept
+zero or more `ghw.WithOption` structs and return a pointer to a `ghw.XXXInfo`
+struct.
+
+A `ghw.XXXInfo` struct corresponds the name of the module being queried. For
+example, the `ghw.CPU` module's `ghw.XXXInfo` struct is `ghw.CPUInfo`.
+
+`ghw.WithOption` structs are returned from
+[`ghw` functions prefix with `With`][#with-functions], for example
+`ghw.WithCollectUsage()` or `ghw.WithChroot()`.
+
+## CPU
 
 The `ghw.CPU()` function returns a `ghw.CPUInfo` struct that contains
 information about the CPUs on the host system.
@@ -180,7 +183,7 @@ cpu (1 physical package, 6 cores, 12 hardware threads)
                  flexpriority ept vpid dtherm ida arat]
 ```
 
-### Memory
+## Memory
 
 The `ghw.Memory()` function returns a `ghw.MemoryInfo` struct that contains
 information about the RAM on the host system.
@@ -194,6 +197,11 @@ information about the RAM on the host system.
   resident memory size and some reserved system bits. Please note this value is
   **NOT** the amount of memory currently in use by processes in the system. See
   [the discussion][#physical-versus-usage-memory] about the difference.
+* `ghw.MemoryInfo.TotalUsedBytes` contains the amount of memory the system is
+  currently using. If `GHW_COLLECT_USAGE` is not true/on, this value will be
+  `-1`. On Linux, this value is calculated by subtracting the sum of free,
+  buffered, cached and slab reclaimable memory from the total amount of usable
+  memory.
 * `ghw.MemoryInfo.SupportedPageSizes` is an array of integers representing the
   size, in bytes, of memory pages the system supports
 * `ghw.MemoryInfo.Modules` is an array of pointers to `ghw.MemoryModule`
@@ -211,7 +219,7 @@ import (
 )
 
 func main() {
-	memory, err := ghw.Memory()
+	memory, err := ghw.Memory(ghw.WithCollectUsage())
 	if err != nil {
 		fmt.Printf("Error getting memory info: %v", err)
 	}
@@ -223,10 +231,10 @@ func main() {
 Example output from my personal workstation:
 
 ```
-memory (24GB physical, 24GB usable)
+memory (24GB physical, 24GB usable, 9GB used)
 ```
 
-#### Physical versus Usable Memory
+### Physical versus Usable Memory
 
 There has been [some](https://github.com/jaypipes/ghw/pull/171)
 [confusion](https://github.com/jaypipes/ghw/issues/183) regarding the
@@ -281,7 +289,7 @@ system with a Linux GRUB bootloader:
 The bootloader consumes 3832720 bytes of RAM
 ```
 
-### Block storage
+## Block storage
 
 The `ghw.Block()` function returns a `ghw.BlockInfo` struct that contains
 information about the block storage on the host system.
@@ -394,7 +402,7 @@ block storage (1 disk, 2TB physical storage)
 > `/run` into your container, otherwise `ghw` won't be able to query the udev
 > DB or sysfs paths for information.
 
-### Topology
+## Topology
 
 > **NOTE**: Topology support is currently Linux-only. Windows support is
 > [planned](https://github.com/jaypipes/ghw/issues/166).
@@ -511,7 +519,7 @@ topology SMP (1 nodes)
   L3 cache (12288 KB) shared with logical processors: 0,1,10,11,2,3,4,5,6,7,8,9
 ```
 
-### Network
+## Network
 
 The `ghw.Network()` function returns a `ghw.NetworkInfo` struct that contains
 information about the host computer's networking hardware.
@@ -649,7 +657,7 @@ net (3 NICs)
    - netns-local
 ```
 
-### PCI
+## PCI
 
 `ghw` contains a PCI database inspection and querying facility that allows
 developers to not only gather information about devices on a local PCI bus but
@@ -814,7 +822,7 @@ host PCI devices:
 0000:3f:06.3	Intel Corporation   	Xeon 5600 Series Integrated Memory Co...
 ```
 
-#### Finding a PCI device by PCI address
+### Finding a PCI device by PCI address
 
 In addition to the above information, the `ghw.PCIInfo` struct has the
 following method:
@@ -885,7 +893,7 @@ Subclass: VGA compatible controller [00]
 Programming Interface: VGA controller [00]
 ```
 
-### GPU
+## GPU
 
 The `ghw.GPU()` function returns a `ghw.GPUInfo` struct that contains
 information about the host computer's graphics hardware.
@@ -945,7 +953,7 @@ information
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
 
-### Chassis
+## Chassis
 
 The `ghw.Chassis()` function returns a `ghw.ChassisInfo` struct that contains
 information about the host computer's hardware chassis.
@@ -1000,7 +1008,7 @@ WARNING: Unable to read chassis_serial: open /sys/class/dmi/id/chassis_serial: p
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
 feature to quiet things down.
 
-### BIOS
+## BIOS
 
 The `ghw.BIOS()` function returns a `ghw.BIOSInfo` struct that contains
 information about the host computer's basis input/output system (BIOS).
@@ -1036,7 +1044,7 @@ Example output from my personal workstation:
 bios vendor=System76 version=F2 Z5 date=11/14/2018
 ```
 
-### Baseboard
+## Baseboard
 
 The `ghw.Baseboard()` function returns a `ghw.BaseboardInfo` struct that
 contains information about the host computer's hardware baseboard.
@@ -1090,7 +1098,7 @@ WARNING: Unable to read board_serial: open /sys/class/dmi/id/board_serial: permi
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
 feature to quiet things down.
 
-### Product
+## Product
 
 The `ghw.Product()` function returns a `ghw.ProductInfo` struct that
 contains information about the host computer's hardware product line.
@@ -1146,73 +1154,7 @@ WARNING: Unable to read product_serial: open /sys/class/dmi/id/product_serial: p
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
 feature to quiet things down.
 
-## Advanced Usage
-
-### Disabling warning messages
-
-When `ghw` isn't able to retrieve some information, it may print certain
-warning messages to `stderr`. To disable these warnings, simply set the
-`GHW_DISABLE_WARNINGS` environs variable:
-
-```
-$ ghwc memory
-WARNING:
-Could not determine total physical bytes of memory. This may
-be due to the host being a virtual machine or container with no
-/var/log/syslog file, or the current user may not have necessary
-privileges to read the syslog. We are falling back to setting the
-total physical amount of memory to the total usable amount of memory
-memory (24GB physical, 24GB usable)
-```
-
-```
-$ GHW_DISABLE_WARNINGS=1 ghwc memory
-memory (24GB physical, 24GB usable)
-```
-
-You can disable warning programmatically using the `WithDisableWarnings` option:
-
-```go
-
-import (
-	"github.com/jaypipes/ghw"
-)
-
-mem, err := ghw.Memory(ghw.WithDisableWarnings())
-```
-
-`WithDisableWarnings` is a alias for the `WithNullAlerter` option, which in turn
-leverages the more general `Alerter` feature of ghw.
-
-You may supply a `Alerter` to ghw to redirect all the warnings there, like
-logger objects (see for example golang's stdlib `log.Logger`).
-`Alerter` is in fact the minimal logging interface `ghw needs.
-To learn more, please check the `option.Alerter` interface and the `ghw.WithAlerter()`
-function.
-
-### Overriding the root mountpoint `ghw` uses
-
-When `ghw` looks for information about the host system, it considers `/` as its
-root mountpoint. So, for example, when looking up CPU information on a Linux
-system, `ghw.CPU()` will use the path `/proc/cpuinfo`.
-
-If you are calling `ghw` from a system that has an alternate root mountpoint,
-you can either set the `GHW_CHROOT` environment variable to that alternate
-path, or call one of the functions like `ghw.CPU()` or `ghw.Memory()` with the
-`ghw.WithChroot()` modifier.
-
-For example, if you are executing from within an application container that has
-bind-mounted the root host filesystem to the mount point `/host`, you would set
-`GHW_CHROOT` to `/host` so that `ghw` can find `/proc/cpuinfo` at
-`/host/proc/cpuinfo`.
-
-Alternately, you can use the `ghw.WithChroot()` function like so:
-
-```go
-cpu, err := ghw.CPU(ghw.WithChroot("/host"))
-```
-
-### Serialization to JSON or YAML
+## Serialization to JSON or YAML
 
 All of the `ghw` `XXXInfo` structs -- e.g. `ghw.CPUInfo` -- have two methods
 for producing a serialized JSON or YAML string representation of the contained
@@ -1254,6 +1196,105 @@ memory:
   total_usable_bytes: 25263415296
 ```
 
+## With functions
+
+`ghw`'s With functions allow you to modify `ghw`'s behaviour when discovering
+hardware capabilities or resource usage.
+
+* `ghw.WithCollectUsage()` tells `ghw` to collect current resource usage when
+  collecting hardware information. By default, `ghw` does **NOT** collect
+  current resource usage.
+* `ghw.WithDisableWarnings()` tells `ghw` not to print warning information to
+  `stderr` when it is unable to determine certain information.
+* `ghw.WithChroot()` tells `ghw` to use an alternate root mountpoint.
+* `ghw.WithPathOverrides()` tells `ghw` to use one or more alternate
+  mountpoints (Linux only).
+* `ghw.WithDisableTools()` tells `ghw` not to use certain external tools (like
+  `ethtool` on Linux).
+* `ghw.WithSnapshot()` tells `ghw` to read a `ghw-snapsot` file instead of
+  examining the host system.
+
+### Collecting current resource usage
+
+By default, `ghw` does **NOT** collect resource usage. To instruct `ghw` to
+collect current resource usage, set the `GHW_COLLECT_USAGE` environs
+variable.
+
+You can enable resource usage collection programmatically using the
+`ghw.WithCollectUsage()` option:
+
+```go
+import (
+	"github.com/jaypipes/ghw"
+)
+
+mem, err := ghw.Memory(ghw.WithCollectUsage())
+```
+
+### Disabling warning messages
+
+When `ghw` isn't able to retrieve some information, it may print certain
+warning messages to `stderr`. To disable these warnings, simply set the
+`GHW_DISABLE_WARNINGS` environs variable:
+
+```
+$ ghwc memory
+WARNING:
+Could not determine total physical bytes of memory. This may
+be due to the host being a virtual machine or container with no
+/var/log/syslog file, or the current user may not have necessary
+privileges to read the syslog. We are falling back to setting the
+total physical amount of memory to the total usable amount of memory
+memory (24GB physical, 24GB usable)
+```
+
+```
+$ GHW_DISABLE_WARNINGS=1 ghwc memory
+memory (24GB physical, 24GB usable)
+```
+
+You can disable warning programmatically using the `ghw.WithDisableWarnings()`
+option:
+
+```go
+import (
+	"github.com/jaypipes/ghw"
+)
+
+mem, err := ghw.Memory(ghw.WithDisableWarnings())
+```
+
+`WithDisableWarnings` is a alias for the `WithNullAlerter` option, which in turn
+leverages the more general `Alerter` feature of ghw.
+
+You may supply a `Alerter` to ghw to redirect all the warnings there, like
+logger objects (see for example golang's stdlib `log.Logger`).
+`Alerter` is in fact the minimal logging interface `ghw needs.
+To learn more, please check the `option.Alerter` interface and the `ghw.WithAlerter()`
+function.
+
+### Overriding the root mountpoint `ghw` uses
+
+When `ghw` looks for information about the host system, it considers `/` as its
+root mountpoint. So, for example, when looking up CPU information on a Linux
+system, `ghw.CPU()` will use the path `/proc/cpuinfo`.
+
+If you are calling `ghw` from a system that has an alternate root mountpoint,
+you can either set the `GHW_CHROOT` environment variable to that alternate
+path, or call one of the functions like `ghw.CPU()` or `ghw.Memory()` with the
+`ghw.WithChroot()` modifier.
+
+For example, if you are executing from within an application container that has
+bind-mounted the root host filesystem to the mount point `/host`, you would set
+`GHW_CHROOT` to `/host` so that `ghw` can find `/proc/cpuinfo` at
+`/host/proc/cpuinfo`.
+
+Alternately, you can use the `ghw.WithChroot()` function like so:
+
+```go
+cpu, err := ghw.CPU(ghw.WithChroot("/host"))
+```
+
 ### Overriding a specific mountpoint (Linux only)
 
 When running inside containers, it can be cumbersome to only override the root
@@ -1274,6 +1315,28 @@ cpu, err := ghw.CPU(ghw.WithPathOverrides(ghw.PathOverrides{
 
 **NOTE**: This feature works in addition and is composable with the
 `ghw.WithChroot()` function and `GHW_CHROOT` environment variable.
+
+## Calling external programs
+
+By default `ghw` may call external programs, for example `ethtool`, to learn
+about hardware capabilities.  In some rare circumstances it may be useful to
+opt out from this behaviour and rely only on the data provided by
+pseudo-filesystems, like sysfs.
+
+The most common use case is when we want to read a snapshot from `ghw`. In
+these cases the information provided by tools will be inconsistent with the
+data from the snapshot - since they will be run on a different host than the
+host the snapshot was created for.
+
+To prevent `ghw` from calling external tools, set the `GHW_DISABLE_TOOLS`
+environment variable to any value, or, programmatically, use the
+`ghw.WithDisableTools()` function.  The default behaviour of ghw is to call
+external tools when available.
+
+> **WARNING**: on all platforms, disabling external tools make ghw return less
+> data.  Unless noted otherwise, there is _no fallback flow_ if external tools
+> are disabled. On MacOSX/Darwin, disabling external tools disables block
+> support entirely
 
 ### Reading hardware information from a `ghw` snapshot (Linux only)
 
@@ -1327,7 +1390,7 @@ cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
 }))
 ```
 
-### Creating snapshots
+## Creating snapshots
 
 You can create `ghw` snapshots using the `ghw-snapshot` tool or
 programmatically using the `pkg/snapshot` package.
@@ -1376,28 +1439,6 @@ if err := snapshot.PackFrom("my-snapshot.tgz", scratchDir); err != nil {
 	fmt.Printf("error packing %q into %q: %v", scratchDir, *output, err)
 }
 ```
-
-## Calling external programs
-
-By default `ghw` may call external programs, for example `ethtool`, to learn
-about hardware capabilities.  In some rare circumstances it may be useful to
-opt out from this behaviour and rely only on the data provided by
-pseudo-filesystems, like sysfs.
-
-The most common use case is when we want to read a snapshot from `ghw`. In
-these cases the information provided by tools will be inconsistent with the
-data from the snapshot - since they will be run on a different host than the
-host the snapshot was created for.
-
-To prevent `ghw` from calling external tools, set the `GHW_DISABLE_TOOLS`
-environment variable to any value, or, programmatically, use the
-`ghw.WithDisableTools()` function.  The default behaviour of ghw is to call
-external tools when available.
-
-> **WARNING**: on all platforms, disabling external tools make ghw return less
-> data.  Unless noted otherwise, there is _no fallback flow_ if external tools
-> are disabled. On MacOSX/Darwin, disabling external tools disables block
-> support entirely
 
 ## Developers
 
