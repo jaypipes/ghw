@@ -8,7 +8,10 @@ import (
 	"strings"
 )
 
-var sysctlOutput = make(map[string]string)
+var (
+	hasARMArchitecture = false                   // determine if ARM
+	sysctlOutput       = make(map[string]string) // store all the sysctl output
+)
 
 func (i *Info) load() error {
 	err := populateSysctlOutput()
@@ -32,20 +35,37 @@ func getProcessors() []*Processor {
 		p[i].Model = getVendor()
 		p[i].NumCores = getNumberCoresFromPerfLevel(i)
 		p[i].Capabilities = getCapabilities()
+		p[i].Cores = make([]*ProcessorCore, getTotalCores())
 	}
 	return p
 }
 
-// valid for ARM see https://developer.apple.com/documentation/kernel/1387446-sysctlbyname/determining_instruction_set_characteristics
+// getCapabilities valid for ARM, see https://developer.apple.com/documentation/kernel/1387446-sysctlbyname/determining_instruction_set_characteristics
 func getCapabilities() []string {
-	caps := []string{}
-	for k, v := range sysctlOutput {
-		if strings.HasPrefix(k, "hw.optional.arm.") {
-			isEnabled, _ := strconv.Atoi(v)
-			if isEnabled == 1 {
-				caps = append(caps, k)
+	var caps []string
+
+	// add ARM capabilities
+	if hasARMArchitecture {
+		for cap, isEnabled := range sysctlOutput {
+			if isEnabled == "1" {
+				// capabilities with keys with a common prefix
+				commonPrefix := "hw.optional.arm."
+				if strings.HasPrefix(cap, commonPrefix) {
+					caps = append(caps, strings.TrimPrefix(cap, commonPrefix))
+				}
+				// not following prefix convention but are important
+				if cap == "hw.optional.AdvSIMD_HPFPCvt" {
+					caps = append(caps, "AdvSIMD_HPFPCvt")
+				}
+				if cap == "hw.optional.armv8_crc32" {
+					caps = append(caps, "armv8_crc32")
+				}
 			}
 		}
+
+		// hw.optional.AdvSIMD and hw.optional.floatingpoint are always enabled (see linked doc)
+		caps = append(caps, "AdvSIMD")
+		caps = append(caps, "floatingpoint")
 	}
 
 	return caps
@@ -66,6 +86,11 @@ func populateSysctlOutput() error {
 			s := strings.SplitN(l, ":", 2)
 			k, v := strings.TrimSpace(s[0]), strings.TrimSpace(s[1])
 			sysctlOutput[k] = v
+
+			// see if it's possible to determine if ARM
+			if k == "hw.optional.arm64" && v == "1" {
+				hasARMArchitecture = true
+			}
 		}
 	}
 
@@ -73,7 +98,7 @@ func populateSysctlOutput() error {
 }
 
 func getNumberCoresFromPerfLevel(i int) uint32 {
-	key := fmt.Sprintf("hw.perflevel%s.physicalcpu", strconv.Itoa(i))
+	key := fmt.Sprintf("hw.perflevel%s.physicalcpu_max", strconv.Itoa(i))
 	nCores := sysctlOutput[key]
 	return stringToUint32(nCores)
 }
@@ -95,7 +120,7 @@ func getProcTopCount() int {
 
 // num of physical cores
 func getTotalCores() uint32 {
-	nCores := sysctlOutput["hw.physicalcpu"]
+	nCores := sysctlOutput["hw.physicalcpu_max"]
 	return stringToUint32(nCores)
 }
 
