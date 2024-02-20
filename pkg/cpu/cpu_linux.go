@@ -22,6 +22,7 @@ import (
 
 var (
 	regexForCpulCore = regexp.MustCompile("^cpu([0-9]+)$")
+	onlineFile       = "online"
 )
 
 func (i *Info) load() error {
@@ -64,6 +65,10 @@ func processorsGet(ctx *context.Context) []*Processor {
 			continue
 		}
 
+		onlineFilePath := filepath.Join(paths.SysDevicesSystemCPU, fmt.Sprintf("cpu%d", lpID), onlineFile)
+		if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
+			continue
+		}
 		procID := processorIDFromLogicalProcessorID(ctx, lpID)
 		proc, found := procs[procID]
 		if !found {
@@ -199,6 +204,10 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 				"failed to determine procID from %s. Expected integer after 3rd char.",
 				filename,
 			)
+			continue
+		}
+		onlineFilePath := filepath.Join(cpuPath, onlineFile)
+		if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
 			continue
 		}
 		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
