@@ -183,6 +183,18 @@ func diskBusPath(paths *linuxpath.Paths, disk string) string {
 	return util.UNKNOWN
 }
 
+func diskWWNNoExtension(paths *linuxpath.Paths, disk string) string {
+	info, err := udevInfoDisk(paths, disk)
+	if err != nil {
+		return util.UNKNOWN
+	}
+
+	if wwn, ok := info["ID_WWN"]; ok {
+		return wwn
+	}
+	return util.UNKNOWN
+}
+
 func diskWWN(paths *linuxpath.Paths, disk string) string {
 	info, err := udevInfoDisk(paths, disk)
 	if err != nil {
@@ -326,6 +338,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		model := diskModel(paths, dname)
 		serialNo := diskSerialNumber(paths, dname)
 		wwn := diskWWN(paths, dname)
+		wwnNoExtension := diskWWNNoExtension(paths, dname)
 		removable := diskIsRemovable(paths, dname)
 
 		if storageController == STORAGE_CONTROLLER_LOOP && size == 0 {
@@ -345,6 +358,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 			Model:                  model,
 			SerialNumber:           serialNo,
 			WWN:                    wwn,
+			WWNNoExtension:         wwnNoExtension,
 		}
 
 		parts := diskPartitions(ctx, paths, dname)

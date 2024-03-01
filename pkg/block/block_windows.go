@@ -155,6 +155,7 @@ func (i *Info) load() error {
 			Model:                  strings.TrimSpace(*diskdrive.Caption),
 			SerialNumber:           strings.TrimSpace(*diskdrive.SerialNumber),
 			WWN:                    util.UNKNOWN, // TODO: add information
+			WWNNoExtension:         util.UNKNOWN, // TODO: add information
 			Partitions:             make([]*Partition, 0),
 		}
 		for _, diskpartition := range win32DiskPartitionDescriptions {
