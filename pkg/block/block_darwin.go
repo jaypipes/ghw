@@ -258,6 +258,7 @@ func (info *Info) load() error {
 			Model:                  ioregPlist.ModelNumber,
 			SerialNumber:           ioregPlist.SerialNumber,
 			WWN:                    "",
+			WWNNoExtension:         "",
 			Partitions:             make([]*Partition, 0, len(disk.Partitions)+len(disk.APFSVolumes)),
 		}
 

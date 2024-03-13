@@ -233,9 +233,13 @@ type Disk struct {
 	Model string `json:"model"`
 	// SerialNumber is the serial number of the disk.
 	SerialNumber string `json:"serial_number"`
-	// WWN is the World-wide Number of the disk.
+	// WWN is the World-wide Name of the disk.
 	// See: https://en.wikipedia.org/wiki/World_Wide_Name
 	WWN string `json:"wwn"`
+	// WWNNoExtension is the World-wide Name of the disk with any vendor
+	// extensions excluded.
+	// See: https://en.wikipedia.org/wiki/World_Wide_Name
+	WWNNoExtension string `json:"wwnNoExtension"`
 	// Partitions contains an array of pointers to `Partition` structs, one for
 	// each partition on the disk.
 	Partitions []*Partition `json:"partitions"`
