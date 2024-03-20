@@ -18,6 +18,7 @@ const (
 
 const (
 	envKeyChroot            = "GHW_CHROOT"
+	envKeyCollectUsage      = "GHW_COLLECT_USAGE"
 	envKeyDisableWarnings   = "GHW_DISABLE_WARNINGS"
 	envKeyDisableTools      = "GHW_DISABLE_TOOLS"
 	envKeySnapshotPath      = "GHW_SNAPSHOT_PATH"
@@ -109,6 +110,16 @@ func EnvOrDefaultTools() bool {
 	return true
 }
 
+// EnvOrDefaultCollectUsage returns true if the GHW_COLLECT_USAGE environs
+// variable is set, which indicates ghw should collect current resource usage
+// information, false otherwise.
+func EnvOrDefaultCollectUsage() bool {
+	if _, exists := os.LookupEnv(envKeyCollectUsage); exists {
+		return true
+	}
+	return false
+}
+
 // Option is used to represent optionally-configured settings. Each field is a
 // pointer to some concrete value so that we can tell when something has been
 // set or left unset.
@@ -121,6 +132,9 @@ type Option struct {
 	// would ensure the GHW_CHROOT environ variable is set to "/host" and ghw will
 	// build its paths from that location instead of /
 	Chroot *string
+
+	// CollectUsage informs ghw to collect current resource usage information
+	CollectUsage *bool
 
 	// Snapshot contains options for handling ghw snapshots
 	Snapshot *SnapshotOptions
@@ -166,6 +180,11 @@ type SnapshotOptions struct {
 // WithChroot allows to override the root directory ghw uses.
 func WithChroot(dir string) *Option {
 	return &Option{Chroot: &dir}
+}
+
+// WithCollectUsage tells ghw to collect current resource usage.
+func WithCollectUsage(toggle bool) *Option {
+	return &Option{CollectUsage: &toggle}
 }
 
 // WithSnapshot sets snapshot-processing options for a ghw run
@@ -217,6 +236,9 @@ func Merge(opts ...*Option) *Option {
 		if opt.Chroot != nil {
 			merged.Chroot = opt.Chroot
 		}
+		if opt.CollectUsage != nil {
+			merged.CollectUsage = opt.CollectUsage
+		}
 		if opt.Snapshot != nil {
 			merged.Snapshot = opt.Snapshot
 		}
@@ -238,6 +260,10 @@ func Merge(opts ...*Option) *Option {
 	if merged.Chroot == nil {
 		chroot := EnvOrDefaultChroot()
 		merged.Chroot = &chroot
+	}
+	if merged.CollectUsage == nil {
+		enabled := EnvOrDefaultCollectUsage()
+		merged.CollectUsage = &enabled
 	}
 	if merged.Alerter == nil {
 		merged.Alerter = EnvOrDefaultAlerter()

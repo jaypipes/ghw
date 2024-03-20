@@ -45,16 +45,29 @@ var (
 
 func (i *Info) load() error {
 	paths := linuxpath.New(i.ctx)
-	tub := memTotalUsableBytes(paths)
-	if tub < 1 {
+	mi := memInfo{}
+	if err := mi.load(paths.ProcMeminfo); err != nil {
+		return err
+	}
+	usable := mi.totalUsableBytes()
+	if usable < 1 {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
 	}
-	i.TotalUsableBytes = tub
+	i.TotalUsableBytes = usable
+	if i.ctx.CollectUsage {
+		used := mi.totalUsedBytes()
+		if used < 1 {
+			return fmt.Errorf("Could not determine total used bytes of memory")
+		}
+		i.TotalUsedBytes = used
+	} else {
+		i.TotalUsedBytes = -1
+	}
 	tpb := memTotalPhysicalBytes(paths)
 	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
 		i.ctx.Warn(warnCannotDeterminePhysicalMemory)
-		i.TotalPhysicalBytes = tub
+		i.TotalPhysicalBytes = usable
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)
 	return nil
@@ -72,10 +85,11 @@ func AreaForNode(ctx *context.Context, nodeID int) (*Area, error) {
 	var totPhys int64
 	var totUsable int64
 
-	totUsable, err = memoryTotalUsableBytesFromPath(filepath.Join(path, "meminfo"))
-	if err != nil {
+	mi := memInfo{}
+	if err := mi.load(filepath.Join(path, "meminfo")); err != nil {
 		return nil, err
 	}
+	totUsable = mi.totalUsableBytes()
 
 	blockSizeBytes, err = memoryBlockSizeBytes(paths.SysDevicesSystemMemory)
 	if err == nil {
@@ -235,66 +249,124 @@ func memTotalPhysicalBytesFromSyslog(paths *linuxpath.Paths) int64 {
 	return -1
 }
 
-func memTotalUsableBytes(paths *linuxpath.Paths) int64 {
-	amount, err := memoryTotalUsableBytesFromPath(paths.ProcMeminfo)
-	if err != nil {
-		return -1
-	}
-	return amount
-}
+// memInfo is a /proc/meminfo file parsed into its key:value blocks, with all
+// values ending in a "kB" suffix having their values multiplied by 1024.
+type memInfo map[string]int64
 
-func memoryTotalUsableBytesFromPath(meminfoPath string) (int64, error) {
-	// In Linux, /proc/meminfo or its close relative
-	// /sys/devices/system/node/node*/meminfo
-	// contains a set of memory-related amounts, with
-	// lines looking like the following:
-	//
-	// $ cat /proc/meminfo
-	// MemTotal:       24677596 kB
-	// MemFree:        21244356 kB
-	// MemAvailable:   22085432 kB
-	// ...
-	// HugePages_Total:       0
-	// HugePages_Free:        0
-	// HugePages_Rsvd:        0
-	// HugePages_Surp:        0
-	// ...
-	//
-	// It's worth noting that /proc/meminfo returns exact information, not
-	// "theoretical" information. For instance, on the above system, I have
-	// 24GB of RAM but MemTotal is indicating only around 23GB. This is because
-	// MemTotal contains the exact amount of *usable* memory after accounting
-	// for the kernel's resident memory size and a few reserved bits.
-	// Please note GHW cares about the subset of lines shared between system-wide
-	// and per-NUMA-node meminfos. For more information, see:
-	//
-	//  https://www.kernel.org/doc/Documentation/filesystems/proc.txt
-	r, err := os.Open(meminfoPath)
+// load accepts a path and loads the memInfo map by parsing the supplied
+// /proc/meminfo file.
+//
+// In Linux, /proc/meminfo or its close relative
+// /sys/devices/system/node/node*/meminfo contains a set of memory-related
+// amounts, with lines looking like the following:
+//
+// $ cat /proc/meminfo
+// MemTotal:       24677596 kB
+// MemFree:        21244356 kB
+// MemAvailable:   22085432 kB
+// ...
+// HugePages_Total:       0
+// HugePages_Free:        0
+// HugePages_Rsvd:        0
+// HugePages_Surp:        0
+// ...
+//
+// The /sys/devices/system/node/node*/meminfo files look like this, however:
+//
+// Node 0 MemTotal:       24677596 kB
+// Node 0 MemFree:        21244356 kB
+// Node 0 MemAvailable:   22085432 kB
+// ...
+// Node 0 HugePages_Total:       0
+// Node 0 HugePages_Free:        0
+// Node 0 HugePages_Rsvd:        0
+// Node 0 HugePages_Surp:        0
+// ...
+//
+// It's worth noting that /proc/meminfo returns exact information, not
+// "theoretical" information. For instance, on the above system, I have 24GB of
+// RAM but MemTotal is indicating only around 23GB. This is because MemTotal
+// contains the exact amount of *usable* memory after accounting for the
+// kernel's resident memory size and a few reserved bits.  Please note GHW
+// cares about the subset of lines shared between system-wide and per-NUMA-node
+// meminfos. For more information, see:
+//
+//	https://www.kernel.org/doc/Documentation/filesystems/proc.txt
+func (mi memInfo) load(fp string) error {
+	r, err := os.Open(fp)
 	if err != nil {
-		return -1, err
+		return err
 	}
 	defer util.SafeClose(r)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
-		parts := strings.Split(line, ":")
-		key := parts[0]
-		if !strings.Contains(key, "MemTotal") {
-			continue
+		if strings.HasPrefix(line, "Node") {
+			// For the /sys/devices/system/node/nodeX/meminfo files, the lines
+			// all start with "Node X ". We need to strip all that off.
+			fields := strings.Fields(line)
+			line = strings.Join(fields[2:], "")
 		}
-		rawValue := parts[1]
-		inKb := strings.HasSuffix(rawValue, "kB")
-		value, err := strconv.Atoi(strings.TrimSpace(strings.TrimSuffix(rawValue, "kB")))
+		parts := strings.Split(line, ":")
+		key := strings.TrimSpace(parts[0])
+		raw := parts[1]
+		inKb := strings.HasSuffix(raw, "kB")
+		v, err := strconv.Atoi(
+			strings.TrimSpace(
+				strings.TrimSuffix(
+					raw, "kB",
+				),
+			),
+		)
+		v64 := int64(v)
 		if err != nil {
-			return -1, err
+			return err
 		}
 		if inKb {
-			value = value * int(unitutil.KB)
+			v64 = v64 * unitutil.KB
 		}
-		return int64(value), nil
+		mi[key] = v64
 	}
-	return -1, fmt.Errorf("failed to find MemTotal entry in path %q", meminfoPath)
+	return nil
+}
+
+// totalUsageBytes returns the MemTotal entry from the memInfo map
+func (mi memInfo) totalUsableBytes() int64 {
+	v, ok := mi["MemTotal"]
+	if !ok {
+		return -1
+	}
+	return v
+}
+
+// totalUsedBytes returns the total used memory from the memInfo map.
+// We calculate used memory with the following formula:
+// mem_total - (mem_free + mem_buffered + mem_cached + mem_slab_reclaimable)
+func (mi memInfo) totalUsedBytes() int64 {
+	mf, ok := mi["MemFree"]
+	if !ok {
+		return -1
+	}
+	mc, ok := mi["Cached"]
+	if !ok {
+		return -1
+	}
+	mb, ok := mi["Buffers"]
+	if !ok {
+		return -1
+	}
+	mt, ok := mi["MemTotal"]
+	if !ok {
+		return -1
+	}
+	if sr, ok := mi["SReclaimable"]; ok {
+		return mt - (mf + mb + mc + sr)
+	} else if st, ok := mi["Slab"]; ok {
+		// If detailed slab information isn't present, fall back to slab total.
+		return mt - (mf + mb + mc + st)
+	}
+	return -1
 }
 
 func memorySupportedPageSizes(hpDir string) ([]uint64, error) {
