@@ -22,6 +22,7 @@ jobs:
          allowed-endpoints: >
            github.com:443
            api.github.com:443
+           proxy.github.com:443
            raw.githubusercontent.com:443
            objects.githubusercontent.com:443
      - name: checkout code
@@ -29,7 +30,7 @@ jobs:
      - name: setup go
        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
        with:
-         go-version: 1.19
+         go-version: 1.21
      - name: lint
        uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299 # v3.6.0
        with:
