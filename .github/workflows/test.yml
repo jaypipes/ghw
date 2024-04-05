@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.19', '1.20']
+        go: [ '1.19', '1.20', '1.21']
     steps:
      - name: harden runner
        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
@@ -26,6 +26,10 @@ jobs:
          disable-sudo: true
          allowed-endpoints: >
            github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
      - name: checkout code
        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
      - name: setup go
@@ -51,6 +55,10 @@ jobs:
          disable-sudo: true
          allowed-endpoints: >
            github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
      - name: checkout code
        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
      - name: setup go
@@ -67,7 +75,7 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        go: [ '1.19' ]
+        go: [ '1.20', '1.21' ]
     steps:
      - name: harden runner
        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
@@ -76,6 +84,10 @@ jobs:
          disable-sudo: true
          allowed-endpoints: >
            github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
      - name: checkout code
        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
      - name: setup go
@@ -98,7 +110,7 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        go: [ '1.18' ]
+        go: [ '1.19' ]
     steps:
      - name: harden runner
        uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
@@ -107,6 +119,10 @@ jobs:
          disable-sudo: true
          allowed-endpoints: >
            github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
      - name: checkout code
        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
      - name: setup go
@@ -145,6 +161,10 @@ jobs:
          disable-sudo: true
          allowed-endpoints: >
            github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
      - name: checkout code
        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
      - name: setup go
