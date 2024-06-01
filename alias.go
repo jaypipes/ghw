@@ -47,13 +47,20 @@ var (
 
 type MemoryArea = memory.Area
 type MemoryInfo = memory.Info
+type MemoryCache = memory.Cache
 type MemoryCacheType = memory.CacheType
 type MemoryModule = memory.Module
 
 const (
-	MEMORY_CACHE_TYPE_UNIFIED     = memory.CACHE_TYPE_UNIFIED
+	MemoryCacheTypeUnified = memory.CacheTypeUnified
+	// DEPRECATED: Please use MemoryCacheTypeUnified
+	MEMORY_CACHE_TYPE_UNIFIED  = memory.CACHE_TYPE_UNIFIED
+	MemoryCacheTypeInstruction = memory.CacheTypeInstruction
+	// DEPRECATED: Please use MemoryCacheTypeInstruction
 	MEMORY_CACHE_TYPE_INSTRUCTION = memory.CACHE_TYPE_INSTRUCTION
-	MEMORY_CACHE_TYPE_DATA        = memory.CACHE_TYPE_DATA
+	MemoryCacheTypeData           = memory.CacheTypeData
+	// DEPRECATED: Please use MemoryCacheTypeData
+	MEMORY_CACHE_TYPE_DATA = memory.CACHE_TYPE_DATA
 )
 
 var (
@@ -71,22 +78,44 @@ var (
 type DriveType = block.DriveType
 
 const (
+	DriveTypeUnknown = block.DriveTypeUnknown
+	// DEPRECATED: Please use DriveTypeUnknown
 	DRIVE_TYPE_UNKNOWN = block.DRIVE_TYPE_UNKNOWN
-	DRIVE_TYPE_HDD     = block.DRIVE_TYPE_HDD
-	DRIVE_TYPE_FDD     = block.DRIVE_TYPE_FDD
-	DRIVE_TYPE_ODD     = block.DRIVE_TYPE_ODD
-	DRIVE_TYPE_SSD     = block.DRIVE_TYPE_SSD
+	DriveTypeHDD       = block.DriveTypeHDD
+	// DEPRECATED: Please use DriveTypeHDD
+	DRIVE_TYPE_HDD = block.DRIVE_TYPE_HDD
+	DriveTypeFDD   = block.DriveTypeFDD
+	// DEPRECATED: Please use DriveTypeFDD
+	DRIVE_TYPE_FDD = block.DRIVE_TYPE_FDD
+	DriveTypeODD   = block.DriveTypeODD
+	// DEPRECATED: Please use DriveTypeODD
+	DRIVE_TYPE_ODD = block.DRIVE_TYPE_ODD
+	DriveTypeSSD   = block.DriveTypeSSD
+	// DEPRECATED: Please use DriveTypeSSD
+	DRIVE_TYPE_SSD = block.DRIVE_TYPE_SSD
 )
 
 type StorageController = block.StorageController
 
 const (
+	StorageControllerUnknown = block.StorageControllerUnknown
+	// DEPRECATED: Please use StorageControllerUnknown
 	STORAGE_CONTROLLER_UNKNOWN = block.STORAGE_CONTROLLER_UNKNOWN
-	STORAGE_CONTROLLER_IDE     = block.STORAGE_CONTROLLER_IDE
-	STORAGE_CONTROLLER_SCSI    = block.STORAGE_CONTROLLER_SCSI
-	STORAGE_CONTROLLER_NVME    = block.STORAGE_CONTROLLER_NVME
-	STORAGE_CONTROLLER_VIRTIO  = block.STORAGE_CONTROLLER_VIRTIO
-	STORAGE_CONTROLLER_MMC     = block.STORAGE_CONTROLLER_MMC
+	StorageControllerIDE       = block.StorageControllerIDE
+	// DEPRECATED: Please use StorageControllerIDE
+	STORAGE_CONTROLLER_IDE = block.STORAGE_CONTROLLER_IDE
+	StorageControllerSCSI  = block.StorageControllerSCSI
+	// DEPRECATED: Please use StorageControllerSCSI
+	STORAGE_CONTROLLER_SCSI = block.STORAGE_CONTROLLER_SCSI
+	StorageControllerNVMe   = block.StorageControllerNVMe
+	// DEPRECATED: Please use StorageControllerNVMe
+	STORAGE_CONTROLLER_NVME = block.STORAGE_CONTROLLER_NVME
+	StorageControllerVirtIO = block.StorageControllerVirtIO
+	// DEPRECATED: Please use StorageControllerVirtIO
+	STORAGE_CONTROLLER_VIRTIO = block.STORAGE_CONTROLLER_VIRTIO
+	StorageControllerMMC      = block.StorageControllerMMC
+	// DEPRECATED: Please use StorageControllerMMC
+	STORAGE_CONTROLLER_MMC = block.STORAGE_CONTROLLER_MMC
 )
 
 type NetworkInfo = net.Info

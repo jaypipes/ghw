@@ -185,9 +185,9 @@ func makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, e
 // driveTypeFromPlist looks at the supplied property list struct and attempts to
 // determine the disk type
 func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
-	dt := DRIVE_TYPE_HDD
+	dt := DriveTypeHDD
 	if infoPlist.SolidState {
-		dt = DRIVE_TYPE_SSD
+		dt = DriveTypeSSD
 	}
 	// TODO(jaypipes): Figure out how to determine floppy and/or CD/optical
 	// drive type on Mac
@@ -197,9 +197,9 @@ func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
 // storageControllerFromPlist looks at the supplied property list struct and
 // attempts to determine the storage controller in use for the device
 func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController {
-	sc := STORAGE_CONTROLLER_SCSI
+	sc := StorageControllerSCSI
 	if strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController") {
-		sc = STORAGE_CONTROLLER_NVME
+		sc = StorageControllerNVMe
 	}
 	// TODO(jaypipes): I don't know if Mac even supports IDE controllers and
 	// the "virtio" controller is libvirt-specific
@@ -217,7 +217,7 @@ func (info *Info) load() error {
 		return err
 	}
 
-	info.TotalPhysicalBytes = 0
+	var tsb uint64
 	info.Disks = make([]*Disk, 0, len(listPlist.AllDisksAndPartitions))
 	info.Partitions = []*Partition{}
 
@@ -258,6 +258,7 @@ func (info *Info) load() error {
 			Model:                  ioregPlist.ModelNumber,
 			SerialNumber:           ioregPlist.SerialNumber,
 			WWN:                    "",
+			WWNNoExtension:         "",
 			Partitions:             make([]*Partition, 0, len(disk.Partitions)+len(disk.APFSVolumes)),
 		}
 
@@ -278,10 +279,12 @@ func (info *Info) load() error {
 			diskReport.Partitions = append(diskReport.Partitions, part)
 		}
 
-		info.TotalPhysicalBytes += uint64(disk.Size)
+		tsb += uint64(disk.Size)
 		info.Disks = append(info.Disks, diskReport)
 		info.Partitions = append(info.Partitions, diskReport.Partitions...)
 	}
+	info.TotalSizeBytes = tsb
+	info.TotalPhysicalBytes = tsb
 
 	return nil
 }

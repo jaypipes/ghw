@@ -6,7 +6,6 @@
 package pci
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,10 +43,8 @@ func (i *Info) load() error {
 	if err != nil {
 		return err
 	}
-	i.Classes = db.Classes
-	i.Vendors = db.Vendors
-	i.Products = db.Products
-	i.Devices = i.ListDevices()
+	i.db = db
+	i.Devices = i.getDevices()
 	return nil
 }
 
@@ -71,7 +68,7 @@ func getDeviceRevision(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	if _, err := os.Stat(revisionPath); err != nil {
 		return ""
 	}
-	revision, err := ioutil.ReadFile(revisionPath)
+	revision, err := os.ReadFile(revisionPath)
 	if err != nil {
 		return ""
 	}
@@ -125,7 +122,7 @@ func parseModaliasFile(fp string) *deviceModaliasInfo {
 	if _, err := os.Stat(fp); err != nil {
 		return nil
 	}
-	data, err := ioutil.ReadFile(fp)
+	data, err := os.ReadFile(fp)
 	if err != nil {
 		return nil
 	}
@@ -160,9 +157,9 @@ func parseModaliasData(data string) *deviceModaliasInfo {
 	productID := strings.ToLower(data[18:22])
 	subvendorID := strings.ToLower(data[28:32])
 	subproductID := strings.ToLower(data[38:42])
-	classID := data[44:46]
-	subclassID := data[48:50]
-	progIfaceID := data[51:53]
+	classID := strings.ToLower(data[44:46])
+	subclassID := strings.ToLower(data[48:50])
+	progIfaceID := strings.ToLower(data[51:53])
 	return &deviceModaliasInfo{
 		vendorID:     vendorID,
 		productID:    productID,
@@ -179,7 +176,7 @@ func parseModaliasData(data string) *deviceModaliasInfo {
 // pcidb.Vendor struct populated with "unknown" vendor Name attribute and
 // empty Products attribute.
 func findPCIVendor(info *Info, vendorID string) *pcidb.Vendor {
-	vendor := info.Vendors[vendorID]
+	vendor := info.db.Vendors[vendorID]
 	if vendor == nil {
 		return &pcidb.Vendor{
 			ID:       vendorID,
@@ -199,7 +196,7 @@ func findPCIProduct(
 	vendorID string,
 	productID string,
 ) *pcidb.Product {
-	product := info.Products[vendorID+productID]
+	product := info.db.Products[vendorID+productID]
 	if product == nil {
 		return &pcidb.Product{
 			ID:         productID,
@@ -221,8 +218,8 @@ func findPCISubsystem(
 	subvendorID string,
 	subproductID string,
 ) *pcidb.Product {
-	product := info.Products[vendorID+productID]
-	subvendor := info.Vendors[subvendorID]
+	product := info.db.Products[vendorID+productID]
+	subvendor := info.db.Vendors[subvendorID]
 	if subvendor != nil && product != nil {
 		for _, p := range product.Subsystems {
 			if p.ID == subproductID {
@@ -242,7 +239,7 @@ func findPCISubsystem(
 // pcidb.Class struct populated with "unknown" class Name attribute and
 // empty Subclasses attribute.
 func findPCIClass(info *Info, classID string) *pcidb.Class {
-	class := info.Classes[classID]
+	class := info.db.Classes[classID]
 	if class == nil {
 		return &pcidb.Class{
 			ID:         classID,
@@ -262,7 +259,7 @@ func findPCISubclass(
 	classID string,
 	subclassID string,
 ) *pcidb.Subclass {
-	class := info.Classes[classID]
+	class := info.db.Classes[classID]
 	if class != nil {
 		for _, sc := range class.Subclasses {
 			if sc.ID == subclassID {
@@ -346,7 +343,10 @@ func (info *Info) ParseDevice(address, modalias string) *Device {
 	return info.getDeviceFromModaliasInfo(address, modaliasInfo)
 }
 
-func (info *Info) getDeviceFromModaliasInfo(address string, modaliasInfo *deviceModaliasInfo) *Device {
+func (info *Info) getDeviceFromModaliasInfo(
+	address string,
+	modaliasInfo *deviceModaliasInfo,
+) *Device {
 	vendor := findPCIVendor(info, modaliasInfo.vendorID)
 	product := findPCIProduct(
 		info,
@@ -384,18 +384,16 @@ func (info *Info) getDeviceFromModaliasInfo(address string, modaliasInfo *device
 	}
 }
 
-// ListDevices returns a list of pointers to Device structs present on the
+// getDevices returns a list of pointers to Device structs present on the
 // host system
-// DEPRECATED. Will be removed in v1.0. Please use
-// github.com/jaypipes/pcidb to explore PCIDB information
-func (info *Info) ListDevices() []*Device {
+func (info *Info) getDevices() []*Device {
 	paths := linuxpath.New(info.ctx)
 	devs := make([]*Device, 0)
 	// We scan the /sys/bus/pci/devices directory which contains a collection
 	// of symlinks. The names of the symlinks are all the known PCI addresses
 	// for the host. For each address, we grab a *Device matching the
 	// address and append to the returned array.
-	links, err := ioutil.ReadDir(paths.SysBusPciDevices)
+	links, err := os.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
 		info.ctx.Warn("failed to read /sys/bus/pci/devices")
 		return nil

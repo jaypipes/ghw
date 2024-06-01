@@ -17,6 +17,10 @@ import (
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
+// Module describes a single physical memory module for a host system. Pretty
+// much all modern systems contain dual in-line memory modules (DIMMs).
+//
+// See https://en.wikipedia.org/wiki/DIMM
 type Module struct {
 	Label        string `json:"label"`
 	Location     string `json:"location"`
@@ -25,6 +29,10 @@ type Module struct {
 	Vendor       string `json:"vendor"`
 }
 
+// Area describes a set of physical memory on a host system. Non-NUMA systems
+// will almost always have a single memory area containing all memory the
+// system can use. NUMA systems will have multiple memory areas, one or more
+// for each NUMA node/cell in the system.
 type Area struct {
 	TotalPhysicalBytes int64 `json:"total_physical_bytes"`
 	TotalUsableBytes   int64 `json:"total_usable_bytes"`
@@ -33,6 +41,8 @@ type Area struct {
 	Modules            []*Module `json:"modules"`
 }
 
+// String returns a short string with a summary of information for this memory
+// area
 func (a *Area) String() string {
 	tpbs := util.UNKNOWN
 	if a.TotalPhysicalBytes > 0 {
@@ -51,11 +61,13 @@ func (a *Area) String() string {
 	return fmt.Sprintf("memory (%s physical, %s usable)", tpbs, tubs)
 }
 
+// Info contains information about the memory on a host system.
 type Info struct {
 	ctx *context.Context
 	Area
 }
 
+// New returns an Info struct that describes the memory on a host system.
 func New(opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
 	info := &Info{ctx: ctx}
@@ -65,6 +77,7 @@ func New(opts ...*option.Option) (*Info, error) {
 	return info, nil
 }
 
+// String returns a short string with a summary of memory information
 func (i *Info) String() string {
 	return i.Area.String()
 }

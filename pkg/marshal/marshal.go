@@ -9,28 +9,36 @@ package marshal
 import (
 	"encoding/json"
 
-	"github.com/ghodss/yaml"
 	"github.com/jaypipes/ghw/pkg/context"
+	yaml "gopkg.in/yaml.v3"
 )
 
-// safeYAML returns a string after marshalling the supplied parameter into YAML
+// SafeYAML returns a string after marshalling the supplied parameter into YAML.
 func SafeYAML(ctx *context.Context, p interface{}) string {
 	b, err := json.Marshal(p)
 	if err != nil {
 		ctx.Warn("error marshalling JSON: %s", err)
 		return ""
 	}
-	yb, err := yaml.JSONToYAML(b)
-	if err != nil {
+
+	var jsonObj interface{}
+	if err := yaml.Unmarshal(b, &jsonObj); err != nil {
 		ctx.Warn("error converting JSON to YAML: %s", err)
 		return ""
 	}
+
+	yb, err := yaml.Marshal(jsonObj)
+	if err != nil {
+		ctx.Warn("error marshalling YAML: %s", err)
+		return ""
+	}
+
 	return string(yb)
 }
 
-// safeJSON returns a string after marshalling the supplied parameter into
+// SafeJSON returns a string after marshalling the supplied parameter into
 // JSON. Accepts an optional argument to trigger pretty/indented formatting of
-// the JSON string
+// the JSON string.
 func SafeJSON(ctx *context.Context, p interface{}, indent bool) string {
 	var b []byte
 	var err error

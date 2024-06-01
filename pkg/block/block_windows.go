@@ -7,6 +7,7 @@ package block
 
 import (
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 	"unsafe"
@@ -15,6 +16,29 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/util"
 )
+
+type physicalDiskMediaType int
+
+const (
+	physicalDiskMediaTypeUnspecified physicalDiskMediaType = 0
+	physicalDiskMediaTypeHDD         physicalDiskMediaType = 3
+	physicalDiskMediaTypeSSD         physicalDiskMediaType = 4
+	physicalDiskMediaTypeSCM         physicalDiskMediaType = 5
+)
+
+func (dt physicalDiskMediaType) ToDriveType() DriveType {
+	switch dt {
+	case physicalDiskMediaTypeUnspecified:
+		return DriveTypeUnknown
+	case physicalDiskMediaTypeHDD:
+		return DriveTypeHDD
+	case physicalDiskMediaTypeSSD:
+		return DriveTypeSSD
+	case physicalDiskMediaTypeSCM:
+		return DriveTypeUnknown
+	}
+	return DriveTypeUnknown
+}
 
 const wqlDiskDrive = "SELECT Caption, CreationClassName, DefaultBlockSize, Description, DeviceID, Index, InterfaceType, Manufacturer, MediaType, Model, Name, Partitions, SerialNumber, Size, TotalCylinders, TotalHeads, TotalSectors, TotalTracks, TracksPerCylinder FROM Win32_DiskDrive"
 
@@ -78,6 +102,13 @@ type win32LogicalDisk struct {
 	SystemName        *string
 }
 
+const wqlPhysicalDisk = "SELECT DeviceId, MediaType FROM MSFT_PhysicalDisk"
+
+type win32PhysicalDisk struct {
+	DeviceId  string
+	MediaType physicalDiskMediaType
+}
+
 func (i *Info) load() error {
 	win32DiskDriveDescriptions, err := getDiskDrives()
 	if err != nil {
@@ -99,14 +130,27 @@ func (i *Info) load() error {
 		return err
 	}
 
+	win32PhysicalDisks, err := getPhysicalDisks()
+	if err != nil {
+		return err
+	}
+
 	// Converting into standard structures
 	disks := make([]*Disk, 0)
 	for _, diskdrive := range win32DiskDriveDescriptions {
+		var physicalDiskMediaType physicalDiskMediaType
+		for _, physicalDisk := range win32PhysicalDisks {
+			if id, err := strconv.Atoi(physicalDisk.DeviceId); err != nil {
+				return err
+			} else if uint32(id) == *diskdrive.Index {
+				physicalDiskMediaType = physicalDisk.MediaType
+			}
+		}
 		disk := &Disk{
 			Name:                   strings.TrimSpace(*diskdrive.DeviceID),
 			SizeBytes:              *diskdrive.Size,
 			PhysicalBlockSizeBytes: *diskdrive.DefaultBlockSize,
-			DriveType:              toDriveType(*diskdrive.MediaType, *diskdrive.Caption),
+			DriveType:              toDriveType(physicalDiskMediaType, *diskdrive.MediaType, *diskdrive.Caption),
 			StorageController:      toStorageController(*diskdrive.InterfaceType),
 			BusPath:                util.UNKNOWN, // TODO: add information
 			NUMANodeID:             -1,
@@ -114,11 +158,15 @@ func (i *Info) load() error {
 			Model:                  strings.TrimSpace(*diskdrive.Caption),
 			SerialNumber:           strings.TrimSpace(*diskdrive.SerialNumber),
 			WWN:                    util.UNKNOWN, // TODO: add information
+			WWNNoExtension:         util.UNKNOWN, // TODO: add information
 			Partitions:             make([]*Partition, 0),
 		}
 		for _, diskpartition := range win32DiskPartitionDescriptions {
 			// Finding disk partition linked to current disk drive
-			if diskdrive.Index == diskpartition.DiskIndex {
+			if diskdrive.Index == nil || diskpartition.DiskIndex == nil {
+				continue
+			}
+			if *diskdrive.Index == *diskpartition.DiskIndex {
 				disk.PhysicalBlockSizeBytes = *diskpartition.BlockSize
 				// Finding logical partition linked to current disk partition
 				for _, logicaldisk := range win32LogicalDiskDescriptions {
@@ -147,11 +195,12 @@ func (i *Info) load() error {
 	}
 
 	i.Disks = disks
-	var tpb uint64
+	var tsb uint64
 	for _, d := range i.Disks {
-		tpb += d.SizeBytes
+		tsb += d.SizeBytes
 	}
-	i.TotalPhysicalBytes = tpb
+	i.TotalSizeBytes = tsb
+	i.TotalPhysicalBytes = tsb
 	return nil
 }
 
@@ -211,15 +260,28 @@ func getLogicalDisks() ([]win32LogicalDisk, error) {
 	return win32LogicalDiskDescriptions, nil
 }
 
-func toDriveType(mediaType string, caption string) DriveType {
+func getPhysicalDisks() ([]win32PhysicalDisk, error) {
+	// Getting physical disks from WMI
+	var win32PhysicalDisks []win32PhysicalDisk
+	if err := wmi.QueryNamespace(wqlPhysicalDisk, &win32PhysicalDisks, "root\\Microsoft\\Windows\\Storage"); err != nil {
+		return nil, err
+	}
+	return win32PhysicalDisks, nil
+}
+
+func toDriveType(physicalDiskMediaType physicalDiskMediaType, mediaType string, caption string) DriveType {
+	if driveType := physicalDiskMediaType.ToDriveType(); driveType != DriveTypeUnknown {
+		return driveType
+	}
+
 	mediaType = strings.ToLower(mediaType)
 	caption = strings.ToLower(caption)
 	if strings.Contains(mediaType, "fixed") || strings.Contains(mediaType, "ssd") || strings.Contains(caption, "ssd") {
-		return DRIVE_TYPE_SSD
+		return DriveTypeSSD
 	} else if strings.ContainsAny(mediaType, "hdd") {
-		return DRIVE_TYPE_HDD
+		return DriveTypeHDD
 	}
-	return DRIVE_TYPE_UNKNOWN
+	return DriveTypeUnknown
 }
 
 // TODO: improve
@@ -227,11 +289,11 @@ func toStorageController(interfaceType string) StorageController {
 	var storageController StorageController
 	switch interfaceType {
 	case "SCSI":
-		storageController = STORAGE_CONTROLLER_SCSI
+		storageController = StorageControllerSCSI
 	case "IDE":
-		storageController = STORAGE_CONTROLLER_IDE
+		storageController = StorageControllerIDE
 	default:
-		storageController = STORAGE_CONTROLLER_UNKNOWN
+		storageController = StorageControllerUnknown
 	}
 	return storageController
 }

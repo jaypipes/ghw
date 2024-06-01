@@ -45,10 +45,10 @@ func nics(win32NetDescriptions []win32NetworkAdapter) []*NIC {
 		nic := &NIC{
 			Name:         netDeviceName(nicDescription),
 			MacAddress:   *nicDescription.MACAddress,
+			MACAddress:   *nicDescription.MACAddress,
 			IsVirtual:    netIsVirtual(nicDescription),
 			Capabilities: []*NICCapability{},
 		}
-		// Appenging NIC to NICs
 		nics = append(nics, nic)
 	}
 

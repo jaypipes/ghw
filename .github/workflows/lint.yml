@@ -1,0 +1,40 @@
+name: lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: read # needed for only-new-issues option below
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@55d479fb1c5bcad5a4f9099a5d9f37c8857b2845 # v2.4.1
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
+           proxy.golang.org:443
+     - name: checkout code
+       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+     - name: setup go
+       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       with:
+         go-version: 1.21
+     - name: lint
+       uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299 # v3.6.0
+       with:
+         version: v1.53
+         args: --timeout=5m0s --verbose
+         only-new-issues: true

@@ -8,7 +8,6 @@ package memory
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -35,7 +34,7 @@ func CachesForNode(ctx *context.Context, nodeID int) ([]*Cache, error) {
 	)
 	caches := make(map[string]*Cache)
 
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +65,7 @@ func CachesForNode(ctx *context.Context, nodeID int) ([]*Cache, error) {
 		if _, err = os.Stat(cachePath); errors.Is(err, os.ErrNotExist) {
 			continue
 		}
-		cacheDirFiles, err := ioutil.ReadDir(cachePath)
+		cacheDirFiles, err := os.ReadDir(cachePath)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +119,7 @@ func memoryCacheLevel(ctx *context.Context, paths *linuxpath.Paths, nodeID int, 
 		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"level",
 	)
-	levelContents, err := ioutil.ReadFile(levelPath)
+	levelContents, err := os.ReadFile(levelPath)
 	if err != nil {
 		ctx.Warn("%s", err)
 		return -1
@@ -140,7 +139,7 @@ func memoryCacheSize(ctx *context.Context, paths *linuxpath.Paths, nodeID int, l
 		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"size",
 	)
-	sizeContents, err := ioutil.ReadFile(sizePath)
+	sizeContents, err := os.ReadFile(sizePath)
 	if err != nil {
 		ctx.Warn("%s", err)
 		return -1
@@ -159,18 +158,18 @@ func memoryCacheType(ctx *context.Context, paths *linuxpath.Paths, nodeID int, l
 		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"type",
 	)
-	cacheTypeContents, err := ioutil.ReadFile(typePath)
+	cacheTypeContents, err := os.ReadFile(typePath)
 	if err != nil {
 		ctx.Warn("%s", err)
-		return CACHE_TYPE_UNIFIED
+		return CacheTypeUnified
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
 	case "Data":
-		return CACHE_TYPE_DATA
+		return CacheTypeData
 	case "Instruction":
-		return CACHE_TYPE_INSTRUCTION
+		return CacheTypeInstruction
 	default:
-		return CACHE_TYPE_UNIFIED
+		return CacheTypeUnified
 	}
 }
 
@@ -179,7 +178,7 @@ func memoryCacheSharedCPUMap(ctx *context.Context, paths *linuxpath.Paths, nodeI
 		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
 		"shared_cpu_map",
 	)
-	sharedCpuMap, err := ioutil.ReadFile(scpuPath)
+	sharedCpuMap, err := os.ReadFile(scpuPath)
 	if err != nil {
 		ctx.Warn("%s", err)
 		return ""

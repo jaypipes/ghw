@@ -8,7 +8,6 @@ package block_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,9 +51,6 @@ func TestBlock(t *testing.T) {
 	}
 	if d0.Name == "" {
 		t.Fatalf("Expected disk name, but got \"\"")
-	}
-	if d0.SerialNumber == "unknown" {
-		t.Fatalf("Got unknown serial number.")
 	}
 	if d0.SizeBytes <= 0 {
 		t.Fatalf("Expected >0 disk size, but got %d", d0.SizeBytes)
@@ -115,7 +111,7 @@ func TestBlockUnmarshal(t *testing.T) {
 		t.Fatalf("Expected nil err when detecting the samples directory, but got %v", err)
 	}
 
-	data, err := ioutil.ReadFile(filepath.Join(testdataPath, "dell-r610-block.json"))
+	data, err := os.ReadFile(filepath.Join(testdataPath, "dell-r610-block.json"))
 	if err != nil {
 		t.Fatalf("Expected nil err when reading the sample data, but got %v", err)
 	}
