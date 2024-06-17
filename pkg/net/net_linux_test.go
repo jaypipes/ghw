@@ -18,6 +18,10 @@ import (
 	"github.com/safchain/ethtool"
 )
 
+func TestAlwaysFailUntilWeFigureOutTheOutputDifferences(t *testing.T) {
+	t.Fail()
+}
+
 func TestNetDeviceCapabilitiesFromEthHandle(t *testing.T) {
 	type testCase struct {
 		name string
