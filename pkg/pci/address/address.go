@@ -13,7 +13,7 @@ import (
 
 var (
 	regexAddress *regexp.Regexp = regexp.MustCompile(
-		`^(([0-9a-f]{0,8}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
+		`^((1?[0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
 	)
 )
 
@@ -32,7 +32,7 @@ func (addr *Address) String() string {
 
 // FromString returns [Address] from an address string in either
 // $BUS:$DEVICE.$FUNCTION (BDF) format or a full PCI address that
-// includes the $DOMAIN: $DOMAIN:$BUS:$DEVICE.$FUNCTION.
+// includes the domain: $DOMAIN:$BUS:$DEVICE.$FUNCTION.
 //
 // If the address string isn't a valid PCI address, then nil is returned.
 func FromString(address string) *Address {
