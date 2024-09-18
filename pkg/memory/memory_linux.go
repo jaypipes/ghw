@@ -59,16 +59,16 @@ func (i *Info) load() error {
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)
 	i.DefaultHugePageSize, _ = memoryDefaultHPSizeFromPath(paths.ProcMeminfo)
-	i.HugeTLBSize, _ = memoryHugeTLBFromPath(paths.ProcMeminfo)
-	hugePage := make(map[uint64]*HugePage)
+	i.TotalHugePageBytes, _ = memoryHugeTLBFromPath(paths.ProcMeminfo)
+	hugePageAmounts := make(map[uint64]*HugePageAmounts)
 	for _, p := range i.SupportedPageSizes {
 		info, err := memoryHPInfo(paths.SysKernelMMHugepages, p)
 		if err != nil {
 			return err
 		}
-		hugePage[p] = info
+		hugePageAmounts[p] = info
 	}
-	i.HugePages = hugePage
+	i.HugePageAmountsBySize = hugePageAmounts
 	return nil
 }
 
@@ -116,27 +116,27 @@ func AreaForNode(ctx *context.Context, nodeID int) (*Area, error) {
 		return nil, err
 	}
 
-	hugeTlb, err := memoryHugeTLBFromPath(paths.ProcMeminfo)
+	totHPSize, err := memoryHugeTLBFromPath(paths.ProcMeminfo)
 	if err != nil {
 		return nil, err
 	}
 
-	hugePages := make(map[uint64]*HugePage)
+	hugePageAmounts := make(map[uint64]*HugePageAmounts)
 	for _, p := range supportedHP {
 		info, err := memoryHPInfo(filepath.Join(path, "hugepages"), p)
 		if err != nil {
 			return nil, err
 		}
-		hugePages[p] = info
+		hugePageAmounts[p] = info
 	}
 
 	return &Area{
-		TotalPhysicalBytes:  totPhys,
-		TotalUsableBytes:    totUsable,
-		SupportedPageSizes:  supportedHP,
-		DefaultHugePageSize: defHPSize,
-		HugeTLBSize:         hugeTlb,
-		HugePages:           hugePages,
+		TotalPhysicalBytes:    totPhys,
+		TotalUsableBytes:      totUsable,
+		SupportedPageSizes:    supportedHP,
+		DefaultHugePageSize:   defHPSize,
+		TotalHugePageBytes:    totHPSize,
+		HugePageAmountsBySize: hugePageAmounts,
 	}, nil
 }
 
@@ -301,7 +301,7 @@ func memorySupportedPageSizes(hpDir string) ([]uint64, error) {
 	return out, nil
 }
 
-func memoryHPInfo(hpDir string, sizeBytes uint64) (*HugePage, error) {
+func memoryHPInfo(hpDir string, sizeBytes uint64) (*HugePageAmounts, error) {
 	// In linux huge page info can be obtained in several places
 	// /sys/kernel/mm/hugepages/hugepages-{pagesize}kb/ directory, which contains
 	//		nr_hugepages
@@ -356,7 +356,7 @@ func memoryHPInfo(hpDir string, sizeBytes uint64) (*HugePage, error) {
 		}
 	}
 
-	return &HugePage{
+	return &HugePageAmounts{
 		Total:    total,
 		Free:     free,
 		Surplus:  surplus,

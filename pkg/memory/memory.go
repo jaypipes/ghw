@@ -29,8 +29,8 @@ type Module struct {
 	Vendor       string `json:"vendor"`
 }
 
-// HugePage describes huge page info
-type HugePage struct {
+// HugePageAmounts describes huge page info
+type HugePageAmounts struct {
 	Total   int64 `json:"total"`
 	Free    int64 `json:"free"`
 	Surplus int64 `json:"surplus"`
@@ -47,13 +47,13 @@ type Area struct {
 	TotalUsableBytes   int64 `json:"total_usable_bytes"`
 	// An array of sizes, in bytes, of memory pages supported in this area
 	SupportedPageSizes []uint64 `json:"supported_page_sizes"`
-	// Default system huge pages size, in bytes
+	// Default system huge page size, in bytes
 	DefaultHugePageSize uint64 `json:"default_huge_page_size"`
-	// Amount of memory, in bytes, consumed by huge pages of all sizes.
-	HugeTLBSize int64 `json:"huge_tlb_size"`
+	// Amount of memory, in bytes, consumed by huge pages of all sizes
+	TotalHugePageBytes int64 `json:"total_huge_page_bytes"`
 	// Huge page info by size
-	HugePages map[uint64]*HugePage `json:"huge_pages"`
-	Modules   []*Module            `json:"modules"`
+	HugePageAmountsBySize map[uint64]*HugePageAmounts `json:"huge_page_amounts_by_size"`
+	Modules               []*Module                   `json:"modules"`
 }
 
 // String returns a short string with a summary of information for this memory
