@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -57,6 +58,17 @@ func (i *Info) load() error {
 		i.TotalPhysicalBytes = tub
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)
+	i.DefaultHugePageSize, _ = memoryDefaultHPSizeFromPath(paths.ProcMeminfo)
+	i.TotalHugePageBytes, _ = memoryHugeTLBFromPath(paths.ProcMeminfo)
+	hugePageAmounts := make(map[uint64]*HugePageAmounts)
+	for _, p := range i.SupportedPageSizes {
+		info, err := memoryHPInfo(paths.SysKernelMMHugepages, p)
+		if err != nil {
+			return err
+		}
+		hugePageAmounts[p] = info
+	}
+	i.HugePageAmountsBySize = hugePageAmounts
 	return nil
 }
 
@@ -99,10 +111,32 @@ func AreaForNode(ctx *context.Context, nodeID int) (*Area, error) {
 		return nil, err
 	}
 
+	defHPSize, err := memoryDefaultHPSizeFromPath(paths.ProcMeminfo)
+	if err != nil {
+		return nil, err
+	}
+
+	totHPSize, err := memoryHugeTLBFromPath(paths.ProcMeminfo)
+	if err != nil {
+		return nil, err
+	}
+
+	hugePageAmounts := make(map[uint64]*HugePageAmounts)
+	for _, p := range supportedHP {
+		info, err := memoryHPInfo(filepath.Join(path, "hugepages"), p)
+		if err != nil {
+			return nil, err
+		}
+		hugePageAmounts[p] = info
+	}
+
 	return &Area{
-		TotalPhysicalBytes: totPhys,
-		TotalUsableBytes:   totUsable,
-		SupportedPageSizes: supportedHP,
+		TotalPhysicalBytes:    totPhys,
+		TotalUsableBytes:      totUsable,
+		SupportedPageSizes:    supportedHP,
+		DefaultHugePageSize:   defHPSize,
+		TotalHugePageBytes:    totHPSize,
+		HugePageAmountsBySize: hugePageAmounts,
 	}, nil
 }
 
@@ -243,7 +277,113 @@ func memTotalUsableBytes(paths *linuxpath.Paths) int64 {
 	return amount
 }
 
+func memorySupportedPageSizes(hpDir string) ([]uint64, error) {
+	// In Linux, /sys/kernel/mm/hugepages contains a directory per page size
+	// supported by the kernel. The directory name corresponds to the pattern
+	// 'hugepages-{pagesize}kb'
+	out := make([]uint64, 0)
+
+	files, err := os.ReadDir(hpDir)
+	if err != nil {
+		return out, err
+	}
+	for _, file := range files {
+		parts := strings.Split(file.Name(), "-")
+		sizeStr := parts[1]
+		// Cut off the 'kb'
+		sizeStr = sizeStr[0 : len(sizeStr)-2]
+		size, err := strconv.Atoi(sizeStr)
+		if err != nil {
+			return out, err
+		}
+		out = append(out, uint64(size*int(unitutil.KB)))
+	}
+	return out, nil
+}
+
+func memoryHPInfo(hpDir string, sizeBytes uint64) (*HugePageAmounts, error) {
+	// In linux huge page info can be obtained in several places
+	// /sys/kernel/mm/hugepages/hugepages-{pagesize}kb/ directory, which contains
+	//		nr_hugepages
+	//		nr_hugepages_mempolicy
+	//		nr_overcommit_hugepages
+	//		free_hugepages
+	//		resv_hugepages
+	//		surplus_hugepages
+	// or NUMA specific data /sys/devices/system/node/node[0-9]*/hugepages/hugepages-{pagesize}kb/, which contains
+	//		nr_hugepages
+	//		free_hugepages
+	//		surplus_hugepages
+	targetPath := filepath.Join(hpDir, fmt.Sprintf("hugepages-%vkB", sizeBytes/uint64(unitutil.KB)))
+	files, err := os.ReadDir(targetPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		total    int64
+		free     int64
+		surplus  int64
+		reserved int64
+	)
+
+	for _, f := range files {
+		switch f.Name() {
+		case "nr_hugepages":
+			count, err := readFileToInt64(path.Join(targetPath, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			total = count
+		case "free_hugepages":
+			count, err := readFileToInt64(path.Join(targetPath, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			free = count
+		case "surplus_hugepages":
+			count, err := readFileToInt64(path.Join(targetPath, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			surplus = count
+		case "resv_hugepages":
+			count, err := readFileToInt64(path.Join(targetPath, f.Name()))
+			if err != nil {
+				return nil, err
+			}
+			reserved = count
+		}
+	}
+
+	return &HugePageAmounts{
+		Total:    total,
+		Free:     free,
+		Surplus:  surplus,
+		Reserved: reserved,
+	}, nil
+}
+
 func memoryTotalUsableBytesFromPath(meminfoPath string) (int64, error) {
+	const key = "MemTotal"
+	return getMemInfoField(meminfoPath, key)
+}
+
+func memoryDefaultHPSizeFromPath(meminfoPath string) (uint64, error) {
+	const key = "Hugepagesize"
+	got, err := getMemInfoField(meminfoPath, key)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(got), nil
+}
+
+func memoryHugeTLBFromPath(meminfoPath string) (int64, error) {
+	const key = "Hugetlb"
+	return getMemInfoField(meminfoPath, key)
+}
+
+func getMemInfoField(meminfoPath string, wantKey string) (int64, error) {
 	// In Linux, /proc/meminfo or its close relative
 	// /sys/devices/system/node/node*/meminfo
 	// contains a set of memory-related amounts, with
@@ -280,7 +420,7 @@ func memoryTotalUsableBytesFromPath(meminfoPath string) (int64, error) {
 		line := scanner.Text()
 		parts := strings.Split(line, ":")
 		key := parts[0]
-		if !strings.Contains(key, "MemTotal") {
+		if !strings.Contains(key, wantKey) {
 			continue
 		}
 		rawValue := parts[1]
@@ -294,29 +434,13 @@ func memoryTotalUsableBytesFromPath(meminfoPath string) (int64, error) {
 		}
 		return int64(value), nil
 	}
-	return -1, fmt.Errorf("failed to find MemTotal entry in path %q", meminfoPath)
+	return -1, fmt.Errorf("failed to find '%s' entry in path %q", wantKey, meminfoPath)
 }
 
-func memorySupportedPageSizes(hpDir string) ([]uint64, error) {
-	// In Linux, /sys/kernel/mm/hugepages contains a directory per page size
-	// supported by the kernel. The directory name corresponds to the pattern
-	// 'hugepages-{pagesize}kb'
-	out := make([]uint64, 0)
-
-	files, err := os.ReadDir(hpDir)
+func readFileToInt64(filename string) (int64, error) {
+	data, err := os.ReadFile(filename)
 	if err != nil {
-		return out, err
+		return -1, err
 	}
-	for _, file := range files {
-		parts := strings.Split(file.Name(), "-")
-		sizeStr := parts[1]
-		// Cut off the 'kb'
-		sizeStr = sizeStr[0 : len(sizeStr)-2]
-		size, err := strconv.Atoi(sizeStr)
-		if err != nil {
-			return out, err
-		}
-		out = append(out, uint64(size*int(unitutil.KB)))
-	}
-	return out, nil
+	return strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
 }

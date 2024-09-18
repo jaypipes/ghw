@@ -141,5 +141,11 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 		if node.Memory.TotalUsableBytes > node.Memory.TotalPhysicalBytes {
 			t.Fatalf("excessive usable size for node %d", node.ID)
 		}
+		if node.Memory.DefaultHugePageSize == 0 {
+			t.Fatalf("unexpected default HP size for node %d", node.ID)
+		}
+		if len(node.Memory.HugePageAmountsBySize) != 2 {
+			t.Fatalf("expected 2 huge page info records, but got '%d' for node %d", len(node.Memory.HugePageAmountsBySize), node.ID)
+		}
 	}
 }

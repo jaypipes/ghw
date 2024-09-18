@@ -29,6 +29,15 @@ type Module struct {
 	Vendor       string `json:"vendor"`
 }
 
+// HugePageAmounts describes huge page info
+type HugePageAmounts struct {
+	Total   int64 `json:"total"`
+	Free    int64 `json:"free"`
+	Surplus int64 `json:"surplus"`
+	// Note: this field will not be populated for Topology call, since data not present in NUMA folder structure
+	Reserved int64 `json:"reserved"`
+}
+
 // Area describes a set of physical memory on a host system. Non-NUMA systems
 // will almost always have a single memory area containing all memory the
 // system can use. NUMA systems will have multiple memory areas, one or more
@@ -37,8 +46,14 @@ type Area struct {
 	TotalPhysicalBytes int64 `json:"total_physical_bytes"`
 	TotalUsableBytes   int64 `json:"total_usable_bytes"`
 	// An array of sizes, in bytes, of memory pages supported in this area
-	SupportedPageSizes []uint64  `json:"supported_page_sizes"`
-	Modules            []*Module `json:"modules"`
+	SupportedPageSizes []uint64 `json:"supported_page_sizes"`
+	// Default system huge page size, in bytes
+	DefaultHugePageSize uint64 `json:"default_huge_page_size"`
+	// Amount of memory, in bytes, consumed by huge pages of all sizes
+	TotalHugePageBytes int64 `json:"total_huge_page_bytes"`
+	// Huge page info by size
+	HugePageAmountsBySize map[uint64]*HugePageAmounts `json:"huge_page_amounts_by_size"`
+	Modules               []*Module                   `json:"modules"`
 }
 
 // String returns a short string with a summary of information for this memory
