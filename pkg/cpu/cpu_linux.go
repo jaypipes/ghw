@@ -7,6 +7,7 @@ package cpu
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -66,8 +67,13 @@ func processorsGet(ctx *context.Context) []*Processor {
 		}
 
 		onlineFilePath := filepath.Join(paths.SysDevicesSystemCPU, fmt.Sprintf("cpu%d", lpID), onlineFile)
-		if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
-			continue
+		if _, err := os.Stat(onlineFilePath); err == nil {
+			if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
+				continue
+			}
+		} else if errors.Is(err, os.ErrNotExist) {
+			// Assume the CPU is online if the online state file doesn't exist
+			// (as is the case with older snapshots)
 		}
 		procID := processorIDFromLogicalProcessorID(ctx, lpID)
 		proc, found := procs[procID]
@@ -207,8 +213,13 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 			continue
 		}
 		onlineFilePath := filepath.Join(cpuPath, onlineFile)
-		if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
-			continue
+		if _, err := os.Stat(onlineFilePath); err == nil {
+			if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
+				continue
+			}
+		} else if errors.Is(err, os.ErrNotExist) {
+			// Assume the CPU is online if the online state file doesn't exist
+			// (as is the case with older snapshots)
 		}
 		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
 		coreID := util.SafeIntFromFile(ctx, coreIDPath)

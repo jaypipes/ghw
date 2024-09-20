@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/gpu"
+	"github.com/jaypipes/ghw/testdata"
 )
 
 func TestGPU(t *testing.T) {
@@ -21,6 +22,9 @@ func TestGPU(t *testing.T) {
 	if _, err := os.Stat("/sys/class/drm"); errors.Is(err, os.ErrNotExist) {
 		t.Skip("Skipping GPU tests. The environment has no /sys/class/drm directory.")
 	}
+
+	t.Setenv("PCIDB_PATH", testdata.PCIDBChroot())
+
 	info, err := gpu.New()
 	if err != nil {
 		t.Fatalf("Expected no error creating GPUInfo, but got %v", err)

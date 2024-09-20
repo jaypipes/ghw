@@ -32,6 +32,8 @@ func TestGPUWithoutNUMANodeInfo(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
+	t.Setenv("PCIDB_PATH", testdata.PCIDBChroot())
+
 	workstationSnapshot := filepath.Join(testdataPath, "linux-amd64-amd-ryzen-1600.tar.gz")
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
