@@ -8,6 +8,7 @@ package gpu
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -17,6 +18,12 @@ import (
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
+
+const (
+	validPCIAddress = `\b(0{0,4}:\d{2}:\d{2}.\d:?\w*)`
+)
+
+var reValidPCIAddress = regexp.MustCompile(validPCIAddress)
 
 const (
 	_WARN_NO_SYS_CLASS_DRM = `
@@ -83,8 +90,16 @@ func (i *Info) load() error {
 			continue
 		}
 		pathParts := strings.Split(dest, "/")
-		numParts := len(pathParts)
-		pciAddress := pathParts[numParts-3]
+		pciAddress := ""
+		for _, part := range pathParts {
+			if reValidPCIAddress.MatchString(part) {
+				pciAddress = part
+				break
+			}
+		}
+		if pciAddress == "" {
+			continue
+		}
 		card := &GraphicsCard{
 			Address: pciAddress,
 			Index:   cardIdx,
@@ -102,6 +117,7 @@ func (i *Info) load() error {
 func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
 	pci, err := pci.New(context.WithContext(ctx))
 	if err != nil {
+		ctx.Warn("failed to PCI device database: %s", err)
 		return
 	}
 	for _, card := range cards {
