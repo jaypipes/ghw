@@ -21,9 +21,9 @@ import (
 func (i *Info) load() error {
 	i.Nodes = topologyNodes(i.ctx)
 	if len(i.Nodes) == 1 {
-		i.Architecture = ARCHITECTURE_SMP
+		i.Architecture = ArchitectureSMP
 	} else {
-		i.Architecture = ARCHITECTURE_NUMA
+		i.Architecture = ArchitectureNUMA
 	}
 	return nil
 }

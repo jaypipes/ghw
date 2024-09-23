@@ -26,15 +26,24 @@ type Architecture int
 
 const (
 	// SMP is a Symmetric Multi-Processor system
-	ARCHITECTURE_SMP Architecture = iota
+	ArchitectureSMP Architecture = iota
 	// NUMA is a Non-Uniform Memory Access system
-	ARCHITECTURE_NUMA
+	ArchitectureNUMA
+)
+
+const (
+	// DEPRECATED: please use ArchitectureSMP.
+	// TODO(jaypipes): Remove before v1.0
+	ARCHITECTURE_SMP = ArchitectureSMP
+	// DEPRECATED: please use ArchitectureNUMA.
+	// TODO(jaypipes): Remove before v1.0
+	ARCHITECTURE_NUMA = ArchitectureNUMA
 )
 
 var (
 	architectureString = map[Architecture]string{
-		ARCHITECTURE_SMP:  "SMP",
-		ARCHITECTURE_NUMA: "NUMA",
+		ArchitectureSMP:  "SMP",
+		ArchitectureNUMA: "NUMA",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
@@ -43,8 +52,8 @@ var (
 	// Architecture:MarshalJSON.
 	// We use this table only in UnmarshalJSON, so it should be OK.
 	stringArchitecture = map[string]Architecture{
-		"smp":  ARCHITECTURE_SMP,
-		"numa": ARCHITECTURE_NUMA,
+		"smp":  ArchitectureSMP,
+		"numa": ArchitectureNUMA,
 	}
 )
 
@@ -126,7 +135,7 @@ func New(opts ...*option.Option) (*Info, error) {
 
 func (i *Info) String() string {
 	archStr := "SMP"
-	if i.Architecture == ARCHITECTURE_NUMA {
+	if i.Architecture == ArchitectureNUMA {
 		archStr = "NUMA"
 	}
 	res := fmt.Sprintf(

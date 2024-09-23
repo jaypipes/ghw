@@ -325,7 +325,7 @@ func (info *Info) GetDevice(address string) *Device {
 
 	device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
 	device.Revision = getDeviceRevision(info.ctx, pciAddr)
-	if info.arch == topology.ARCHITECTURE_NUMA {
+	if info.arch == topology.ArchitectureNUMA {
 		device.Node = getDeviceNUMANode(info.ctx, pciAddr)
 	}
 	device.Driver = getDeviceDriver(info.ctx, pciAddr)

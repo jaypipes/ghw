@@ -137,7 +137,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 		// Problem getting topology information so just set the graphics card's
 		// node to nil
 		for _, card := range cards {
-			if topo.Architecture != topology.ARCHITECTURE_NUMA {
+			if topo.Architecture != topology.ArchitectureNUMA {
 				card.Node = nil
 			}
 		}
