@@ -49,10 +49,10 @@ func TestArmCPU(t *testing.T) {
 	}
 
 	for _, p := range info.Processors {
-		if p.NumCores == 0 {
+		if p.TotalCores == 0 {
 			t.Fatalf("Expected >0 cores but got 0.")
 		}
-		if p.NumThreads == 0 {
+		if p.TotalHardwareThreads == 0 {
 			t.Fatalf("Expected >0 threads but got 0.")
 		}
 		if len(p.Capabilities) == 0 {
@@ -66,7 +66,7 @@ func TestArmCPU(t *testing.T) {
 			t.Fatalf("Expected >0 cores in processor, but got 0.")
 		}
 		for _, c := range p.Cores {
-			if c.NumThreads == 0 {
+			if c.TotalHardwareThreads == 0 {
 				t.Fatalf("Expected >0 threads but got 0.")
 			}
 			if len(c.LogicalProcessors) == 0 {
@@ -118,6 +118,7 @@ func TestCheckCPUTopologyFilesForOfflineCPU(t *testing.T) {
 		t.Fatalf("Unexpected warning related to missing files under topology directory was reported")
 	}
 }
+
 func TestNumCoresAmongOfflineCPUs(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
 		t.Skip("Skipping CPU tests.")
