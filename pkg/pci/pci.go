@@ -135,7 +135,7 @@ func New(opts ...*option.Option) (*Info, error) {
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
 	info := &Info{
-		arch: topology.ARCHITECTURE_SMP,
+		arch: topology.ArchitectureSMP,
 		ctx:  ctx,
 	}
 

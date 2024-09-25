@@ -154,8 +154,12 @@ var (
 type Architecture = topology.Architecture
 
 const (
-	ARCHITECTURE_SMP  = topology.ARCHITECTURE_SMP
-	ARCHITECTURE_NUMA = topology.ARCHITECTURE_NUMA
+	ArchitectureSMP = topology.ArchitectureSMP
+	// DEPRECATED: Please use ArchitectureSMP
+	ARCHITECTURE_SMP = topology.ArchitectureSMP
+	ArchitectureNUMA = topology.ArchitectureNUMA
+	// DEPRECATED: Please use ArchitectureNUMA
+	ARCHITECTURE_NUMA = topology.ArchitectureNUMA
 )
 
 type PCIInfo = pci.Info

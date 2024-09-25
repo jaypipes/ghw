@@ -31,9 +31,9 @@ func (i *Info) load() error {
 	}
 	i.Nodes = nodes
 	if len(nodes) == 1 {
-		i.Architecture = ARCHITECTURE_SMP
+		i.Architecture = ArchitectureSMP
 	} else {
-		i.Architecture = ARCHITECTURE_NUMA
+		i.Architecture = ArchitectureNUMA
 	}
 	return nil
 }
