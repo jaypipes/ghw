@@ -31,10 +31,12 @@ func (i *Info) load() error {
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range i.Processors {
-		totCores += p.NumCores
-		totThreads += p.NumThreads
+		totCores += p.TotalCores
+		totThreads += p.TotalHardwareThreads
 	}
 	i.TotalCores = totCores
+	i.TotalHardwareThreads = totThreads
+	// TODO(jaypipes): Remove TotalThreads before v1.0
 	i.TotalThreads = totThreads
 	return nil
 }
@@ -113,12 +115,23 @@ func processorsGet(ctx *context.Context) []*Processor {
 		coreID := coreIDFromLogicalProcessorID(ctx, lpID)
 		core := proc.CoreByID(coreID)
 		if core == nil {
-			core = &ProcessorCore{ID: coreID, NumThreads: 1}
+			core = &ProcessorCore{
+				ID:                   coreID,
+				TotalHardwareThreads: 1,
+				// TODO(jaypipes): Remove NumThreads before v1.0
+				NumThreads: 1,
+			}
 			proc.Cores = append(proc.Cores, core)
+			proc.TotalCores += 1
+			// TODO(jaypipes): Remove NumCores before v1.0
 			proc.NumCores += 1
 		} else {
+			core.TotalHardwareThreads += 1
+			// TODO(jaypipes) Remove NumThreads before v1.0
 			core.NumThreads += 1
 		}
+		proc.TotalHardwareThreads += 1
+		// TODO(jaypipes) Remove NumThreads before v1.0
 		proc.NumThreads += 1
 		core.LogicalProcessors = append(core.LogicalProcessors, lpID)
 	}
@@ -231,7 +244,9 @@ func CoresForNode(ctx *context.Context, nodeID int) ([]*ProcessorCore, error) {
 	}
 
 	for _, c := range cores {
-		c.NumThreads = uint32(len(c.LogicalProcessors))
+		c.TotalHardwareThreads = uint32(len(c.LogicalProcessors))
+		// TODO(jaypipes): Remove NumThreads before v1.0
+		c.NumThreads = c.TotalHardwareThreads
 	}
 
 	return cores, nil

@@ -44,10 +44,10 @@ func TestTopology(t *testing.T) {
 			if len(c.LogicalProcessors) == 0 {
 				t.Fatalf("Expected >0 logical processors but got 0.")
 			}
-			if uint32(len(c.LogicalProcessors)) != c.NumThreads {
+			if uint32(len(c.LogicalProcessors)) != c.TotalHardwareThreads {
 				t.Fatalf(
-					"Expected NumThreads == len(logical procs) but %d != %d",
-					c.NumThreads,
+					"Expected TotalHardwareThreads == len(logical procs) but %d != %d",
+					c.TotalHardwareThreads,
 					len(c.LogicalProcessors),
 				)
 			}
