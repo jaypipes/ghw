@@ -79,4 +79,11 @@ func TestHost(t *testing.T) {
 	if gpu == nil {
 		t.Fatalf("Expected non-nil GPU but got nil.")
 	}
+
+	// Processing accelerator cards are not common nowadays.
+	// You may not have one in your machine, so this check displays a message but does not interrupt the test.
+	accel := host.Accelerator
+	if accel == nil {
+		t.Logf("WARNING: Processing accelerator cards not detected.")
+	}
 }

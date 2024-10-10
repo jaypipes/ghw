@@ -62,6 +62,7 @@ hardware:
 * [`ghw.Network()`](#network)
 * [`ghw.PCI()`](#pci)
 * [`ghw.GPU()`](#gpu) (graphical processing unit)
+* [`ghw.Accelerator()`](#accelerator) (processing accelerators, AI)
 * [`ghw.Chassis()`](#chassis)
 * [`ghw.BIOS()`](#bios)
 * [`ghw.Baseboard()`](#baseboard)
@@ -893,7 +894,7 @@ information about the host computer's graphics hardware.
 The `ghw.GPUInfo` struct contains one field:
 
 * `ghw.GPUInfo.GraphicCards` is an array of pointers to `ghw.GraphicsCard`
-  structs, one for each graphics card found for the systen
+  structs, one for each graphics card found for the system
 
 Each `ghw.GraphicsCard` struct contains the following fields:
 
@@ -944,6 +945,60 @@ information
 **NOTE**: You can [read more](#topology) about the fields of the
 `ghw.TopologyNode` struct if you'd like to dig deeper into the NUMA/topology
 subsystem
+
+### Accelerator
+
+The `ghw.Accelerator()` function returns a `ghw.AcceleratorInfo` struct that contains
+information about the host computer's processing accelerator hardware. In this category
+we can find used hardware for AI. The hardware detected in this category will be
+processing accelerators (PCI class `1200`), 3D controllers (`0302`) and Display
+controllers (`0380`).
+
+The `ghw.AcceleratorInfo` struct contains one field:
+
+* `ghw.AcceleratorInfo.Devices` is an array of pointers to `ghw.AcceleratorDevice`
+  structs, one for each processing accelerator card found for the system.
+
+Each `ghw.AcceleratorDevice` struct contains the following fields:
+
+* `ghw.AcceleratorDevice.Address` is the PCI address for the processing accelerator card.
+* `ghw.AcceleratorDevice.PCIDevice` is a pointer to a `ghw.PCIDevice` struct.
+  describing the processing accelerator card. This may be `nil` if no PCI device
+  information could be determined for the card.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	accel, err := ghw.Accelerator()
+	if err != nil {
+		fmt.Printf("Error getting processing accelerator info: %v", err)
+	}
+
+	fmt.Printf("%v\n", accel)
+
+	for _, card := range accel.Devices {
+		fmt.Printf(" %v\n", device)
+	}
+}
+```
+
+Example output from a testing machine:
+
+```
+processing accelerators (1 device)
+ device @0000:00:04.0 -> driver: 'fake_pci_driver' class: 'Processing accelerators' vendor: 'Red Hat, Inc.' product: 'QEMU PCI Test Device'
+```
+
+**NOTE**: You can [read more](#pci) about the fields of the `ghw.PCIDevice`
+struct if you'd like to dig deeper into PCI subsystem and programming interface
+information
 
 ### Chassis
 

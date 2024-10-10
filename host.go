@@ -11,6 +11,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/context"
 
+	"github.com/jaypipes/ghw/pkg/accelerator"
 	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
@@ -28,18 +29,19 @@ import (
 // HostInfo is a wrapper struct containing information about the host system's
 // memory, block storage, CPU, etc
 type HostInfo struct {
-	ctx       *context.Context
-	Memory    *memory.Info    `json:"memory"`
-	Block     *block.Info     `json:"block"`
-	CPU       *cpu.Info       `json:"cpu"`
-	Topology  *topology.Info  `json:"topology"`
-	Network   *net.Info       `json:"network"`
-	GPU       *gpu.Info       `json:"gpu"`
-	Chassis   *chassis.Info   `json:"chassis"`
-	BIOS      *bios.Info      `json:"bios"`
-	Baseboard *baseboard.Info `json:"baseboard"`
-	Product   *product.Info   `json:"product"`
-	PCI       *pci.Info       `json:"pci"`
+	ctx         *context.Context
+	Memory      *memory.Info      `json:"memory"`
+	Block       *block.Info       `json:"block"`
+	CPU         *cpu.Info         `json:"cpu"`
+	Topology    *topology.Info    `json:"topology"`
+	Network     *net.Info         `json:"network"`
+	GPU         *gpu.Info         `json:"gpu"`
+	Accelerator *accelerator.Info `json:"accelerator"`
+	Chassis     *chassis.Info     `json:"chassis"`
+	BIOS        *bios.Info        `json:"bios"`
+	Baseboard   *baseboard.Info   `json:"baseboard"`
+	Product     *product.Info     `json:"product"`
+	PCI         *pci.Info         `json:"pci"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -71,6 +73,10 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	acceleratorInfo, err := accelerator.New(opts...)
+	if err != nil {
+		return nil, err
+	}
 	chassisInfo, err := chassis.New(opts...)
 	if err != nil {
 		return nil, err
@@ -92,18 +98,19 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 		return nil, err
 	}
 	return &HostInfo{
-		ctx:       ctx,
-		CPU:       cpuInfo,
-		Memory:    memInfo,
-		Block:     blockInfo,
-		Topology:  topologyInfo,
-		Network:   netInfo,
-		GPU:       gpuInfo,
-		Chassis:   chassisInfo,
-		BIOS:      biosInfo,
-		Baseboard: baseboardInfo,
-		Product:   productInfo,
-		PCI:       pciInfo,
+		ctx:         ctx,
+		CPU:         cpuInfo,
+		Memory:      memInfo,
+		Block:       blockInfo,
+		Topology:    topologyInfo,
+		Network:     netInfo,
+		GPU:         gpuInfo,
+		Accelerator: acceleratorInfo,
+		Chassis:     chassisInfo,
+		BIOS:        biosInfo,
+		Baseboard:   baseboardInfo,
+		Product:     productInfo,
+		PCI:         pciInfo,
 	}, nil
 }
 
@@ -111,10 +118,11 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 // structs' String-ified output
 func (info *HostInfo) String() string {
 	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		info.Block.String(),
 		info.CPU.String(),
 		info.GPU.String(),
+		info.Accelerator.String(),
 		info.Memory.String(),
 		info.Network.String(),
 		info.Topology.String(),
