@@ -90,6 +90,9 @@ func showAll(cmd *cobra.Command, args []string) error {
 		if err := showProduct(cmd, args); err != nil {
 			return err
 		}
+		if err := showAccelerator(cmd, args); err != nil {
+			return err
+		}
 	case outputFormatJSON:
 		host, err := ghw.Host()
 		if err != nil {

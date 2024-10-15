@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"github.com/jaypipes/ghw/pkg/accelerator"
 	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
@@ -182,4 +183,11 @@ type GraphicsCard = gpu.GraphicsCard
 
 var (
 	GPU = gpu.New
+)
+
+type AcceleratorInfo = accelerator.Info
+type AcceleratorDevice = accelerator.AcceleratorDevice
+
+var (
+	Accelerator = accelerator.New
 )
