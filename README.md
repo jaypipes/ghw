@@ -966,6 +966,16 @@ Each `ghw.AcceleratorDevice` struct contains the following fields:
   describing the processing accelerator card. This may be `nil` if no PCI device
   information could be determined for the card.
 
+#### filters
+The `ghw.Accelerator()` function accepts a slice of filters, of type string, as parameter
+in format `[<vendor>]:[<device>][:<class>]`, (same is the _lspci_ command).
+
+Some filter examples:
+* `::0302`. Select 3D controller cards.
+* `10de::0302`. Select Nvidia (`10de`) 3D controller cards (`0302`).
+* `1da3:1060:1200`. Select Habana Labs (`1da3`) Gaudi3 (`1060`) processing accelerator cards (`1200`).
+* `1002::`. Select AMD ATI hardware.
+
 ```go
 package main
 
@@ -976,7 +986,11 @@ import (
 )
 
 func main() {
-	accel, err := ghw.Accelerator()
+	filter := make([]string, 0)
+	// example of a filter to detect 3D controllers
+	// filter = append(filter, "::0302")
+
+	accel, err := ghw.Accelerator(filter)
 	if err != nil {
 		fmt.Printf("Error getting processing accelerator info: %v", err)
 	}
