@@ -49,6 +49,9 @@ func TestArmCPU(t *testing.T) {
 	}
 
 	for _, p := range info.Processors {
+		if p.Vendor == "" {
+			t.Fatalf("Expected not empty vendor field.")
+		}
 		if p.TotalCores == 0 {
 			t.Fatalf("Expected >0 cores but got 0.")
 		}
