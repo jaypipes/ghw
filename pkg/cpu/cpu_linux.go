@@ -108,6 +108,8 @@ func processorsGet(ctx *context.Context) []*Processor {
 				proc.Vendor = lp.Attrs["vendor_id"]
 			} else if len(lp.Attrs["isa"]) != 0 { // RISCV64
 				proc.Vendor = lp.Attrs["isa"]
+			} else if lp.Attrs["CPU implementer"] == "0x41" { // ARM
+				proc.Vendor = "ARM"
 			}
 			procs[procID] = proc
 		}
