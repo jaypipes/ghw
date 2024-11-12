@@ -174,7 +174,7 @@ func (ctx *Context) Teardown() error {
 	return snapshot.Cleanup(ctx.snapshotUnpackedPath)
 }
 
-// Warn Send warnings to log with timestamp added
+// Warn Send warnings to log with timestamp
 func (ctx *Context) Warn(msg string, args ...interface{}) {
 	ctx.alert.Printf("WARNING: "+msg, args...)
 	location, _ := time.LoadLocation("UTC")
