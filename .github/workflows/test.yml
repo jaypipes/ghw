@@ -155,12 +155,12 @@ jobs:
   # NOTE(jaypipes): We currently only support block information on MacOS, and
   # the tests have block skipped because we cannot get meaningful information
   # about the block devices in the Github Actions Runner virtual machines. So
-  # this is really just a test of whether the library builds on MacOS 12.
-  macos-12:
-    runs-on: macos-12
+  # this is really just a test of whether the library builds on MacOS 13.
+  macos-13:
+    runs-on: macos-13
     strategy:
       matrix:
-        go: [ '1.18' ]
+        go: [ '1.21' ]
     steps:
      - name: harden runner
        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
