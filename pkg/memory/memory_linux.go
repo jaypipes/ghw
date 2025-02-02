@@ -242,7 +242,7 @@ func memTotalPhysicalBytesFromSyslog(paths *linuxpath.Paths) int64 {
 	for _, file := range logFiles {
 		if strings.HasPrefix(file.Name(), "syslog") {
 			fullPath := filepath.Join(logDir, file.Name())
-			unzip := strings.HasSuffix(file.Name(), ".gz")
+			unzip := filepath.Ext(file.Name()) == ".gz"
 			var r io.ReadCloser
 			r, err = os.Open(fullPath)
 			if err != nil {
