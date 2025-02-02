@@ -14,7 +14,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // PackFrom creates the snapshot named `snapshotName` from the
@@ -91,7 +90,11 @@ func createSnapshot(tw *tar.Writer, buildDir string) error {
 		if err != nil {
 			return err
 		}
-		hdr.Name = strings.TrimPrefix(strings.TrimPrefix(path, buildDir), string(os.PathSeparator))
+		relPath, err := filepath.Rel(buildDir, path)
+		if err != nil {
+			return err
+		}
+		hdr.Name = relPath
 
 		if err = tw.WriteHeader(hdr); err != nil {
 			return err
@@ -103,10 +106,10 @@ func createSnapshot(tw *tar.Writer, buildDir string) error {
 			if err != nil {
 				return err
 			}
+			defer f.Close()
 			if _, err = io.Copy(tw, f); err != nil {
 				return err
 			}
-			f.Close()
 		}
 		return nil
 	})
