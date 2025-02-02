@@ -32,26 +32,25 @@ func PackFrom(snapshotName, sourceRoot string) error {
 // if the file seems to exist and have existing content already.
 // This is done to avoid accidental overwrites.
 func OpenDestination(snapshotName string) (*os.File, error) {
-    f, err := os.OpenFile(snapshotName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
-    if err != nil {
-        if !errors.Is(err, os.ErrExist) {
-            return nil, err
-        }
-        fs, err := os.Stat(snapshotName)
-        if err != nil {
-            return nil, err
-        }
-        if fs.Size() > 0 {
-            return nil, fmt.Errorf("file %s already exists and is of size > 0", snapshotName)
-        }
-        f, err = os.OpenFile(snapshotName, os.O_WRONLY, 0600)
-        if err != nil {
-            return nil, err
-        }
-    }
-    return f, nil
+	f, err := os.OpenFile(snapshotName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		if !errors.Is(err, os.ErrExist) {
+			return nil, err
+		}
+		fs, err := os.Stat(snapshotName)
+		if err != nil {
+			return nil, err
+		}
+		if fs.Size() > 0 {
+			return nil, fmt.Errorf("file %s already exists and is of size > 0", snapshotName)
+		}
+		f, err = os.OpenFile(snapshotName, os.O_WRONLY, 0600)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return f, nil
 }
-
 
 // PakcWithWriter creates a snapshot sending all the binary data to the
 // given `fw` writer. The snapshot is made from the directory tree whose
