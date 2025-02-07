@@ -17,7 +17,7 @@ import (
 	"github.com/jaypipes/ghw/testdata"
 )
 
-func testScenario(t *testing.T, filename string, expectedDevs int) {
+func testScenario(t *testing.T, filename string, hwFilter []string, expectedDevs int) {
 	testdataPath, err := testdata.SnapshotsDirectory()
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -41,7 +41,7 @@ func testScenario(t *testing.T, filename string, expectedDevs int) {
 		_ = snapshot.Cleanup(tmpRoot)
 	}()
 
-	info, err := accelerator.New(option.WithChroot(tmpRoot))
+	info, err := accelerator.New(hwFilter, option.WithChroot(tmpRoot))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -59,7 +59,7 @@ func TestAcceleratorDefault(t *testing.T) {
 	}
 
 	// In this scenario we have 1 processing accelerator device
-	testScenario(t, "linux-amd64-accel.tar.gz", 1)
+	testScenario(t, "linux-amd64-accel.tar.gz", []string{}, 1)
 
 }
 
@@ -69,5 +69,18 @@ func TestAcceleratorNvidia(t *testing.T) {
 	}
 
 	// In this scenario we have 1 Nvidia 3D controller device
-	testScenario(t, "linux-amd64-accel-nvidia.tar.gz", 1)
+	testScenario(t, "linux-amd64-accel-nvidia.tar.gz", []string{}, 1)
+}
+
+func TestAcceleratorFilter(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_ACCELERATOR"); ok {
+		t.Skip("Skipping PCI tests.")
+	}
+
+	// Set the filter to detect only processing accelerators (Nvidia not included)
+	discoveryFilter := make([]string, 0)
+	discoveryFilter = append(discoveryFilter, "::1200")
+
+	// In this scenario we have 1 Nvidia 3D controller device
+	testScenario(t, "linux-amd64-accel-nvidia.tar.gz", discoveryFilter, 0)
 }

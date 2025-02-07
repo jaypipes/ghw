@@ -37,15 +37,19 @@ func (dev *AcceleratorDevice) String() string {
 }
 
 type Info struct {
-	ctx     *context.Context
-	Devices []*AcceleratorDevice `json:"devices"`
+	ctx              *context.Context
+	Devices          []*AcceleratorDevice `json:"devices"`
+	DiscoveryFilters []string
 }
 
 // New returns a pointer to an Info struct that contains information about the
 // accelerator devices on the host system
-func New(opts ...*option.Option) (*Info, error) {
+func New(filter []string, opts ...*option.Option) (*Info, error) {
 	ctx := context.New(opts...)
-	info := &Info{ctx: ctx}
+	info := &Info{
+		ctx:              ctx,
+		DiscoveryFilters: filter,
+	}
 
 	if err := ctx.Do(info.load); err != nil {
 		return nil, err

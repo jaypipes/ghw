@@ -73,7 +73,7 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	acceleratorInfo, err := accelerator.New(opts...)
+	acceleratorInfo, err := accelerator.New([]string{}, opts...)
 	if err != nil {
 		return nil, err
 	}
