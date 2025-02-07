@@ -17,13 +17,16 @@ const (
 )
 
 const (
-	envKeyChroot            = "GHW_CHROOT"
-	envKeyDisableWarnings   = "GHW_DISABLE_WARNINGS"
-	envKeyDisableTools      = "GHW_DISABLE_TOOLS"
-	envKeySnapshotPath      = "GHW_SNAPSHOT_PATH"
-	envKeySnapshotRoot      = "GHW_SNAPSHOT_ROOT"
-	envKeySnapshotExclusive = "GHW_SNAPSHOT_EXCLUSIVE"
-	envKeySnapshotPreserve  = "GHW_SNAPSHOT_PRESERVE"
+	envKeyChroot               = "GHW_CHROOT"
+	envKeyDisableWarnings      = "GHW_DISABLE_WARNINGS"
+	envKeyDisableTools         = "GHW_DISABLE_TOOLS"
+	envKeySnapshotPath         = "GHW_SNAPSHOT_PATH"
+	envKeySnapshotRoot         = "GHW_SNAPSHOT_ROOT"
+	envKeySnapshotExclusive    = "GHW_SNAPSHOT_EXCLUSIVE"
+	envKeySnapshotPreserve     = "GHW_SNAPSHOT_PRESERVE"
+	envKeyDisableNodeCaches    = "GHW_DISABLE_NODE_CACHES"
+	envKeyDisableNodeAreas     = "GHW_DISABLE_NODE_AREAS"
+	envKeyDisableNodeDistances = "GHW_DISABLE_NODE_DISTANCES"
 )
 
 // Alerter emits warnings about undesirable but recoverable errors.
@@ -140,6 +143,9 @@ type Option struct {
 	// during a call to the `context.WithContext` function. Only used internally.
 	// This is an interface to get around recursive package import issues.
 	Context interface{}
+
+	// TopologyOptions contains options for handling of ghw topology
+	TopologyOptions *TopologyOptions
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -161,6 +167,16 @@ type SnapshotOptions struct {
 	// As additional side effect, give both this option and SnapshotRoot to make each
 	// context try to unpack the snapshot only once.
 	Exclusive bool
+}
+
+// TopologyOptions contains options for handling of ghw topology
+type TopologyOptions struct {
+	// DisableNodeCaches disables the collection of node caches
+	DisableNodeCaches bool
+	// DisableNodeAreas disables the collection of node memory areas
+	DisableNodeAreas bool
+	// DisableNodeDistances disables the collection of node distances
+	DisableNodeDistances bool
 }
 
 // WithChroot allows to override the root directory ghw uses.
@@ -233,6 +249,9 @@ func Merge(opts ...*Option) *Option {
 		if opt.Context != nil {
 			merged.Context = opt.Context
 		}
+		if opt.TopologyOptions != nil {
+			merged.TopologyOptions = opt.TopologyOptions
+		}
 	}
 	// Set the default value if missing from mergeOpts
 	if merged.Chroot == nil {
@@ -254,5 +273,37 @@ func Merge(opts ...*Option) *Option {
 		enabled := EnvOrDefaultTools()
 		merged.EnableTools = &enabled
 	}
+	if merged.TopologyOptions == nil {
+		merged.TopologyOptions = &TopologyOptions{
+			DisableNodeCaches:    EnvOrDefaultDisableNodeCaches(),
+			DisableNodeAreas:     EnvOrDefaultDisableNodeAreas(),
+			DisableNodeDistances: EnvOrDefaultDisableNodeDistances(),
+		}
+	}
+
 	return merged
+}
+
+// EnvOrDefaultDisableNodeCaches ...
+func EnvOrDefaultDisableNodeCaches() bool {
+	if _, exists := os.LookupEnv(envKeyDisableNodeCaches); exists {
+		return true
+	}
+	return false
+}
+
+// EnvOrDefaultDisableNodeCaches ...
+func EnvOrDefaultDisableNodeAreas() bool {
+	if _, exists := os.LookupEnv(envKeyDisableNodeAreas); exists {
+		return true
+	}
+	return false
+}
+
+// EnvOrDefaultDisableNodeDistances ...
+func EnvOrDefaultDisableNodeDistances() bool {
+	if _, exists := os.LookupEnv(envKeyDisableNodeDistances); exists {
+		return true
+	}
+	return false
 }
