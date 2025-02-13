@@ -56,7 +56,7 @@ func (i *Info) load() error {
 	// Building dynamic WHERE clause with addresses to create a single query collecting all desired data
 	queryAddresses := []string{}
 	for _, description := range win32VideoControllerDescriptions {
-		var queryAddres = strings.Replace(description.PNPDeviceID, "\\", `\\`, -1)
+		var queryAddres = strings.ReplaceAll(description.PNPDeviceID, "\\", `\\`)
 		queryAddresses = append(queryAddresses, "PNPDeviceID='"+queryAddres+"'")
 	}
 	whereClause := strings.Join(queryAddresses[:], " OR ")
@@ -85,7 +85,7 @@ func (i *Info) load() error {
 
 func GetDevice(id string, entities []win32PnPEntity) *pci.Device {
 	// Backslashing PnP address ID as requested by JSON and VMI query: https://docs.microsoft.com/en-us/windows/win32/wmisdk/where-clause
-	var queryAddress = strings.Replace(id, "\\", `\\`, -1)
+	var queryAddress = strings.ReplaceAll(id, "\\", `\\`)
 	// Preparing default structure
 	var device = &pci.Device{
 		Address: queryAddress,
