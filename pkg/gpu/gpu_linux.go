@@ -90,8 +90,11 @@ func (i *Info) load() error {
 			continue
 		}
 		pathParts := strings.Split(dest, "/")
+		// The PCI address of the graphics card is the *last* PCI address in
+		// the filepath...
 		pciAddress := ""
-		for _, part := range pathParts {
+		for x := len(pathParts) - 1; x >= 0; x-- {
+			part := pathParts[x]
 			if reValidPCIAddress.MatchString(part) {
 				pciAddress = part
 				break
