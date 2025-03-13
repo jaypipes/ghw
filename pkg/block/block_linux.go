@@ -208,6 +208,10 @@ func diskWWN(paths *linuxpath.Paths, disk string) string {
 	if wwn, ok := info["ID_WWN"]; ok {
 		return wwn
 	}
+	// Device Mapper devices get DM_WWN instead of ID_WWN_WITH_EXTENSION
+	if wwn, ok := info["DM_WWN"]; ok {
+		return wwn
+	}
 	return util.UNKNOWN
 }
 
