@@ -101,6 +101,12 @@ func processorsGet(ctx *context.Context) []*Processor {
 			}
 			if len(lp.Attrs["model name"]) != 0 {
 				proc.Model = lp.Attrs["model name"]
+			} else if len(lp.Attrs["Processor"]) != 0 { // ARM
+				proc.Model = lp.Attrs["Processor"]
+			} else if len(lp.Attrs["cpu model"]) != 0 { // MIPS, ARM
+				proc.Model = lp.Attrs["cpu model"]
+			} else if len(lp.Attrs["Model Name"]) != 0 { // LoongArch
+				proc.Model = lp.Attrs["Model Name"]
 			} else if len(lp.Attrs["uarch"]) != 0 { // SiFive
 				proc.Model = lp.Attrs["uarch"]
 			}
