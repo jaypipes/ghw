@@ -265,8 +265,9 @@ type Partition struct {
 	Type string `json:"type"`
 	// IsReadOnly indicates if the partition is marked read-only.
 	IsReadOnly bool `json:"read_only"`
-	// UUID is the universally-unique identifier (UUID) for the partition.
-	// This will be volume UUID on Darwin, PartUUID on linux, empty on Windows.
+	// UUID is a unique identifier for the partition. Note that for Windows
+	// partitions, this field contains a Volume Serial Number which is not
+	// in the standard UUID format, e.g. "A8C3D032".
 	UUID string `json:"uuid"`
 	// FilesystemLabel is the label of the filesystem contained on the
 	// partition. On Linux, this is derived from the `ID_FS_NAME` udev entry.
