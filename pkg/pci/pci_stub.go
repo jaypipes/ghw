@@ -15,7 +15,7 @@ import (
 )
 
 func (i *Info) load() error {
-	return errors.New("pciFillInfo not implemented on " + runtime.GOOS)
+	return errors.New("pci load() not implemented on " + runtime.GOOS)
 }
 
 // GetDevice returns a pointer to a Device struct that describes the PCI
