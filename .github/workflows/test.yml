@@ -44,11 +44,11 @@ jobs:
          GHW_TESTING_SKIP_GPU: "1"
        run: go test -v ./...
 
-  ubuntu-2004:
-    runs-on: ubuntu-20.04
+  ubuntu-2204:
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        go: [ '1.18', '1.19']
+        go: [ '1.21', '1.22', '1.23']
     steps:
      - name: harden runner
        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
@@ -116,7 +116,7 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        go: [ '1.19' ]
+        go: [ '1.21', '1.22' ]
     steps:
      - name: harden runner
        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
