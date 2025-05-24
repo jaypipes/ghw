@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	validPCIAddress = `\b(0{0,4}:\d{2}:\d{2}.\d:?\w*)`
+	validPCIAddress = `\b(0{0,4}:[[:xdigit:]]{2}:[[:xdigit:]]{2}\.[[:xdigit:]]:?\w*)`
 )
 
 var reValidPCIAddress = regexp.MustCompile(validPCIAddress)
