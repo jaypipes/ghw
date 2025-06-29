@@ -39,11 +39,13 @@ func (i *Info) load() error {
 	if i.ctx.SnapshotPath != "" {
 		chroot = option.DefaultChroot
 	}
-	db, err := pcidb.New(pcidb.WithChroot(chroot))
-	if err != nil {
-		return err
+	if i.db == nil {
+		db, err := pcidb.New(pcidb.WithChroot(chroot))
+		if err != nil {
+			return err
+		}
+		i.db = db
 	}
-	i.db = db
 	i.Devices = i.getDevices()
 	return nil
 }
