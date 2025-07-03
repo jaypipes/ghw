@@ -150,6 +150,12 @@ func TestOption(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "pciDb",
+			opts: []*option.Option{
+				option.WithPCIDB()
+			},
+		}
 	}
 	for _, optTCase := range optTCases {
 		t.Run(optTCase.name, func(t *testing.T) {
