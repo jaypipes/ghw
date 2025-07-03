@@ -84,6 +84,9 @@ func populateSysctlOutput() error {
 	for _, l := range oS {
 		if l != "" {
 			s := strings.SplitN(l, ":", 2)
+			if len(s) < 2 {
+				continue
+			}
 			k, v := strings.TrimSpace(s[0]), strings.TrimSpace(s[1])
 			sysctlOutput[k] = v
 
