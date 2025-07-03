@@ -143,11 +143,11 @@ type Option struct {
 	// This is an interface to get around recursive package import issues.
 	Context interface{}
 
-	// PciDb allows users to provide a custom instance of the PCI database (pcidb.PCIDB)
+	// PCIDB allows users to provide a custom instance of the PCI database (pcidb.PCIDB)
 	// to be used by ghw. This can be useful for testing, supplying a preloaded database,
 	// or providing an instance created with custom pcidb.WithOption settings, instead of
 	// letting ghw load the PCI database automatically.
-	PciDb *pcidb.PCIDB
+	PCIDB *pcidb.PCIDB
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -203,12 +203,12 @@ func WithDisableTools() *Option {
 	return &Option{EnableTools: &false_}
 }
 
-// WithPciDb allows you to provide a custom instance of the PCI database (pcidb.PCIDB)
+// WithPCIDB allows you to provide a custom instance of the PCI database (pcidb.PCIDB)
 // to ghw. This is useful if you want to use a preloaded or specially configured
 // PCI database, such as one created with custom pcidb.WithOption settings, instead
 // of letting ghw load the PCI database automatically.
-func WithPciDb(pcidb *pcidb.PCIDB) *Option {
-	return &Option{PciDb: pcidb}
+func WithPCIDB(pcidb *pcidb.PCIDB) *Option {
+	return &Option{PCIDB: pcidb}
 }
 
 // PathOverrides is a map, keyed by the string name of a mount path, of override paths
@@ -249,8 +249,8 @@ func Merge(opts ...*Option) *Option {
 		if opt.Context != nil {
 			merged.Context = opt.Context
 		}
-		if opt.PciDb != nil {
-			merged.PciDb = opt.PciDb
+		if opt.PCIDB != nil {
+			merged.PCIDB = opt.PCIDB
 		}
 	}
 	// Set the default value if missing from mergeOpts
