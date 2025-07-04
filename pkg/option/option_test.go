@@ -23,11 +23,12 @@ type optTestCase struct {
 // nolint: gocyclo
 func TestOption(t *testing.T) {
 	var pciTest *optTestCase
-	pcidb, err := pcidb.New()
-	if err != nil {
-		t.Fatalf("error creating new pcidb: %v", err)
-	}
+
 	if runtime.GOOS == "linux" {
+		pcidb, err := pcidb.New()
+		if err != nil {
+			t.Fatalf("error creating new pcidb: %v", err)
+		}
 		pciTest = &optTestCase{
 			name: "pcidb",
 			opts: []*option.Option{
