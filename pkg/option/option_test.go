@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/pcidb"
 )
 
 type optTestCase struct {
@@ -20,6 +21,10 @@ type optTestCase struct {
 
 // nolint: gocyclo
 func TestOption(t *testing.T) {
+	pcidb, err := pcidb.New()
+	if err != nil {
+		t.Fatalf("error creating new pcidb: %v", err)
+	}
 	optTCases := []optTestCase{
 		{
 			name: "multiple chroots",
@@ -151,11 +156,16 @@ func TestOption(t *testing.T) {
 			},
 		},
 		{
-			name: "pciDb",
+			name: "pcidb",
 			opts: []*option.Option{
-				option.WithPCIDB()
+				option.WithPCIDB(pcidb),
+				option.WithChroot("/my/chroot/dir"),
 			},
-		}
+			merged: &option.Option{
+				Chroot: stringPtr("/my/chroot/dir"),
+				PCIDB:  pcidb,
+			},
+		},
 	}
 	for _, optTCase := range optTCases {
 		t.Run(optTCase.name, func(t *testing.T) {
