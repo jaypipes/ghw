@@ -149,6 +149,9 @@ func New(opts ...*option.Option) (*Info, error) {
 		} else {
 			ctx.Warn("error detecting system topology: %v", err)
 		}
+		if merged.PCIDB != nil {
+			info.db = merged.PCIDB
+		}
 		return info.load()
 	}
 

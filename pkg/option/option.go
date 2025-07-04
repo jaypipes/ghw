@@ -10,6 +10,8 @@ import (
 	"io"
 	"log"
 	"os"
+
+	"github.com/jaypipes/pcidb"
 )
 
 const (
@@ -140,6 +142,12 @@ type Option struct {
 	// during a call to the `context.WithContext` function. Only used internally.
 	// This is an interface to get around recursive package import issues.
 	Context interface{}
+
+	// PCIDB allows users to provide a custom instance of the PCI database (pcidb.PCIDB)
+	// to be used by ghw. This can be useful for testing, supplying a preloaded database,
+	// or providing an instance created with custom pcidb.WithOption settings, instead of
+	// letting ghw load the PCI database automatically.
+	PCIDB *pcidb.PCIDB
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -195,6 +203,14 @@ func WithDisableTools() *Option {
 	return &Option{EnableTools: &false_}
 }
 
+// WithPCIDB allows you to provide a custom instance of the PCI database (pcidb.PCIDB)
+// to ghw. This is useful if you want to use a preloaded or specially configured
+// PCI database, such as one created with custom pcidb.WithOption settings, instead
+// of letting ghw load the PCI database automatically.
+func WithPCIDB(pcidb *pcidb.PCIDB) *Option {
+	return &Option{PCIDB: pcidb}
+}
+
 // PathOverrides is a map, keyed by the string name of a mount path, of override paths
 type PathOverrides map[string]string
 
@@ -232,6 +248,9 @@ func Merge(opts ...*Option) *Option {
 		}
 		if opt.Context != nil {
 			merged.Context = opt.Context
+		}
+		if opt.PCIDB != nil {
+			merged.PCIDB = opt.PCIDB
 		}
 	}
 	// Set the default value if missing from mergeOpts
