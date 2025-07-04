@@ -7,6 +7,7 @@
 package option_test
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/option"
@@ -21,10 +22,25 @@ type optTestCase struct {
 
 // nolint: gocyclo
 func TestOption(t *testing.T) {
+	var pciTest *optTestCase
 	pcidb, err := pcidb.New()
 	if err != nil {
 		t.Fatalf("error creating new pcidb: %v", err)
 	}
+	if runtime.GOOS == "linux" {
+		pciTest = &optTestCase{
+			name: "pcidb",
+			opts: []*option.Option{
+				option.WithPCIDB(pcidb),
+				option.WithChroot("/my/chroot/dir"),
+			},
+			merged: &option.Option{
+				Chroot: stringPtr("/my/chroot/dir"),
+				PCIDB:  pcidb,
+			},
+		}
+	}
+
 	optTCases := []optTestCase{
 		{
 			name: "multiple chroots",
@@ -155,17 +171,9 @@ func TestOption(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "pcidb",
-			opts: []*option.Option{
-				option.WithPCIDB(pcidb),
-				option.WithChroot("/my/chroot/dir"),
-			},
-			merged: &option.Option{
-				Chroot: stringPtr("/my/chroot/dir"),
-				PCIDB:  pcidb,
-			},
-		},
+	}
+	if pciTest != nil {
+		optTCases = append(optTCases, *pciTest)
 	}
 	for _, optTCase := range optTCases {
 		t.Run(optTCase.name, func(t *testing.T) {
