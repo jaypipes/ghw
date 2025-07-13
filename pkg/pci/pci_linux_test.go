@@ -13,10 +13,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/util"
 
 	"github.com/jaypipes/ghw/testdata"
@@ -56,6 +56,12 @@ func TestPCINUMANode(t *testing.T) {
 			}
 			if dev.Node == nil {
 				if tCase.node != -1 {
+					addrs := []string{}
+					for _, d := range info.Devices {
+						addrs = append(addrs, d.Address)
+					}
+					msg := fmt.Sprintf("address: %q device addresses: %v", tCase.addr, addrs)
+					t.Error(msg)
 					t.Fatalf("got nil numa NODE for address %q", tCase.addr)
 				}
 			} else {
@@ -138,7 +144,7 @@ func TestPCIMarshalJSON(t *testing.T) {
 	if dev == nil {
 		t.Fatalf("Failed to parse valid modalias")
 	}
-	s := marshal.SafeJSON(context.FromEnv(), dev, true)
+	s := marshal.SafeJSON(dev, true)
 	if s == "" {
 		t.Fatalf("Error marshalling device: %v", dev)
 	}
@@ -177,15 +183,18 @@ func pciTestSetup(t *testing.T) *pci.Info {
 	}
 
 	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(multiNumaSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
-	info, err := pci.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
-
+	info, err := pci.New(option.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

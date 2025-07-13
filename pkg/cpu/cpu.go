@@ -9,7 +9,6 @@ package cpu
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 )
@@ -122,7 +121,6 @@ func (p *Processor) String() string {
 // Info describes all central processing unit (CPU) functionality on a host.
 // Returned by the `ghw.CPU()` function.
 type Info struct {
-	ctx *context.Context
 	// TotalCores is the total number of physical cores the host system
 	// contains
 	TotalCores uint32 `json:"total_cores"`
@@ -140,10 +138,13 @@ type Info struct {
 
 // New returns a pointer to an Info struct that contains information about the
 // CPUs on the host system
-func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
-	info := &Info{ctx: ctx}
-	if err := ctx.Do(info.load); err != nil {
+func New(opt ...option.Option) (*Info, error) {
+	opts := &option.Options{}
+	for _, o := range opt {
+		o(opts)
+	}
+	info := &Info{}
+	if err := info.load(opts); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -183,11 +184,11 @@ type cpuPrinter struct {
 // YAMLString returns a string with the cpu information formatted as YAML
 // under a top-level "cpu:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(i.ctx, cpuPrinter{i})
+	return marshal.SafeYAML(cpuPrinter{i})
 }
 
 // JSONString returns a string with the cpu information formatted as JSON
 // under a top-level "cpu:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(i.ctx, cpuPrinter{i}, indent)
+	return marshal.SafeJSON(cpuPrinter{i}, indent)
 }

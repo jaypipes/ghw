@@ -12,6 +12,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/pkg/errors"
 	"howett.net/plist"
 )
@@ -206,9 +207,9 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 	return sc
 }
 
-func (info *Info) load() error {
-	if !info.ctx.EnableTools {
-		return fmt.Errorf("EnableTools=false on darwin disables block support entirely.")
+func (info *Info) load(opts *option.Options) error {
+	if opts.DisableTools {
+		return fmt.Errorf("DisableTools=true on darwin disables block support entirely.")
 	}
 
 	listPlist, err := getDiskUtilListPlist()

@@ -16,7 +16,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -200,9 +199,9 @@ func TestDiskPartLabel(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
+	opts := &option.Options{}
+	opts.Chroot = baseDir
+	paths := linuxpath.New(opts)
 	partLabel := "TEST_LABEL_GHW"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -231,9 +230,9 @@ func TestDiskFSLabel(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
+	opts := &option.Options{}
+	opts.Chroot = baseDir
+	paths := linuxpath.New(opts)
 	fsLabel := "TEST_LABEL_GHW"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -262,9 +261,9 @@ func TestDiskTypeUdev(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
+	opts := &option.Options{}
+	opts.Chroot = baseDir
+	paths := linuxpath.New(opts)
 	expectedPartType := "ext4"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -293,9 +292,9 @@ func TestDiskPartUUID(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
+	opts := &option.Options{}
+	opts.Chroot = baseDir
+	paths := linuxpath.New(opts)
 	partUUID := "11111111-1111-1111-1111-111111111111"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -325,9 +324,10 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New(option.WithNullAlerter(), option.WithDisableTools())
-	ctx.Chroot = baseDir
-	paths := linuxpath.New(ctx)
+	opts := &option.Options{}
+	opts.Chroot = baseDir
+	opts.DisableTools = true
+	paths := linuxpath.New(opts)
 	fsType := "ext4"
 	expectedLoopName := "loop0"
 	loopNotUsed := "loop1"
@@ -348,7 +348,7 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
 	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("102400\n"), 0644)
 	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
-	d := disks(ctx, paths)
+	d := disks(opts)
 	// There should be one disk, the other should be ignored due to 0 size
 	if len(d) != 1 {
 		t.Fatalf("expected one disk device but the function reported %d", len(d))

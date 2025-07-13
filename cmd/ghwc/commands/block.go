@@ -23,7 +23,8 @@ var blockCmd = &cobra.Command{
 
 // showBlock show block storage information for the host system.
 func showBlock(cmd *cobra.Command, args []string) error {
-	block, err := ghw.Block()
+	opts := cmd.Context().Value(optsKey).([]ghw.Option)
+	block, err := ghw.Block(opts...)
 	if err != nil {
 		return errors.Wrap(err, "error getting block device info")
 	}

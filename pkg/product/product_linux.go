@@ -7,17 +7,17 @@ package product
 
 import (
 	"github.com/jaypipes/ghw/pkg/linuxdmi"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load() error {
-
-	i.Family = linuxdmi.Item(i.ctx, "product_family")
-	i.Name = linuxdmi.Item(i.ctx, "product_name")
-	i.Vendor = linuxdmi.Item(i.ctx, "sys_vendor")
-	i.SerialNumber = linuxdmi.Item(i.ctx, "product_serial")
-	i.UUID = linuxdmi.Item(i.ctx, "product_uuid")
-	i.SKU = linuxdmi.Item(i.ctx, "product_sku")
-	i.Version = linuxdmi.Item(i.ctx, "product_version")
+func (i *Info) load(opts *option.Options) error {
+	i.Family = linuxdmi.Item(opts, "product_family")
+	i.Name = linuxdmi.Item(opts, "product_name")
+	i.Vendor = linuxdmi.Item(opts, "sys_vendor")
+	i.SerialNumber = linuxdmi.Item(opts, "product_serial")
+	i.UUID = linuxdmi.Item(opts, "product_uuid")
+	i.SKU = linuxdmi.Item(opts, "product_sku")
+	i.Version = linuxdmi.Item(opts, "product_version")
 
 	return nil
 }

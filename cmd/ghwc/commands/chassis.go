@@ -23,7 +23,8 @@ var chassisCmd = &cobra.Command{
 
 // showChassis shows chassis information for the host system.
 func showChassis(cmd *cobra.Command, args []string) error {
-	chassis, err := ghw.Chassis()
+	opts := cmd.Context().Value(optsKey).([]ghw.Option)
+	chassis, err := ghw.Chassis(opts...)
 	if err != nil {
 		return errors.Wrap(err, "error getting chassis info")
 	}

@@ -21,7 +21,8 @@ var pciCmd = &cobra.Command{
 
 // showPCI shows information for PCI devices on the host system.
 func showPCI(cmd *cobra.Command, args []string) error {
-	pci, err := ghw.PCI()
+	opts := cmd.Context().Value(optsKey).([]ghw.Option)
+	pci, err := ghw.PCI(opts...)
 	if err != nil {
 		return errors.Wrap(err, "error getting PCI info")
 	}

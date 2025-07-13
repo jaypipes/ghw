@@ -17,8 +17,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -44,8 +44,8 @@ var (
 	regexMemoryBlockDirname = regexp.MustCompile(`memory\d+$`)
 )
 
-func (i *Info) load() error {
-	paths := linuxpath.New(i.ctx)
+func (i *Info) load(opts *option.Options) error {
+	paths := linuxpath.New(opts)
 	tub := memTotalUsableBytes(paths)
 	if tub < 1 {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
@@ -54,7 +54,7 @@ func (i *Info) load() error {
 	tpb := memTotalPhysicalBytes(paths)
 	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		i.ctx.Warn(warnCannotDeterminePhysicalMemory)
+		opts.Warn(warnCannotDeterminePhysicalMemory)
 		i.TotalPhysicalBytes = tub
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)
@@ -72,8 +72,7 @@ func (i *Info) load() error {
 	return nil
 }
 
-func AreaForNode(ctx *context.Context, nodeID int) (*Area, error) {
-	paths := linuxpath.New(ctx)
+func AreaForNode(paths *linuxpath.Paths, nodeID int) (*Area, error) {
 	path := filepath.Join(
 		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),

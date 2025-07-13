@@ -13,6 +13,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
 
 	"github.com/jaypipes/ghw/testdata"
@@ -26,14 +27,17 @@ func TestTopologyNUMADistances(t *testing.T) {
 	}
 
 	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(multiNumaSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
-	info, err := topology.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
+	info, err := topology.New(option.WithChroot(unpackDir))
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -90,15 +94,16 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 	}
 
 	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(multiNumaSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
-
-	memInfo, err := memory.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
-
+	memInfo, err := memory.New(option.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -106,10 +111,7 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 		t.Fatalf("Expected non-nil MemoryInfo, but got nil")
 	}
 
-	info, err := topology.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
-
+	info, err := topology.New(option.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
