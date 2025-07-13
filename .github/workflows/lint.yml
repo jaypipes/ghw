@@ -15,27 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
      - name: harden runner
-       uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
        with:
-         egress-policy: block
+         egress-policy: audit
          disable-sudo: true
-         allowed-endpoints: >
-           github.com:443
-           api.github.com:443
-           proxy.github.com:443
-           proxy.golang.org:443
-           raw.githubusercontent.com:443
-           objects.githubusercontent.com:443
-           proxy.golang.org:443
      - name: checkout code
-       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
      - name: setup go
-       uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
        with:
-         go-version: 1.23
+         go-version: 1.24
      - name: lint
-       uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
+       uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8.0.0
        with:
-         version: v1.61.0
+         version: v2.2.0
          args: --timeout=5m0s --verbose
          only-new-issues: true
