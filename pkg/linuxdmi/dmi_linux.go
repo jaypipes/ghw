@@ -10,18 +10,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
-func Item(ctx *context.Context, value string) string {
-	paths := linuxpath.New(ctx)
+func Item(opts *option.Options, value string) string {
+	paths := linuxpath.New(opts)
 	path := filepath.Join(paths.SysClassDMI, "id", value)
 
 	b, err := os.ReadFile(path)
 	if err != nil {
-		ctx.Warn("Unable to read %s: %s\n", value, err)
+		opts.Warn("Unable to read %s: %s\n", value, err)
 		return util.UNKNOWN
 	}
 

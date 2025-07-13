@@ -11,9 +11,11 @@ package memory
 import (
 	"runtime"
 
+	"github.com/jaypipes/ghw/pkg/option"
+
 	"github.com/pkg/errors"
 )
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	return errors.New("mem.Info.load not implemented on " + runtime.GOOS)
 }

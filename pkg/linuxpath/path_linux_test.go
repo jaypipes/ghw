@@ -16,7 +16,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/option"
@@ -33,8 +32,8 @@ func TestPathRoot(t *testing.T) {
 		defer os.Unsetenv("GHW_CHROOT")
 	}
 
-	ctx := context.FromEnv()
-	paths := linuxpath.New(ctx)
+	opts := option.FromEnv()
+	paths := linuxpath.New(opts)
 
 	// No environment variable is set for GHW_CHROOT, so pathProcCpuinfo() should
 	// return the default "/proc/cpuinfo"
@@ -47,8 +46,8 @@ func TestPathRoot(t *testing.T) {
 	// returns that value
 	os.Setenv("GHW_CHROOT", "/host")
 
-	ctx = context.FromEnv()
-	paths = linuxpath.New(ctx)
+	opts = option.FromEnv()
+	paths = linuxpath.New(opts)
 
 	path = paths.ProcCpuinfo
 	if path != "/host/proc/cpuinfo" {
@@ -57,12 +56,12 @@ func TestPathRoot(t *testing.T) {
 }
 
 func TestPathSpecificRoots(t *testing.T) {
-	ctx := context.New(option.WithPathOverrides(option.PathOverrides{
+	opts := option.FromEnv()
+	opts.PathOverrides = option.PathOverrides{
 		"/proc": "/host-proc",
 		"/sys":  "/host-sys",
-	}))
-
-	paths := linuxpath.New(ctx)
+	}
+	paths := linuxpath.New(opts)
 
 	path := paths.ProcCpuinfo
 	expectedPath := "/host-proc/cpuinfo"
@@ -78,15 +77,14 @@ func TestPathSpecificRoots(t *testing.T) {
 }
 
 func TestPathChrootAndSpecifics(t *testing.T) {
-	ctx := context.New(
-		option.WithPathOverrides(option.PathOverrides{
-			"/proc": "/host2-proc",
-			"/sys":  "/host2-sys",
-		}),
-		option.WithChroot("/redirect"),
-	)
+	opts := option.FromEnv()
+	opts.PathOverrides = option.PathOverrides{
+		"/proc": "/host2-proc",
+		"/sys":  "/host2-sys",
+	}
+	opts.Chroot = "/redirect"
 
-	paths := linuxpath.New(ctx)
+	paths := linuxpath.New(opts)
 
 	path := paths.ProcCpuinfo
 	expectedPath := "/redirect/host2-proc/cpuinfo"

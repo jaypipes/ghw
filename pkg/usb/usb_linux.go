@@ -13,14 +13,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	var errs []error
 
-	i.Devices, errs = usbs(i.ctx)
+	i.Devices, errs = usbs(opts)
 
 	if len(errs) == 0 {
 		return nil
@@ -76,18 +76,19 @@ func slurp(path string) string {
 	return string(bytes.TrimSpace(bs))
 }
 
-func usbs(ctx *context.Context) ([]*Device, []error) {
+func usbs(opts *option.Options) ([]*Device, []error) {
+	paths := linuxpath.New(opts)
 	devs := make([]*Device, 0)
 	errs := []error{}
 
-	paths := linuxpath.New(ctx)
 	usbDevicesDirs, err := os.ReadDir(paths.SysBusUsbDevices)
 	if err != nil {
 		return devs, []error{err}
 	}
 
 	for _, dir := range usbDevicesDirs {
-		fullDir, err := os.Readlink(filepath.Join(paths.SysBusUsbDevices, dir.Name()))
+		linkPath := filepath.Join(paths.SysBusUsbDevices, dir.Name())
+		fullDir, err := os.Readlink(linkPath)
 		if err != nil {
 			continue
 		}

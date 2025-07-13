@@ -12,7 +12,6 @@ import (
 
 	"github.com/jaypipes/pcidb"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/option"
 	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
@@ -25,37 +24,23 @@ const (
 	modAliasExpectedLength = 54
 )
 
-func (i *Info) load() error {
-	// when consuming snapshots - most notably, but not only, in tests,
-	// the context pkg forces the chroot value to the unpacked snapshot root.
-	// This is intentional, intentionally transparent and ghw is prepared to handle this case.
-	// However, `pcidb` is not. It doesn't know about ghw snaphots, nor it should.
-	// so we need to complicate things a bit. If the user explicitely supplied
-	// a chroot option, then we should honor it all across the stack, and passing down
-	// the chroot to pcidb is the right thing to do. If, however, the chroot was
-	// implcitely set by snapshot support, then this must be consumed by ghw only.
-	// In this case we should NOT pass it down to pcidb.
-	chroot := i.ctx.Chroot
-	if i.ctx.SnapshotPath != "" {
-		chroot = option.DefaultChroot
-	}
-	opt := pcidb.WithChroot(chroot)
+func (i *Info) load(opts *option.Options) error {
+	pcidbOpt := &pcidb.WithOption{}
 	if path := os.Getenv("PCIDB_PATH"); path != "" {
-		opt = pcidb.WithPath(path)
+		pcidbOpt = pcidb.WithPath(path)
 	}
 	if i.db == nil {
-		db, err := pcidb.New(opt)
+		db, err := pcidb.New(pcidbOpt)
 		if err != nil {
 			return err
 		}
 		i.db = db
 	}
-	i.Devices = i.getDevices()
+	i.Devices = i.getDevices(opts)
 	return nil
 }
 
-func getDeviceModaliasPath(ctx *context.Context, pciAddr *pciaddr.Address) string {
-	paths := linuxpath.New(ctx)
+func getDeviceModaliasPath(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
 	return filepath.Join(
 		paths.SysBusPciDevices,
 		pciAddr.String(),
@@ -63,8 +48,7 @@ func getDeviceModaliasPath(ctx *context.Context, pciAddr *pciaddr.Address) strin
 	)
 }
 
-func getDeviceRevision(ctx *context.Context, pciAddr *pciaddr.Address) string {
-	paths := linuxpath.New(ctx)
+func getDeviceRevision(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
 	revisionPath := filepath.Join(
 		paths.SysBusPciDevices,
 		pciAddr.String(),
@@ -81,15 +65,15 @@ func getDeviceRevision(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	return strings.TrimSpace(string(revision))
 }
 
-func getDeviceNUMANode(ctx *context.Context, pciAddr *pciaddr.Address) *topology.Node {
-	paths := linuxpath.New(ctx)
+func getDeviceNUMANode(opts *option.Options, pciAddr *pciaddr.Address) *topology.Node {
+	paths := linuxpath.New(opts)
 	numaNodePath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "numa_node")
 
 	if _, err := os.Stat(numaNodePath); err != nil {
 		return nil
 	}
 
-	nodeIdx := util.SafeIntFromFile(ctx, numaNodePath)
+	nodeIdx := util.SafeIntFromFile(opts, numaNodePath)
 	if nodeIdx == -1 {
 		return nil
 	}
@@ -99,8 +83,7 @@ func getDeviceNUMANode(ctx *context.Context, pciAddr *pciaddr.Address) *topology
 	}
 }
 
-func getDeviceIommuGroup(ctx *context.Context, pciAddr *pciaddr.Address) string {
-	paths := linuxpath.New(ctx)
+func getDeviceIommuGroup(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
 	iommuGroupPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "iommu_group")
 
 	dest, err := os.Readlink(iommuGroupPath)
@@ -110,8 +93,7 @@ func getDeviceIommuGroup(ctx *context.Context, pciAddr *pciaddr.Address) string 
 	return filepath.Base(dest)
 }
 
-func getDeviceParentAddress(ctx *context.Context, pciAddr *pciaddr.Address) string {
-	paths := linuxpath.New(ctx)
+func getDeviceParentAddress(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
 	devPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String())
 
 	dest, err := os.Readlink(devPath)
@@ -128,8 +110,7 @@ func getDeviceParentAddress(ctx *context.Context, pciAddr *pciaddr.Address) stri
 	return parentAddr
 }
 
-func getDeviceDriver(ctx *context.Context, pciAddr *pciaddr.Address) string {
-	paths := linuxpath.New(ctx)
+func getDeviceDriver(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
 	driverPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "driver")
 
 	if _, err := os.Stat(driverPath); err != nil {
@@ -334,39 +315,7 @@ func findPCIProgrammingInterface(
 // GetDevice returns a pointer to a Device struct that describes the PCI
 // device at the requested address. If no such device could be found, returns nil.
 func (info *Info) GetDevice(address string) *Device {
-	// check cached data first
-	if dev := info.lookupDevice(address); dev != nil {
-		return dev
-	}
-
-	pciAddr := pciaddr.FromString(address)
-	if pciAddr == nil {
-		info.ctx.Warn("error parsing the pci address %q", address)
-		return nil
-	}
-
-	// no cached data, let's get the information from system.
-	fp := getDeviceModaliasPath(info.ctx, pciAddr)
-	if fp == "" {
-		info.ctx.Warn("error finding modalias info for device %q", address)
-		return nil
-	}
-
-	modaliasInfo := parseModaliasFile(fp)
-	if modaliasInfo == nil {
-		info.ctx.Warn("error parsing modalias info for device %q", address)
-		return nil
-	}
-
-	device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
-	device.Revision = getDeviceRevision(info.ctx, pciAddr)
-	if info.arch == topology.ArchitectureNUMA {
-		device.Node = getDeviceNUMANode(info.ctx, pciAddr)
-	}
-	device.Driver = getDeviceDriver(info.ctx, pciAddr)
-	device.ParentAddress = getDeviceParentAddress(info.ctx, pciAddr)
-	device.IOMMUGroup = getDeviceIommuGroup(info.ctx, pciAddr)
-	return device
+	return info.lookupDevice(address)
 }
 
 // ParseDevice returns a pointer to a Device given its describing data.
@@ -423,8 +372,8 @@ func (info *Info) getDeviceFromModaliasInfo(
 
 // getDevices returns a list of pointers to Device structs present on the
 // host system
-func (info *Info) getDevices() []*Device {
-	paths := linuxpath.New(info.ctx)
+func (info *Info) getDevices(opts *option.Options) []*Device {
+	paths := linuxpath.New(opts)
 	devs := make([]*Device, 0)
 	// We scan the /sys/bus/pci/devices directory which contains a collection
 	// of symlinks. The names of the symlinks are all the known PCI addresses
@@ -432,18 +381,39 @@ func (info *Info) getDevices() []*Device {
 	// address and append to the returned array.
 	links, err := os.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
-		info.ctx.Warn("failed to read /sys/bus/pci/devices")
+		opts.Warn("failed to read /sys/bus/pci/devices")
 		return nil
 	}
-	var dev *Device
 	for _, link := range links {
-		addr := link.Name()
-		dev = info.GetDevice(addr)
-		if dev == nil {
-			info.ctx.Warn("failed to get device information for PCI address %s", addr)
-		} else {
-			devs = append(devs, dev)
+		address := link.Name()
+		pciAddr := pciaddr.FromString(address)
+		if pciAddr == nil {
+			opts.Warn("error parsing the pci address %q", address)
+			return nil
 		}
+
+		// no cached data, let's get the information from system.
+		fp := getDeviceModaliasPath(paths, pciAddr)
+		if fp == "" {
+			opts.Warn("error finding modalias info for device %q", address)
+			return nil
+		}
+
+		modaliasInfo := parseModaliasFile(fp)
+		if modaliasInfo == nil {
+			opts.Warn("error parsing modalias info for device %q", address)
+			return nil
+		}
+
+		device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
+		device.Revision = getDeviceRevision(paths, pciAddr)
+		if info.arch == topology.ArchitectureNUMA {
+			device.Node = getDeviceNUMANode(opts, pciAddr)
+		}
+		device.Driver = getDeviceDriver(paths, pciAddr)
+		device.ParentAddress = getDeviceParentAddress(paths, pciAddr)
+		device.IOMMUGroup = getDeviceIommuGroup(paths, pciAddr)
+		devs = append(devs, device)
 	}
 	return devs
 }

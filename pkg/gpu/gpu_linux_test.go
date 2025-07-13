@@ -40,18 +40,12 @@ func TestGPUWithoutNUMANodeInfo(t *testing.T) {
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-amd-ryzen-1600.tar.gz" ghwc gpu
 
-	tmpRoot, err := os.MkdirTemp("", "ghw-gpu-testing-*")
-	if err != nil {
-		t.Fatalf("Unable to create temporary directory: %v", err)
-	}
+	tmpRoot := t.TempDir()
 
-	_, err = snapshot.UnpackInto(workstationSnapshot, tmpRoot, 0)
+	err = snapshot.UnpackInto(workstationSnapshot, tmpRoot)
 	if err != nil {
 		t.Fatalf("Unable to unpack %q into %q: %v", workstationSnapshot, tmpRoot, err)
 	}
-	defer func() {
-		_ = snapshot.Cleanup(tmpRoot)
-	}()
 
 	err = os.Remove(filepath.Join(tmpRoot, "/sys/class/drm/card0/device/numa_node"))
 	if err != nil && !errors.Is(err, os.ErrNotExist) {

@@ -5,7 +5,9 @@
 
 package accelerator
 
-func (i *Info) load() error {
+import "github.com/jaypipes/ghw/pkg/option"
+
+func (i *Info) load(opt ...option.Option) error {
 	i.Devices = []*AcceleratorDevice{}
 	return nil
 }

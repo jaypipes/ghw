@@ -8,6 +8,7 @@ package product
 import (
 	"github.com/yusufpapurcu/wmi"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -24,7 +25,7 @@ type win32Product struct {
 	UUID              *string
 }
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	// Getting data from WMI
 	var win32ProductDescriptions []win32Product
 	// Assuming the first product is the host...

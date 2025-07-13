@@ -9,6 +9,7 @@ package memory
 import (
 	"github.com/yusufpapurcu/wmi"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
@@ -37,7 +38,7 @@ type win32PhysicalMemory struct {
 	TotalWidth    *uint16
 }
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	// Getting info from WMI
 	var win32OSDescriptions []win32OperatingSystem
 	if err := wmi.Query(wqlOperatingSystem, &win32OSDescriptions); err != nil {

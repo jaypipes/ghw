@@ -1332,59 +1332,75 @@ cpu, err := ghw.CPU(ghw.WithPathOverrides(ghw.PathOverrides{
 
 ### Reading hardware information from a `ghw` snapshot (Linux only)
 
-The `ghw-snapshot` tool can create a snapshot of a host's hardware information.
+The `ghwc snapshot` command creates a snapshot of a host's hardware information.
 
-Please read [`SNAPSHOT.md`](SNAPSHOT.md) to learn about creating snapshots with
-the `ghw-snapshot` tool.
+Use the `ghwc -s` flag to supply a path to a snapshot to read with the `ghwc`
+command-line program.
 
-You can make `ghw` read hardware information from a snapshot created with
-`ghw-snapshot` using environment variables or programmatically.
-
-Use the `GHW_SNAPSHOT_PATH` environment variable to specify the filepath to a
-snapshot that `ghw` will read to determine hardware information. All the needed
-chroot changes will be automatically performed. By default, the snapshot is
-unpacked into a temporary directory managed by `ghw`. This temporary directory
-is automatically deleted when `ghw` is finished reading the snapshot.
-
-Three other environment variables are relevant if and only if `GHW_SNAPSHOT_PATH`
-is not empty:
-
-* `GHW_SNAPSHOT_ROOT` let users specify the directory on which the snapshot
-  should be unpacked. This moves the ownership of that directory from `ghw` to
-  users. For this reason, `ghw` will *not* automatically clean up the content
-  unpacked into `GHW_SNAPSHOT_ROOT`.
-* `GHW_SNAPSHOT_EXCLUSIVE` tells `ghw` that the directory is meant only to
-  contain the given snapshot, thus `ghw` will *not* attempt to unpack it unless
-  the directory is empty.  You can use both `GHW_SNAPSHOT_ROOT` and
-  `GHW_SNAPSHOT_EXCLUSIVE` to make sure `ghw` unpacks the snapshot only once
-  regardless of how many `ghw` packages (e.g. cpu, memory) access it. Set the
-  value of this environment variable to any non-empty string.
-* `GHW_SNAPSHOT_PRESERVE` tells `ghw` not to clean up the unpacked snapshot.
-  Set the value of this environment variable to any non-empty string.
-
-```go
-cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
-	Path: "/path/to/linux-amd64-d4771ed3300339bc75f856be09fc6430.tar.gz",
-}))
-
-
-myRoot := "/my/safe/directory"
-cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
-	Path: "/path/to/linux-amd64-d4771ed3300339bc75f856be09fc6430.tar.gz",
-	Root: &myRoot,
-}))
-
-myOtherRoot := "/my/other/safe/directory"
-cpu, err := ghw.CPU(ghw.WithSnapshot(ghw.SnapshotOptions{
-	Path:      "/path/to/linux-amd64-d4771ed3300339bc75f856be09fc6430.tar.gz",
-	Root:      &myOtherRoot,
-	Exclusive: true,
-}))
+```
+$ ghwc -s testdata/snapshots/linux-amd64-amd-ryzen-1600.tar.gz
+block storage (8 disks, 3TB physical storage)
+ dm-0 SSD (90GB) Unknown [@unknown (node #0)] vendor=unknown
+ dm-1 Unknown (16GB) Unknown [@unknown (node #0)] vendor=unknown
+ dm-2 SSD (60GB) Unknown [@unknown (node #0)] vendor=unknown
+ dm-3 SSD (13GB) Unknown [@unknown (node #0)] vendor=unknown
+ dm-4 SSD (436GB) Unknown [@unknown (node #0)] vendor=unknown
+ sda SSD (239GB) SCSI [@unknown (node #0)] vendor=unknown
+  sda1 (128MB) [unknown]
+  sda2 (384MB) [unknown]
+  sda3 (238GB) [unknown]
+ sdb HDD (932GB) SCSI [@unknown (node #0)] vendor=unknown
+  sdb1 (2GB) [unknown]
+  sdb2 (930GB) [unknown]
+ sdc SSD (466GB) SCSI [@unknown (node #0)] vendor=unknown
+  sdc1 (32GB) [unknown]
+  sdc2 (434GB) [unknown]
+cpu (1 physical package, 6 cores, 12 hardware threads)
+ physical package #0 (6 cores, 12 hardware threads)
+  processor core #0 (2 threads), logical processors [0 6]
+  processor core #1 (2 threads), logical processors [1 7]
+  processor core #5 (2 threads), logical processors [4 10]
+  processor core #6 (2 threads), logical processors [5 11]
+  processor core #2 (2 threads), logical processors [2 8]
+  processor core #4 (2 threads), logical processors [3 9]
+  capabilities: [msr pae mce cx8 apic sep
+                 mtrr pge mca cmov pat pse36
+                 clflush mmx fxsr sse sse2 ht
+                 syscall nx mmxext fxsr_opt pdpe1gb rdtscp
+                 lm constant_tsc art rep_good nopl nonstop_tsc
+                 extd_apicid aperfmperf eagerfpu pni pclmulqdq monitor
+                 ssse3 fma cx16 sse4_1 sse4_2 movbe
+                 popcnt aes xsave avx f16c rdrand
+                 lahf_lm cmp_legacy svm extapic cr8_legacy abm
+                 sse4a misalignsse 3dnowprefetch osvw skinit wdt
+                 tce topoext perfctr_core perfctr_nb bpext perfctr_l2
+                 hw_pstate sme retpoline_amd ssbd ibpb vmmcall
+                 fsgsbase bmi1 avx2 smep bmi2 rdseed
+                 adx smap clflushopt sha_ni xsaveopt xsavec
+                 xgetbv1 clzero irperf xsaveerptr arat npt
+                 lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid
+                 decodeassists pausefilter pfthreshold avic v_vmsave_vmload vgif
+                 overflow_recov succor smca]
+gpu (1 graphics card)
+ card #0 @0000:0a:00.0 -> driver: '' class: 'Display controller' vendor: 'Advanced Micro Devices, Inc. [AMD/ATI]' product: 'Turks XT [Radeon HD 6670/7670]'
+processing accelerators (0 devices)
+memory (32GB physical, 32GB usable)
+net (4 NICs)
+ enp3s0
+ enp6s0f0
+ enp6s0f1
+ enp8s0
+topology NUMA (0 nodes)
+chassis type=unknown vendor=unknown version=unknown
+bios vendor=unknown version=unknown
+baseboard vendor=unknown version=unknown product=unknown
+product family=unknown name=unknown vendor=unknown sku=unknown version=unknown
+PCI (43 devices)
 ```
 
 ### Creating snapshots
 
-You can create `ghw` snapshots using the `ghw-snapshot` tool or
+You can create `ghw` snapshots using the `ghwc snapshot` command or
 programmatically using the `pkg/snapshot` package.
 
 Below is an example of creating a `ghw` snapshot using the `pkg/snapshot`

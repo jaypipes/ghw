@@ -24,11 +24,12 @@ import (
 	"github.com/jaypipes/ghw/pkg/usb"
 )
 
+// DEPRECATED: Please use Option
 type WithOption = option.Option
+type Option = option.Option
 
 var (
 	WithChroot      = option.WithChroot
-	WithSnapshot    = option.WithSnapshot
 	WithAlerter     = option.WithAlerter
 	WithNullAlerter = option.WithNullAlerter
 	// match the existing environ variable to minimize surprises
@@ -36,8 +37,6 @@ var (
 	WithDisableTools    = option.WithDisableTools
 	WithPathOverrides   = option.WithPathOverrides
 )
-
-type SnapshotOptions = option.SnapshotOptions
 
 type PathOverrides = option.PathOverrides
 

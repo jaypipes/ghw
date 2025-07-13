@@ -11,6 +11,7 @@ import (
 
 	"github.com/yusufpapurcu/wmi"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -108,7 +109,7 @@ type win32PhysicalDisk struct {
 	MediaType physicalDiskMediaType
 }
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	win32DiskDriveDescriptions, err := getDiskDrives()
 	if err != nil {
 		return err

@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package command
+package commands
 
 import (
 	"crypto/md5"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
@@ -23,14 +24,23 @@ var (
 	outPath string
 )
 
-var createCmd = &cobra.Command{
-	Use:   "create",
+var snapshotCmd = &cobra.Command{
+	Use:   "snapshot",
 	Short: "Creates a new ghw snapshot",
-	RunE:  doCreate,
+	RunE:  doSnapshot,
 }
 
-// doCreate creates a ghw snapshot
-func doCreate(cmd *cobra.Command, args []string) error {
+func trace(msg string, args ...interface{}) {
+	if !debug {
+		return
+	}
+	fmt.Printf(msg, args...)
+}
+
+// doSnapshot creates a ghw snapshot
+func doSnapshot(cmd *cobra.Command, args []string) error {
+	opts := cmd.Context().Value(optsKey).([]ghw.Option)
+	_ = opts
 	scratchDir, err := os.MkdirTemp("", "ghw-snapshot")
 	if err != nil {
 		return err
@@ -75,11 +85,11 @@ func defaultOutPath() (string, error) {
 }
 
 func init() {
-	createCmd.PersistentFlags().StringVarP(
+	snapshotCmd.PersistentFlags().StringVarP(
 		&outPath,
 		"out", "o",
 		outPath,
 		"Path to place snapshot. Defaults to file in current directory with name $OS-$ARCH-$HASHSYSTEMNAME.tar.gz",
 	)
-	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(snapshotCmd)
 }

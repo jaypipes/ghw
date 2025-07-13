@@ -84,6 +84,9 @@ func TestBlock(t *testing.T) {
 }
 
 func TestBlockMarshalUnmarshal(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
 	blocks, err := block.New()
 	if err != nil {
 		t.Fatalf("Expected no error creating block.Info, but got %v", err)
@@ -106,6 +109,9 @@ type blockData struct {
 }
 
 func TestBlockUnmarshal(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
 	testdataPath, err := testdata.SamplesDirectory()
 	if err != nil {
 		t.Fatalf("Expected nil err when detecting the samples directory, but got %v", err)

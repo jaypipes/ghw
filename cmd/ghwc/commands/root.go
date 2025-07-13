@@ -7,12 +7,21 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+)
+
+type optKey string
+
+const (
+	optsKey optKey = "ghwc.opts"
 )
 
 const (
@@ -21,6 +30,7 @@ const (
 	outputFormatYAML  = "yaml"
 	usageOutputFormat = `Output format.
 Choices are 'json','yaml', and 'human'.`
+	usageSnapshotPath = `Specify path to snapshot.`
 )
 
 var (
@@ -34,7 +44,8 @@ var (
 		outputFormatJSON,
 		outputFormatYAML,
 	}
-	pretty bool
+	snapshotPath string
+	pretty       bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -42,8 +53,7 @@ var rootCmd = &cobra.Command{
 	Use:   "ghwc",
 	Short: "ghwc - Discover hardware information.",
 	Args:  validateRootCommand,
-	Long: `
-          __
+	Long: `          __
  .-----. |  |--. .--.--.--.
  |  _  | |     | |  |  |  |
  |___  | |__|__| |________|
@@ -53,7 +63,30 @@ Discover hardware information.
 
 https://github.com/jaypipes/ghw
 `,
-	RunE: showAll,
+	PersistentPreRunE: doPreRun,
+	RunE:              showAll,
+	SilenceUsage:      true,
+}
+
+func init() {
+	rootCmd.PersistentFlags().BoolVar(
+		&debug, "debug", false, "Enable or disable debug mode",
+	)
+	rootCmd.PersistentFlags().StringVarP(
+		&outputFormat,
+		"format", "f",
+		outputFormatHuman,
+		usageOutputFormat,
+	)
+	rootCmd.PersistentFlags().BoolVar(
+		&pretty, "pretty", false, "When outputting JSON, use indentation",
+	)
+	rootCmd.PersistentFlags().StringVarP(
+		&snapshotPath,
+		"snapshot-path", "s",
+		"",
+		usageSnapshotPath,
+	)
 }
 
 func showAll(cmd *cobra.Command, args []string) error {
@@ -106,7 +139,6 @@ func Execute(v string, bh string, bd string) {
 	buildDate = bd
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -120,26 +152,48 @@ func haveValidOutputFormat() bool {
 	return false
 }
 
+func validateSnapshotPath() error {
+	if _, err := os.Stat(snapshotPath); err != nil {
+		return fmt.Errorf("invalid snapshot path: %w", err)
+	}
+	return nil
+}
+
 // validateRootCommand ensures any CLI options or arguments are valid,
 // returning an error if not
 func validateRootCommand(rootCmd *cobra.Command, args []string) error {
 	if !haveValidOutputFormat() {
 		return fmt.Errorf("invalid output format %q", outputFormat)
 	}
+	if snapshotPath != "" {
+		if err := validateSnapshotPath(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func init() {
-	rootCmd.PersistentFlags().BoolVar(
-		&debug, "debug", false, "Enable or disable debug mode",
-	)
-	rootCmd.PersistentFlags().StringVarP(
-		&outputFormat,
-		"format", "f",
-		outputFormatHuman,
-		usageOutputFormat,
-	)
-	rootCmd.PersistentFlags().BoolVar(
-		&pretty, "pretty", false, "When outputting JSON, use indentation",
-	)
+func doPreRun(cmd *cobra.Command, args []string) error {
+	opts := []option.Option{}
+	if snapshotPath != "" {
+		// unpack the snapshot into a tempdir and clean up this tempdir after
+		// the run...
+		unpackDir, err := os.MkdirTemp("", "ghw-snap-*")
+		if err != nil {
+			return err
+		}
+		err = snapshot.UnpackInto(snapshotPath, unpackDir)
+		if err != nil {
+			return err
+		}
+		opts = append(opts, ghw.WithChroot(unpackDir))
+		cmd.PersistentPostRunE = func(c *cobra.Command, args []string) error {
+			_ = os.RemoveAll(unpackDir)
+			return nil
+		}
+	}
+	ctx := context.TODO()
+	ctx = context.WithValue(ctx, optsKey, opts)
+	cmd.SetContext(ctx)
+	return nil
 }

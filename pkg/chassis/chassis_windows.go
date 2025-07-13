@@ -8,6 +8,7 @@ package chassis
 import (
 	"github.com/yusufpapurcu/wmi"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -25,7 +26,7 @@ type win32Chassis struct {
 	Version          *string
 }
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	// Getting data from WMI
 	var win32ChassisDescriptions []win32Chassis
 	if err := wmi.Query(wqlChassis, &win32ChassisDescriptions); err != nil {

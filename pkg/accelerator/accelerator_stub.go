@@ -12,8 +12,10 @@ import (
 	"runtime"
 
 	"github.com/pkg/errors"
+
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load() error {
+func (i *Info) load(opt ...option.Option) error {
 	return errors.New("accelerator.Info.load not implemented on " + runtime.GOOS)
 }
