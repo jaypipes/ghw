@@ -9,7 +9,6 @@ package accelerator
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
@@ -37,17 +36,14 @@ func (dev *AcceleratorDevice) String() string {
 }
 
 type Info struct {
-	ctx     *context.Context
 	Devices []*AcceleratorDevice `json:"devices"`
 }
 
 // New returns a pointer to an Info struct that contains information about the
 // accelerator devices on the host system
-func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
-	info := &Info{ctx: ctx}
-
-	if err := ctx.Do(info.load); err != nil {
+func New(opt ...option.Option) (*Info, error) {
+	info := &Info{}
+	if err := info.load(opt...); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -74,11 +70,11 @@ type acceleratorPrinter struct {
 // YAMLString returns a string with the processing accelerators information formatted as YAML
 // under a top-level "accelerator:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(i.ctx, acceleratorPrinter{i})
+	return marshal.SafeYAML(acceleratorPrinter{i})
 }
 
 // JSONString returns a string with the processing accelerators information formatted as JSON
 // under a top-level "accelerator:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(i.ctx, acceleratorPrinter{i}, indent)
+	return marshal.SafeJSON(acceleratorPrinter{i}, indent)
 }

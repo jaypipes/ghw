@@ -27,19 +27,11 @@ func testScenario(t *testing.T, filename string, expectedDevs int) {
 
 	workstationSnapshot := filepath.Join(testdataPath, filename)
 
-	tmpRoot, err := os.MkdirTemp("", "ghw-accelerator-testing-*")
-	if err != nil {
-		t.Fatalf("Unable to create temporary directory: %v", err)
-	}
-
-	_, err = snapshot.UnpackInto(workstationSnapshot, tmpRoot, 0)
+	tmpRoot := t.TempDir()
+	err = snapshot.UnpackInto(workstationSnapshot, tmpRoot)
 	if err != nil {
 		t.Fatalf("Unable to unpack %q into %q: %v", workstationSnapshot, tmpRoot, err)
 	}
-
-	defer func() {
-		_ = snapshot.Cleanup(tmpRoot)
-	}()
 
 	info, err := accelerator.New(option.WithChroot(tmpRoot))
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/testdata"
 )
@@ -33,9 +34,13 @@ func TestArmCPU(t *testing.T) {
 
 	multiNumaSnapshot := filepath.Join(testdataPath, "linux-arm64-c288e0776090cd558ef793b2a4e61939.tar.gz")
 
-	info, err := cpu.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(multiNumaSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := cpu.New(option.WithChroot(unpackDir))
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -98,9 +103,13 @@ func TestCheckCPUTopologyFilesForOfflineCPU(t *testing.T) {
 	}
 	os.Stderr = wErr
 
-	info, err := cpu.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: offlineCPUSnapshot,
-	}))
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(offlineCPUSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := cpu.New(option.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -139,9 +148,13 @@ func TestNumCoresAmongOfflineCPUs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cannot pipe the StdErr. %v", err)
 	}
-	info, err := topology.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: offlineCPUSnapshot,
-	}))
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(offlineCPUSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := topology.New(option.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Error determining node topology. %v", err)
 	}

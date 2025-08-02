@@ -23,7 +23,8 @@ var topologyCmd = &cobra.Command{
 
 // showTopology show topology information for the host system.
 func showTopology(cmd *cobra.Command, args []string) error {
-	topology, err := ghw.Topology()
+	opts := cmd.Context().Value(optsKey).([]ghw.Option)
+	topology, err := ghw.Topology(opts...)
 	if err != nil {
 		return errors.Wrap(err, "error getting topology info")
 	}

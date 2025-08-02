@@ -12,14 +12,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/memory"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load() error {
-	i.Nodes = topologyNodes(i.ctx)
+func (i *Info) load(opts *option.Options) error {
+	i.Nodes = topologyNodes(opts)
 	if len(i.Nodes) == 1 {
 		i.Architecture = ArchitectureSMP
 	} else {
@@ -28,13 +28,13 @@ func (i *Info) load() error {
 	return nil
 }
 
-func topologyNodes(ctx *context.Context) []*Node {
-	paths := linuxpath.New(ctx)
+func topologyNodes(opts *option.Options) []*Node {
+	paths := linuxpath.New(opts)
 	nodes := make([]*Node, 0)
 
 	files, err := os.ReadDir(paths.SysDevicesSystemNode)
 	if err != nil {
-		ctx.Warn("failed to determine nodes: %s\n", err)
+		opts.Warn("failed to determine nodes: %s\n", err)
 		return nodes
 	}
 	for _, file := range files {
@@ -45,33 +45,33 @@ func topologyNodes(ctx *context.Context) []*Node {
 		node := &Node{}
 		nodeID, err := strconv.Atoi(filename[4:])
 		if err != nil {
-			ctx.Warn("failed to determine node ID: %s\n", err)
+			opts.Warn("failed to determine node ID: %s\n", err)
 			return nodes
 		}
 		node.ID = nodeID
-		cores, err := cpu.CoresForNode(ctx, nodeID)
+		cores, err := cpu.CoresForNode(opts, nodeID)
 		if err != nil {
-			ctx.Warn("failed to determine cores for node: %s\n", err)
+			opts.Warn("failed to determine cores for node: %s\n", err)
 			return nodes
 		}
 		node.Cores = cores
-		caches, err := memory.CachesForNode(ctx, nodeID)
+		caches, err := memory.CachesForNode(opts, nodeID)
 		if err != nil {
-			ctx.Warn("failed to determine caches for node: %s\n", err)
+			opts.Warn("failed to determine caches for node: %s\n", err)
 			return nodes
 		}
 		node.Caches = caches
 
-		distances, err := distancesForNode(ctx, nodeID)
+		distances, err := distancesForNode(paths, nodeID)
 		if err != nil {
-			ctx.Warn("failed to determine node distances for node: %s\n", err)
+			opts.Warn("failed to determine node distances for node: %s\n", err)
 			return nodes
 		}
 		node.Distances = distances
 
-		area, err := memory.AreaForNode(ctx, nodeID)
+		area, err := memory.AreaForNode(paths, nodeID)
 		if err != nil {
-			ctx.Warn("failed to determine memory area for node: %s\n", err)
+			opts.Warn("failed to determine memory area for node: %s\n", err)
 			return nodes
 		}
 		node.Memory = area
@@ -81,8 +81,7 @@ func topologyNodes(ctx *context.Context) []*Node {
 	return nodes
 }
 
-func distancesForNode(ctx *context.Context, nodeID int) ([]int, error) {
-	paths := linuxpath.New(ctx)
+func distancesForNode(paths *linuxpath.Paths, nodeID int) ([]int, error) {
 	path := filepath.Join(
 		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),

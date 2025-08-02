@@ -6,7 +6,7 @@
 package accelerator
 
 import (
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 )
 
@@ -31,13 +31,17 @@ var (
 	}
 )
 
-func (i *Info) load() error {
+func (i *Info) load(opt ...option.Option) error {
 	accelDevices := make([]*AcceleratorDevice, 0)
+	opts := &option.Options{}
+	for _, o := range opt {
+		o(opts)
+	}
 
 	// get PCI devices
-	pciInfo, err := pci.New(context.WithContext(i.ctx))
+	pciInfo, err := pci.New(opt...)
 	if err != nil {
-		i.ctx.Warn("error loading PCI information: %s", err)
+		opts.Warn("error loading PCI information: %s", err)
 		return nil
 	}
 
