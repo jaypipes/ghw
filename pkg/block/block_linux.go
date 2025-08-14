@@ -331,7 +331,10 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
 		// diskIsRotational for ease of unit testing
-		if !diskIsRotational(ctx, paths, dname) {
+		// Only reclassify HDD to SSD if non-rotational to avoid changing already correct types.
+		// This addresses changed kernel behavior where rotational detection may be unreliable,
+		// where some kernels report CD-ROM drives as non-rotational, incorrectly classifying them as SSD.
+		if !diskIsRotational(ctx, paths, dname) && driveType == DRIVE_TYPE_HDD {
 			driveType = DRIVE_TYPE_SSD
 		}
 		size := diskSizeBytes(paths, dname)
