@@ -331,7 +331,7 @@ func disks(ctx *context.Context, paths *linuxpath.Paths) []*Disk {
 		driveType, storageController := diskTypes(dname)
 		// TODO(jaypipes): Move this into diskTypes() once abstracting
 		// diskIsRotational for ease of unit testing
-		if !diskIsRotational(ctx, paths, dname) {
+		if !diskIsRotational(ctx, paths, dname) && driveType == DRIVE_TYPE_HDD {
 			driveType = DRIVE_TYPE_SSD
 		}
 		size := diskSizeBytes(paths, dname)
