@@ -6,7 +6,7 @@
 package chassis
 
 import (
-	"github.com/StackExchange/wmi"
+	"github.com/yusufpapurcu/wmi"
 
 	"github.com/jaypipes/ghw/pkg/util"
 )
