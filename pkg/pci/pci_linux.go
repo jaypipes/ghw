@@ -47,7 +47,8 @@ func (i *Info) load() error {
 		i.db = db
 	}
 	i.Devices = i.getDevices()
-	return nil
+	// we need to do another pass once we filled all the PCI devices.
+	return i.fillSRIOVDevices()
 }
 
 func getDeviceModaliasPath(ctx *context.Context, pciAddr *pciaddr.Address) string {
@@ -406,9 +407,9 @@ func (info *Info) getDevices() []*Device {
 		dev = info.GetDevice(addr)
 		if dev == nil {
 			info.ctx.Warn("failed to get device information for PCI address %s", addr)
-		} else {
-			devs = append(devs, dev)
+			continue
 		}
+		devs = append(devs, dev)
 	}
 	return devs
 }

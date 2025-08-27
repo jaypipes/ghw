@@ -9,6 +9,7 @@ package pci
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/jaypipes/pcidb"
 
@@ -36,6 +37,8 @@ type Device struct {
 	// architecture is not NUMA.
 	Node   *topology.Node `json:"node,omitempty"`
 	Driver string         `json:"driver"`
+	// If this device is a SRIOV function, this field is non-nil
+	Function *Function `json:"function,omitempty"`
 }
 
 type devIdent struct {
@@ -105,13 +108,18 @@ func (d *Device) String() string {
 	if d.Class != nil {
 		className = d.Class.Name
 	}
+	fnInfo := ""
+	if d.Function != nil {
+		fnInfo = " " + d.Function.String()
+	}
 	return fmt.Sprintf(
-		"%s -> driver: '%s' class: '%s' vendor: '%s' product: '%s'",
+		"%s -> driver: '%s' class: '%s' vendor: '%s' product: '%s'%s",
 		d.Address,
 		d.Driver,
 		className,
 		vendorName,
 		productName,
+		fnInfo,
 	)
 }
 
@@ -125,6 +133,42 @@ type Info struct {
 
 func (i *Info) String() string {
 	return fmt.Sprintf("PCI (%d devices)", len(i.Devices))
+}
+
+type DevicesPrinter struct {
+	ctx  *context.Context
+	devs []*Device
+}
+
+func (dp DevicesPrinter) String() string {
+	var sb strings.Builder
+	for _, dev := range dp.devs {
+		fmt.Fprintf(&sb, "%s\n", dev.String())
+	}
+	return sb.String()
+}
+
+func (dp DevicesPrinter) JSONString(pretty bool) string {
+	var sb strings.Builder
+	for _, dev := range dp.devs {
+		fmt.Fprintf(&sb, "%s\n", marshal.SafeJSON(dp.ctx, dev, pretty))
+	}
+	return sb.String()
+}
+
+func (dp DevicesPrinter) YAMLString() string {
+	var sb strings.Builder
+	for _, dev := range dp.devs {
+		fmt.Fprintf(&sb, "%s\n", marshal.SafeYAML(dp.ctx, dev))
+	}
+	return sb.String()
+}
+
+func (i *Info) DescribeDevices(devs []*Device) DevicesPrinter {
+	return DevicesPrinter{
+		ctx:  i.ctx,
+		devs: devs,
+	}
 }
 
 // New returns a pointer to an Info struct that contains information about the
