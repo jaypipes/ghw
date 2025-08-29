@@ -56,6 +56,7 @@ func PathRootsFromContext(ctx *context.Context) PathRoots {
 }
 
 type Paths struct {
+	SysRoot                string
 	VarLog                 string
 	ProcMeminfo            string
 	ProcCpuinfo            string
@@ -66,6 +67,7 @@ type Paths struct {
 	SysDevicesSystemMemory string
 	SysDevicesSystemCPU    string
 	SysBusPciDevices       string
+	SysBusUsbDevices       string
 	SysClassDRM            string
 	SysClassDMI            string
 	SysClassNet            string
@@ -77,6 +79,7 @@ type Paths struct {
 func New(ctx *context.Context) *Paths {
 	roots := PathRootsFromContext(ctx)
 	return &Paths{
+		SysRoot:                filepath.Join(ctx.Chroot, roots.Sys),
 		VarLog:                 filepath.Join(ctx.Chroot, roots.Var, "log"),
 		ProcMeminfo:            filepath.Join(ctx.Chroot, roots.Proc, "meminfo"),
 		ProcCpuinfo:            filepath.Join(ctx.Chroot, roots.Proc, "cpuinfo"),
@@ -87,6 +90,7 @@ func New(ctx *context.Context) *Paths {
 		SysDevicesSystemMemory: filepath.Join(ctx.Chroot, roots.Sys, "devices", "system", "memory"),
 		SysDevicesSystemCPU:    filepath.Join(ctx.Chroot, roots.Sys, "devices", "system", "cpu"),
 		SysBusPciDevices:       filepath.Join(ctx.Chroot, roots.Sys, "bus", "pci", "devices"),
+		SysBusUsbDevices:       filepath.Join(ctx.Chroot, roots.Sys, "bus", "usb", "devices"),
 		SysClassDRM:            filepath.Join(ctx.Chroot, roots.Sys, "class", "drm"),
 		SysClassDMI:            filepath.Join(ctx.Chroot, roots.Sys, "class", "dmi"),
 		SysClassNet:            filepath.Join(ctx.Chroot, roots.Sys, "class", "net"),
