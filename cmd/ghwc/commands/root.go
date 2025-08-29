@@ -60,39 +60,26 @@ func showAll(cmd *cobra.Command, args []string) error {
 
 	switch outputFormat {
 	case outputFormatHuman:
-		if err := showBlock(cmd, args); err != nil {
-			return err
+		for _, f := range []func(*cobra.Command, []string) error{
+			showBlock,
+			showCPU,
+			showGPU,
+			showMemory,
+			showNetwork,
+			showTopology,
+			showChassis,
+			showBIOS,
+			showBaseboard,
+			showProduct,
+			showAccelerator,
+		} {
+			err := f(cmd, args)
+			if err != nil {
+				return err
+			}
+
 		}
-		if err := showCPU(cmd, args); err != nil {
-			return err
-		}
-		if err := showGPU(cmd, args); err != nil {
-			return err
-		}
-		if err := showMemory(cmd, args); err != nil {
-			return err
-		}
-		if err := showNetwork(cmd, args); err != nil {
-			return err
-		}
-		if err := showTopology(cmd, args); err != nil {
-			return err
-		}
-		if err := showChassis(cmd, args); err != nil {
-			return err
-		}
-		if err := showBIOS(cmd, args); err != nil {
-			return err
-		}
-		if err := showBaseboard(cmd, args); err != nil {
-			return err
-		}
-		if err := showProduct(cmd, args); err != nil {
-			return err
-		}
-		if err := showAccelerator(cmd, args); err != nil {
-			return err
-		}
+
 	case outputFormatJSON:
 		host, err := ghw.Host()
 		if err != nil {
