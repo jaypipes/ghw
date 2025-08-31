@@ -3,7 +3,7 @@ module github.com/jaypipes/ghw
 go 1.21
 
 require (
-	github.com/jaypipes/pcidb v1.1.0
+	github.com/jaypipes/pcidb v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.9.1
 	github.com/yusufpapurcu/wmi v1.2.4
