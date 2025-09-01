@@ -1,5 +1,5 @@
-//go:build !linux
-// +build !linux
+//go:build !linux && !cgo
+// +build !linux,!cgo
 
 // Use and distribution licensed under the Apache license version 2.
 //
@@ -15,5 +15,5 @@ import (
 )
 
 func (i *Info) load() error {
-	return errors.New("usb load not implemented on " + runtime.GOOS)
+	return errors.New("usb load not implemented without cgo on " + runtime.GOOS)
 }
