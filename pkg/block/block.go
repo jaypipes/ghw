@@ -272,6 +272,8 @@ type Partition struct {
 	// FilesystemLabel is the label of the filesystem contained on the
 	// partition. On Linux, this is derived from the `ID_FS_NAME` udev entry.
 	FilesystemLabel string `json:"filesystem_label"`
+	// Gets the system assigned or user assigned volume name
+	VolumeName string `json:"volume_name"`
 }
 
 // Info describes all disk drives and partitions in the host system.
