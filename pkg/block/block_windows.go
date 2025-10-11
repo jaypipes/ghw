@@ -85,7 +85,7 @@ type win32LogicalDiskToPartition struct {
 	Dependent  *string
 }
 
-const wqlLogicalDisk = "SELECT Caption, CreationClassName, Description, DeviceID, FileSystem, FreeSpace, Name, Size, SystemName, VolumeSerialNumber  FROM Win32_LogicalDisk"
+const wqlLogicalDisk = "SELECT Caption, CreationClassName, Description, DeviceID, FileSystem, FreeSpace, Name, Size, SystemName, VolumeName, VolumeSerialNumber  FROM Win32_LogicalDisk"
 
 type win32LogicalDisk struct {
 	Caption            *string
@@ -97,6 +97,7 @@ type win32LogicalDisk struct {
 	Name               *string
 	Size               *uint64
 	SystemName         *string
+	VolumeName         *string
 	VolumeSerialNumber *string
 }
 
@@ -182,6 +183,7 @@ func (i *Info) load() error {
 								Type:       *diskpartition.Type,
 								IsReadOnly: toReadOnly(*diskpartition.Access),
 								UUID:       *logicaldisk.VolumeSerialNumber,
+								VolumeName: *logicaldisk.VolumeName,
 							}
 							disk.Partitions = append(disk.Partitions, p)
 							break
