@@ -176,14 +176,13 @@ func (i *Info) load() error {
 							// Appending Partition
 							p := &Partition{
 								Disk:       disk,
-								Name:       strings.TrimSpace(*logicaldisk.Caption),
+								Name:       strings.TrimSpace(*logicaldisk.VolumeName),
 								Label:      strings.TrimSpace(*logicaldisk.Caption),
 								SizeBytes:  *logicaldisk.Size,
 								MountPoint: *logicaldisk.DeviceID,
 								Type:       *diskpartition.Type,
 								IsReadOnly: toReadOnly(*diskpartition.Access),
 								UUID:       *logicaldisk.VolumeSerialNumber,
-								VolumeName: *logicaldisk.VolumeName,
 							}
 							disk.Partitions = append(disk.Partitions, p)
 							break

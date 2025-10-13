@@ -251,7 +251,7 @@ type Disk struct {
 type Partition struct {
 	// Disk is a pointer to the `Disk` struct that houses this partition.
 	Disk *Disk `json:"-"`
-	// Name is the system name given to the partition, e.g. "sda1".
+	// Name is the system given or user given name to the partition, e.g. "sda1".
 	Name string `json:"name"`
 	// Label is the human-readable label given to the partition. On Linux, this
 	// is derived from the `ID_PART_ENTRY_NAME` udev entry.
@@ -272,8 +272,6 @@ type Partition struct {
 	// FilesystemLabel is the label of the filesystem contained on the
 	// partition. On Linux, this is derived from the `ID_FS_NAME` udev entry.
 	FilesystemLabel string `json:"filesystem_label"`
-	// VolumeName is the name of the volume assigned by Windows or set by the User
-	VolumeName string `json:"volume_name"`
 }
 
 // Info describes all disk drives and partitions in the host system.
