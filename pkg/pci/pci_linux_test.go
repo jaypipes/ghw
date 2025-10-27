@@ -23,15 +23,16 @@ import (
 )
 
 type pciTestCase struct {
-	addr     string
-	node     int
-	revision string
-	driver   string
+	addr       string
+	node       int
+	revision   string
+	driver     string
+	iommuGroup string
 }
 
 // nolint: gocyclo
 func TestPCINUMANode(t *testing.T) {
-	info := pciTestSetup(t)
+	info := pciTestSetupXeon(t)
 
 	tCases := []pciTestCase{
 		{
@@ -69,7 +70,7 @@ func TestPCINUMANode(t *testing.T) {
 
 // nolint: gocyclo
 func TestPCIDeviceRevision(t *testing.T) {
-	info := pciTestSetup(t)
+	info := pciTestSetupXeon(t)
 
 	var tCases []pciTestCase = []pciTestCase{
 		{
@@ -95,8 +96,38 @@ func TestPCIDeviceRevision(t *testing.T) {
 }
 
 // nolint: gocyclo
+func TestPCIIommuGroup(t *testing.T) {
+	info := pciTestSetupI7(t)
+	tCases := []pciTestCase{
+		{
+			addr:       "0000:00:1f.0",
+			iommuGroup: "13",
+		},
+		{
+			addr:       "0000:00:1f.5",
+			iommuGroup: "13",
+		},
+		{
+			addr:       "0000:04:00.0",
+			iommuGroup: "14",
+		},
+	}
+	for _, tCase := range tCases {
+		t.Run(fmt.Sprintf("%s (%s)", tCase.addr, tCase.iommuGroup), func(t *testing.T) {
+			dev := info.GetDevice(tCase.addr)
+			if dev == nil {
+				t.Fatalf("got nil device for address %q", tCase.addr)
+			}
+			if dev.IOMMUGroup != tCase.iommuGroup {
+				t.Errorf("got iommu_group %q expected %q", dev.IOMMUGroup, tCase.iommuGroup)
+			}
+		})
+	}
+}
+
+// nolint: gocyclo
 func TestPCIDriver(t *testing.T) {
-	info := pciTestSetup(t)
+	info := pciTestSetupXeon(t)
 
 	tCases := []pciTestCase{
 		{
@@ -166,7 +197,17 @@ func TestPCIMalformedModalias(t *testing.T) {
 	}
 }
 
-func pciTestSetup(t *testing.T) *pci.Info {
+func pciTestSetupXeon(t *testing.T) *pci.Info {
+	const snapshotFilename = "linux-amd64-intel-xeon-L5640.tar.gz"
+	return pciTestSetup(t, snapshotFilename)
+}
+
+func pciTestSetupI7(t *testing.T) *pci.Info {
+	const snapshotFilename = "linux-amd64-intel-i7-1270P.tar.gz"
+	return pciTestSetup(t, snapshotFilename)
+}
+
+func pciTestSetup(t *testing.T, snapshotFilename string) *pci.Info {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
 		t.Skip("Skipping PCI tests.")
 	}
@@ -176,14 +217,14 @@ func pciTestSetup(t *testing.T) *pci.Info {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	snapshot := filepath.Join(testdataPath, snapshotFilename)
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
 	info, err := pci.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
+		Path: snapshot,
 	}))
 
 	if err != nil {
