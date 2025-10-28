@@ -62,6 +62,7 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		"class",
 		"device",
 		"driver",
+		"iommu_group",
 		"irq",
 		"local_cpulist",
 		"modalias",
