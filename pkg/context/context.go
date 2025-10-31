@@ -8,6 +8,7 @@ package context
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
@@ -173,6 +174,10 @@ func (ctx *Context) Teardown() error {
 	return snapshot.Cleanup(ctx.snapshotUnpackedPath)
 }
 
+// Warn Send warnings to log with timestamp
 func (ctx *Context) Warn(msg string, args ...interface{}) {
-	ctx.alert.Printf("WARNING: "+msg, args...)
+	location, _ := time.LoadLocation("UTC")
+	timestamp := time.Now().In(location).Format("2006-01-02T15:04:05.000000-07:00")
+	formatedMsg := fmt.Sprintf("[%s] WARNING: %s", timestamp, msg)
+	ctx.alert.Printf(formatedMsg, args...)
 }
