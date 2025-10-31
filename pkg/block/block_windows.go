@@ -6,8 +6,11 @@
 package block
 
 import (
+	"os"
 	"strconv"
 	"strings"
+	"syscall"
+	"unsafe"
 
 	"github.com/yusufpapurcu/wmi"
 
@@ -209,6 +212,26 @@ func getDiskDrives() ([]win32DiskDrive, error) {
 	var win3232DiskDriveDescriptions []win32DiskDrive
 	if err := wmi.Query(wqlDiskDrive, &win3232DiskDriveDescriptions); err != nil {
 		return nil, err
+	}
+	for _, disk := range win3232DiskDriveDescriptions {
+		if disk.DeviceID == nil {
+			continue
+		}
+		volume, err := os.OpenFile(*disk.DeviceID, os.O_RDWR, 0)
+		if err != nil {
+			continue
+		}
+		// Get the volume's underlying partition size in NTFS clusters.
+		var (
+			partitionSize int64
+			bytes         uint32
+		)
+		const _IOCTL_DISK_GET_LENGTH_INFO = 0x0007405C
+		err = syscall.DeviceIoControl(syscall.Handle(volume.Fd()), _IOCTL_DISK_GET_LENGTH_INFO, nil, 0, (*byte)(unsafe.Pointer(&partitionSize)), 8, &bytes, nil)
+		volume.Close()
+		if err == nil {
+			*disk.Size = uint64(partitionSize)
+		}
 	}
 	return win3232DiskDriveDescriptions, nil
 }
