@@ -59,6 +59,7 @@ type devMarshallable struct {
 	Class         devIdent `json:"class"`
 	Subclass      devIdent `json:"subclass"`
 	Interface     devIdent `json:"programming_interface"`
+	IOMMUGroup    string   `json:"iommu_group"`
 }
 
 // NOTE(jaypipes) Device has a custom JSON marshaller because we don't want
@@ -95,6 +96,7 @@ func (d *Device) MarshalJSON() ([]byte, error) {
 			ID:   d.ProgrammingInterface.ID,
 			Name: d.ProgrammingInterface.Name,
 		},
+		IOMMUGroup: d.IOMMUGroup,
 	}
 	return json.Marshal(dm)
 }
