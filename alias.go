@@ -32,10 +32,10 @@ var (
 	// DEPRECATED: Please use WithLogger
 	WithAlerter = option.WithAlerter
 	// DEPRECATED: Please use WithDisableWarnings
-	WithNullAlerter = option.WithNullAlerter
-	// match the existing environ variable to minimize surprises
+	WithNullAlerter     = option.WithNullAlerter
 	WithDisableWarnings = config.WithDisableWarnings
 	WithDisableTools    = config.WithDisableTools
+	WithDisableTopology = config.WithDisableTopology
 	WithPathOverrides   = config.WithPathOverrides
 	WithLogLevel        = config.WithLogLevel
 	WithDebug           = config.WithDebug
