@@ -146,11 +146,16 @@ func New(opts ...*option.Option) (*Info, error) {
 	// a chance to run before any subordinate package is created reusing
 	// our context.
 	loadDetectingTopology := func() error {
-		topo, err := topology.New(context.WithContext(ctx))
-		if err == nil {
-			info.arch = topo.Architecture
+		// Skip topology detection if requested to reduce memory consumption
+		if merged.DisableTopology != nil && *merged.DisableTopology {
+			ctx.Warn("topology detection disabled, assuming SMP architecture")
 		} else {
-			ctx.Warn("error detecting system topology: %v", err)
+			topo, err := topology.New(context.WithContext(ctx))
+			if err == nil {
+				info.arch = topo.Architecture
+			} else {
+				ctx.Warn("error detecting system topology: %v", err)
+			}
 		}
 		if merged.PCIDB != nil {
 			info.db = merged.PCIDB

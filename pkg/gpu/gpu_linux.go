@@ -134,6 +134,14 @@ func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
 // affined to, setting the GraphicsCard.Node field accordingly. If the host
 // system is not a NUMA system, the Node field will be set to nil.
 func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
+	// Skip topology detection if requested to reduce memory consumption
+	if ctx.DisableTopology {
+		for _, card := range cards {
+			card.Node = nil
+		}
+		return
+	}
+
 	paths := linuxpath.New(ctx)
 	topo, err := topology.New(context.WithContext(ctx))
 	if err != nil {
