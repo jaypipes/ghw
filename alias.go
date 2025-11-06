@@ -36,6 +36,7 @@ var (
 	WithDisableWarnings = option.WithNullAlerter
 	WithDisableTools    = option.WithDisableTools
 	WithPathOverrides   = option.WithPathOverrides
+	WithDisableTopology = option.WithDisableTopology
 )
 
 type PathOverrides = option.PathOverrides

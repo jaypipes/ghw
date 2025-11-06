@@ -138,15 +138,21 @@ func gpuFillPCIDevice(pci *pci.Info, cards []*GraphicsCard) {
 // affined to, setting the GraphicsCard.Node field accordingly. If the host
 // system is not a NUMA system, the Node field will be set to nil.
 func gpuFillNUMANodes(opts *option.Options, cards []*GraphicsCard) {
+	// Skip topology detection if requested to reduce memory consumption
+	if opts.DisableTopology {
+		for _, card := range cards {
+			card.Node = nil
+		}
+		return
+	}
+
 	paths := linuxpath.New(opts)
 	topo, err := topology.New()
 	if err != nil {
 		// Problem getting topology information so just set the graphics card's
 		// node to nil
 		for _, card := range cards {
-			if topo.Architecture != topology.ArchitectureNUMA {
-				card.Node = nil
-			}
+			card.Node = nil
 		}
 		return
 	}

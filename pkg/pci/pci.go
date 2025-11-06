@@ -137,22 +137,32 @@ func (i *Info) String() string {
 // New returns a pointer to an Info struct that contains information about the
 // PCI devices on the host system
 func New(opt ...option.Option) (*Info, error) {
-	topo, err := topology.New(opt...)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to initialize PCI info dur to failure to initialize "+
-				"Topology info: %w",
-			err,
-		)
-	}
 	opts := &option.Options{}
 	for _, o := range opt {
 		o(opts)
 	}
+
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
 	info := &Info{
-		arch: topo.Architecture,
+		arch: topology.ArchitectureSMP, // default to SMP
+	}
+	// Skip topology detection if requested to reduce memory consumption
+	if opts.DisableTopology {
+		opts.Warn("topology detection disabled, assuming SMP architecture")
+	} else {
+		topo, err := topology.New(opt...)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to initialize PCI info due to failure to initialize "+
+					"Topology info: %w",
+				err,
+			)
+		}
+		info.arch = topo.Architecture
+	}
+	if opts.PCIDB != nil {
+		info.db = opts.PCIDB
 	}
 	if err := info.load(opts); err != nil {
 		return nil, err
