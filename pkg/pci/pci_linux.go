@@ -39,8 +39,12 @@ func (i *Info) load() error {
 	if i.ctx.SnapshotPath != "" {
 		chroot = option.DefaultChroot
 	}
+	opt := pcidb.WithChroot(chroot)
+	if path := os.Getenv("PCIDB_PATH"); path != "" {
+		opt = pcidb.WithPath(path)
+	}
 	if i.db == nil {
-		db, err := pcidb.New(pcidb.WithChroot(chroot))
+		db, err := pcidb.New(opt)
 		if err != nil {
 			return err
 		}
