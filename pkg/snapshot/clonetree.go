@@ -40,6 +40,7 @@ func CloneTreeInto(scratchDir string) error {
 func ExpectedCloneContent() []string {
 	fileSpecs := ExpectedCloneStaticContent()
 	fileSpecs = append(fileSpecs, ExpectedCloneNetContent()...)
+	fileSpecs = append(fileSpecs, ExpectedCloneUSBContent()...)
 	fileSpecs = append(fileSpecs, ExpectedClonePCIContent()...)
 	fileSpecs = append(fileSpecs, ExpectedCloneGPUContent()...)
 	return fileSpecs
