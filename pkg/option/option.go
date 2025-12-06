@@ -148,6 +148,13 @@ type Option struct {
 	// or providing an instance created with custom pcidb.WithOption settings, instead of
 	// letting ghw load the PCI database automatically.
 	PCIDB *pcidb.PCIDB
+
+	// DisableTopology skips system topology detection when calling PCI() or GPU().
+	// This can significantly reduce memory consumption when you only need basic
+	// hardware information and don't care about NUMA topology or node affinity.
+	// When enabled, the system architecture will be assumed to be SMP and device
+	// Node fields will be nil.
+	DisableTopology *bool
 }
 
 // SnapshotOptions contains options for handling of ghw snapshots
@@ -211,6 +218,16 @@ func WithPCIDB(pcidb *pcidb.PCIDB) *Option {
 	return &Option{PCIDB: pcidb}
 }
 
+// WithDisableTopology disables system topology detection to reduce memory consumption.
+// When using this option, ghw will skip scanning NUMA topology, CPU cores, memory
+// caches, and node distances. This is useful when you only need basic PCI or GPU
+// information and want to minimize memory overhead. The system architecture will be
+// assumed to be SMP, and device Node fields will be nil.
+func WithDisableTopology() *Option {
+	disabled := true
+	return &Option{DisableTopology: &disabled}
+}
+
 // PathOverrides is a map, keyed by the string name of a mount path, of override paths
 type PathOverrides map[string]string
 
@@ -251,6 +268,9 @@ func Merge(opts ...*Option) *Option {
 		}
 		if opt.PCIDB != nil {
 			merged.PCIDB = opt.PCIDB
+		}
+		if opt.DisableTopology != nil {
+			merged.DisableTopology = opt.DisableTopology
 		}
 	}
 	// Set the default value if missing from mergeOpts
