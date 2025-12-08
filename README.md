@@ -14,7 +14,7 @@ Windows. There currently exists partial support for MacOSX.
 
 * No root privileges needed for discovery
 
-  `ghw` goes the extra mile to be useful without root priveleges. We query for
+  `ghw` goes the extra mile to be useful without root privileges. We query for
   host hardware information as directly as possible without relying on shellouts
   to programs like `dmidecode` that require root privileges to execute.
 
@@ -520,7 +520,7 @@ information about the host computer's networking hardware.
 The `ghw.NetworkInfo` struct contains one field:
 
 * `ghw.NetworkInfo.NICs` is an array of pointers to `ghw.NIC` structs, one
-  for each network interface controller found for the systen
+  for each network interface controller found for the system
 
 Each `ghw.NIC` struct contains the following fields:
 
