@@ -47,8 +47,8 @@ func nics(ctx *context.Context) []*NIC {
 
 	for _, file := range files {
 		filename := file.Name()
-		// Ignore loopback...
-		if filename == "lo" {
+		// Ignore loopback and bonding_masters
+		if filename == "lo" || filename == "bonding_masters" {
 			continue
 		}
 
