@@ -28,3 +28,7 @@ func ExpectedCloneNetContent() []string {
 func ExpectedClonePCIContent() []string {
 	return []string{}
 }
+
+func ExpectedCloneUSBContent() []string {
+	return []string{}
+}

@@ -24,6 +24,7 @@ import (
 
 type pciTestCase struct {
 	addr       string
+	parentAddr string
 	node       int
 	revision   string
 	driver     string
@@ -90,6 +91,28 @@ func TestPCIDeviceRevision(t *testing.T) {
 			}
 			if dev.Revision != tCase.revision {
 				t.Errorf("device %q got revision %q expected %q", tCase.addr, dev.Revision, tCase.revision)
+			}
+		})
+	}
+}
+
+// nolint: gocyclo
+func TestPCIParent(t *testing.T) {
+	info := pciTestSetupI7(t)
+	tCases := []pciTestCase{
+		{
+			addr:       "0000:04:00.0",
+			parentAddr: "0000:00:06.0",
+		},
+	}
+	for _, tCase := range tCases {
+		t.Run(fmt.Sprintf("%s (%s)", tCase.addr, tCase.parentAddr), func(t *testing.T) {
+			dev := info.GetDevice(tCase.addr)
+			if dev == nil {
+				t.Fatalf("got nil device for address %q", tCase.addr)
+			}
+			if dev.ParentAddress != tCase.parentAddr {
+				t.Errorf("got parent %q expected %q", dev.ParentAddress, tCase.parentAddr)
 			}
 		})
 	}

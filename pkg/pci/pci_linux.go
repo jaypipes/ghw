@@ -110,6 +110,24 @@ func getDeviceIommuGroup(ctx *context.Context, pciAddr *pciaddr.Address) string 
 	return filepath.Base(dest)
 }
 
+func getDeviceParentAddress(ctx *context.Context, pciAddr *pciaddr.Address) string {
+	paths := linuxpath.New(ctx)
+	devPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String())
+
+	dest, err := os.Readlink(devPath)
+	if err != nil {
+		return ""
+	}
+
+	parentAddr := filepath.Base(filepath.Dir(dest))
+
+	if pciaddr.FromString(parentAddr) == nil {
+		return ""
+	}
+
+	return parentAddr
+}
+
 func getDeviceDriver(ctx *context.Context, pciAddr *pciaddr.Address) string {
 	paths := linuxpath.New(ctx)
 	driverPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "driver")
@@ -346,6 +364,7 @@ func (info *Info) GetDevice(address string) *Device {
 		device.Node = getDeviceNUMANode(info.ctx, pciAddr)
 	}
 	device.Driver = getDeviceDriver(info.ctx, pciAddr)
+	device.ParentAddress = getDeviceParentAddress(info.ctx, pciAddr)
 	device.IOMMUGroup = getDeviceIommuGroup(info.ctx, pciAddr)
 	return device
 }
