@@ -22,6 +22,7 @@ type Context struct {
 	SnapshotRoot         string
 	SnapshotExclusive    bool
 	PathOverrides        option.PathOverrides
+	DisableTopology      bool
 	snapshotUnpackedPath string
 	alert                option.Alerter
 	err                  error
@@ -81,6 +82,10 @@ func New(opts ...*option.Option) *Context {
 
 	if merged.PathOverrides != nil {
 		ctx.PathOverrides = merged.PathOverrides
+	}
+
+	if merged.DisableTopology != nil {
+		ctx.DisableTopology = *merged.DisableTopology
 	}
 
 	// New is not allowed to return error - it would break the established API.

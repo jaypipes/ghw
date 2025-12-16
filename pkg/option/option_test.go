@@ -172,6 +172,27 @@ func TestOption(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "disable topology",
+			opts: []*option.Option{
+				option.WithDisableTopology(),
+			},
+			merged: &option.Option{
+				DisableTopology: boolPtr(true),
+			},
+		},
+		{
+			name: "chroot and disable topology",
+			opts: []*option.Option{
+				option.WithChroot("/my/chroot/dir"),
+				option.WithDisableTopology(),
+			},
+			merged: &option.Option{
+				Chroot:          stringPtr("/my/chroot/dir"),
+				DisableTopology: boolPtr(true),
+				EnableTools:     boolPtr(true),
+			},
+		},
 	}
 	if pciTest != nil {
 		optTCases = append(optTCases, *pciTest)
@@ -218,6 +239,14 @@ func optionEqual(a, b *option.Option) (string, bool) {
 		}
 		if *a.EnableTools != *b.EnableTools {
 			return "enabletools value", false
+		}
+	}
+	if a.DisableTopology != nil {
+		if b.DisableTopology == nil {
+			return "disabletopology ptr", false
+		}
+		if *a.DisableTopology != *b.DisableTopology {
+			return "disabletopology value", false
 		}
 	}
 	return "", true
