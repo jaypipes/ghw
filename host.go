@@ -9,9 +9,6 @@ package ghw
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/context"
-	"github.com/jaypipes/ghw/pkg/usb"
-
 	"github.com/jaypipes/ghw/pkg/accelerator"
 	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
@@ -25,12 +22,12 @@ import (
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/product"
 	"github.com/jaypipes/ghw/pkg/topology"
+	"github.com/jaypipes/ghw/pkg/usb"
 )
 
 // HostInfo is a wrapper struct containing information about the host system's
 // memory, block storage, CPU, etc
 type HostInfo struct {
-	ctx         *context.Context
 	Memory      *memory.Info      `json:"memory"`
 	Block       *block.Info       `json:"block"`
 	CPU         *cpu.Info         `json:"cpu"`
@@ -48,9 +45,7 @@ type HostInfo struct {
 
 // Host returns a pointer to a HostInfo struct that contains fields with
 // information about the host system's CPU, memory, network devices, etc
-func Host(opts ...*WithOption) (*HostInfo, error) {
-	ctx := context.New(opts...)
-
+func Host(opts ...Option) (*HostInfo, error) {
 	memInfo, err := memory.New(opts...)
 	if err != nil {
 		return nil, err
@@ -105,7 +100,6 @@ func Host(opts ...*WithOption) (*HostInfo, error) {
 	}
 
 	return &HostInfo{
-		ctx:         ctx,
 		CPU:         cpuInfo,
 		Memory:      memInfo,
 		Block:       blockInfo,
@@ -146,11 +140,11 @@ func (info *HostInfo) String() string {
 // YAMLString returns a string with the host information formatted as YAML
 // under a top-level "host:" key
 func (i *HostInfo) YAMLString() string {
-	return marshal.SafeYAML(i.ctx, i)
+	return marshal.SafeYAML(i)
 }
 
 // JSONString returns a string with the host information formatted as JSON
 // under a top-level "host:" key
 func (i *HostInfo) JSONString(indent bool) string {
-	return marshal.SafeJSON(i.ctx, i, indent)
+	return marshal.SafeJSON(i, indent)
 }

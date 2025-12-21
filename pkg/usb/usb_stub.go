@@ -12,8 +12,10 @@ import (
 	"runtime"
 
 	"errors"
+
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	return errors.New("usb load not implemented on " + runtime.GOOS)
 }

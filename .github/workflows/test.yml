@@ -75,8 +75,8 @@ jobs:
          GHW_TESTING_SKIP_GPU: "1"
        run: go test -v ./...
 
-  windows-2022:
-    runs-on: windows-2022
+  windows-latest:
+    runs-on: windows-latest
     strategy:
       matrix:
         go: ['1.23', '1.24', '1.24']
@@ -119,8 +119,8 @@ jobs:
   # the tests have block skipped because we cannot get meaningful information
   # about the block devices in the Github Actions Runner virtual machines. So
   # this is really just a test of whether the library builds on MacOS 13.
-  macos-13:
-    runs-on: macos-13
+  macos-latest:
+    runs-on: macos-latest
     strategy:
       matrix:
         go: ['1.22', '1.23']

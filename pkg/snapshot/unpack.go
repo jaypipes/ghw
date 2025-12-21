@@ -12,52 +12,33 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
 const (
 	TargetRoot = "ghw-snapshot-*"
 )
 
-const (
-	// If set, `ghw` will not unpack the snapshot in the user-supplied directory
-	// unless the aforementioned directory is empty.
-	OwnTargetDirectory = 1 << iota
-)
-
-// Clanup removes the unpacket snapshot from the target root.
-// Please not that the environs variable `GHW_SNAPSHOT_PRESERVE`, if set,
-// will make this function silently skip.
-func Cleanup(targetRoot string) error {
-	if option.EnvOrDefaultSnapshotPreserve() {
-		return nil
-	}
-	return os.RemoveAll(targetRoot)
-}
-
-// Unpack expands the given snapshot in a temporary directory managed by `ghw`. Returns the path of that directory.
+// Unpack expands the given snapshot in a temporary directory managed by `ghw`.
+// Returns the path of that directory. Callers are responsible for cleaning up
+// the temporary directory.
 func Unpack(snapshotName string) (string, error) {
 	targetRoot, err := os.MkdirTemp("", TargetRoot)
 	if err != nil {
 		return "", err
 	}
-	_, err = UnpackInto(snapshotName, targetRoot, 0)
+	err = UnpackInto(snapshotName, targetRoot)
 	return targetRoot, err
 }
 
 // UnpackInto expands the given snapshot in a client-supplied directory.
 // Returns true if the snapshot was actually unpacked, false otherwise
-func UnpackInto(snapshotName, targetRoot string, flags uint) (bool, error) {
-	if (flags&OwnTargetDirectory) == OwnTargetDirectory && !isEmptyDir(targetRoot) {
-		return false, nil
-	}
+func UnpackInto(snapshotName, targetRoot string) error {
 	snap, err := os.Open(snapshotName)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer snap.Close()
-	return true, Untar(targetRoot, snap)
+	return Untar(targetRoot, snap)
 }
 
 // Untar extracts data from the given reader (providing data in tar.gz format) and unpacks it in the given directory.

@@ -7,14 +7,15 @@ package baseboard
 
 import (
 	"github.com/jaypipes/ghw/pkg/linuxdmi"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load() error {
-	i.AssetTag = linuxdmi.Item(i.ctx, "board_asset_tag")
-	i.SerialNumber = linuxdmi.Item(i.ctx, "board_serial")
-	i.Vendor = linuxdmi.Item(i.ctx, "board_vendor")
-	i.Version = linuxdmi.Item(i.ctx, "board_version")
-	i.Product = linuxdmi.Item(i.ctx, "board_name")
+func (i *Info) load(opts *option.Options) error {
+	i.AssetTag = linuxdmi.Item(opts, "board_asset_tag")
+	i.SerialNumber = linuxdmi.Item(opts, "board_serial")
+	i.Vendor = linuxdmi.Item(opts, "board_vendor")
+	i.Version = linuxdmi.Item(opts, "board_version")
+	i.Product = linuxdmi.Item(opts, "board_name")
 
 	return nil
 }

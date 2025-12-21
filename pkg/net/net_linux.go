@@ -14,8 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -23,24 +23,24 @@ const (
 	warnEthtoolNotInstalled = `ethtool not installed. Cannot grab NIC capabilities`
 )
 
-func (i *Info) load() error {
-	i.NICs = nics(i.ctx)
+func (i *Info) load(opts *option.Options) error {
+	i.NICs = nics(opts)
 	return nil
 }
 
-func nics(ctx *context.Context) []*NIC {
+func nics(opts *option.Options) []*NIC {
 	nics := make([]*NIC, 0)
 
-	paths := linuxpath.New(ctx)
+	paths := linuxpath.New(opts)
 	files, err := os.ReadDir(paths.SysClassNet)
 	if err != nil {
 		return nics
 	}
 
-	etAvailable := ctx.EnableTools
+	etAvailable := !opts.DisableTools
 	if etAvailable {
 		if etInstalled := ethtoolInstalled(); !etInstalled {
-			ctx.Warn(warnEthtoolNotInstalled)
+			opts.Warn(warnEthtoolNotInstalled)
 			etAvailable = false
 		}
 	}
@@ -68,7 +68,7 @@ func nics(ctx *context.Context) []*NIC {
 		nic.MacAddress = mac
 		nic.MACAddress = mac
 		if etAvailable {
-			nic.netDeviceParseEthtool(ctx, filename)
+			nic.netDeviceParseEthtool(opts, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
 			// Sets NIC struct fields from data in SysFs
@@ -108,7 +108,7 @@ func ethtoolInstalled() bool {
 	return err == nil
 }
 
-func (n *NIC) netDeviceParseEthtool(ctx *context.Context, dev string) {
+func (n *NIC) netDeviceParseEthtool(opts *option.Options, dev string) {
 	var out bytes.Buffer
 	path, _ := exec.LookPath("ethtool")
 
@@ -133,7 +133,7 @@ func (n *NIC) netDeviceParseEthtool(ctx *context.Context, dev string) {
 		n.AdvertisedFECModes = m["Advertised FEC modes"]
 	} else {
 		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
-		ctx.Warn(msg)
+		opts.Warn(msg)
 	}
 
 	// Get all other capabilities from "ethtool -k"
@@ -171,9 +171,8 @@ func (n *NIC) netDeviceParseEthtool(ctx *context.Context, dev string) {
 
 	} else {
 		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
-		ctx.Warn(msg)
+		opts.Warn(msg)
 	}
-
 }
 
 // netParseEthtoolFeature parses a line from the ethtool -k output and returns

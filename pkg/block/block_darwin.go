@@ -12,6 +12,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/pkg/errors"
 	"howett.net/plist"
 )
@@ -146,7 +147,11 @@ func getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
 		return nil, errors.Wrapf(err, "ioreg unmarshal for %q failed", ioDeviceTreePath)
 	}
 	if len(data) != 1 {
-		err := errors.Errorf("ioreg unmarshal resulted in %d I/O device tree nodes (expected 1)", len(data))
+		err := errors.Errorf(
+			"ioreg unmarshal resulted in %d I/O device tree nodes "+
+				"for path %q (expected 1)",
+			len(data), ioDeviceTreePath,
+		)
 		return nil, err
 	}
 
@@ -206,9 +211,9 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 	return sc
 }
 
-func (info *Info) load() error {
-	if !info.ctx.EnableTools {
-		return fmt.Errorf("EnableTools=false on darwin disables block support entirely.")
+func (info *Info) load(opts *option.Options) error {
+	if opts.DisableTools {
+		return fmt.Errorf("DisableTools=true on darwin disables block support entirely.")
 	}
 
 	listPlist, err := getDiskUtilListPlist()

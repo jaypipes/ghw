@@ -5,12 +5,15 @@
 
 package bios
 
-import "github.com/jaypipes/ghw/pkg/linuxdmi"
+import (
+	"github.com/jaypipes/ghw/pkg/linuxdmi"
+	"github.com/jaypipes/ghw/pkg/option"
+)
 
-func (i *Info) load() error {
-	i.Vendor = linuxdmi.Item(i.ctx, "bios_vendor")
-	i.Version = linuxdmi.Item(i.ctx, "bios_version")
-	i.Date = linuxdmi.Item(i.ctx, "bios_date")
+func (i *Info) load(opts *option.Options) error {
+	i.Vendor = linuxdmi.Item(opts, "bios_vendor")
+	i.Version = linuxdmi.Item(opts, "bios_version")
+	i.Date = linuxdmi.Item(opts, "bios_date")
 
 	return nil
 }

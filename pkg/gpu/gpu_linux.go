@@ -6,14 +6,15 @@
 package gpu
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -33,7 +34,7 @@ GPUInfo.GraphicsCards will be an empty array.
 `
 )
 
-func (i *Info) load() error {
+func (i *Info) load(opt ...option.Option) error {
 	// In Linux, each graphics card is listed under the /sys/class/drm
 	// directory as a symbolic link named "cardN", where N is a zero-based
 	// index of the card in the system. "DRM" stands for Direct Rendering
@@ -60,10 +61,18 @@ func (i *Info) load() error {
 	// we follow to gather information about the actual device from the PCI
 	// subsystem (we query the modalias file of the PCI device's sysfs
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
-	paths := linuxpath.New(i.ctx)
+	opts := &option.Options{}
+	for _, o := range opt {
+		o(opts)
+	}
+	pci, err := pci.New(opt...)
+	if err != nil {
+		return fmt.Errorf("failed to PCI device database: %w", err)
+	}
+	paths := linuxpath.New(opts)
 	links, err := os.ReadDir(paths.SysClassDRM)
 	if err != nil {
-		i.ctx.Warn(_WARN_NO_SYS_CLASS_DRM)
+		opts.Warn(_WARN_NO_SYS_CLASS_DRM)
 		return nil
 	}
 	cards := make([]*GraphicsCard, 0)
@@ -109,20 +118,15 @@ func (i *Info) load() error {
 		}
 		cards = append(cards, card)
 	}
-	gpuFillNUMANodes(i.ctx, cards)
-	gpuFillPCIDevice(i.ctx, cards)
+	gpuFillNUMANodes(opts, cards)
+	gpuFillPCIDevice(pci, cards)
 	i.GraphicsCards = cards
 	return nil
 }
 
 // Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
 // attribute with PCI device information
-func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
-	pci, err := pci.New(context.WithContext(ctx))
-	if err != nil {
-		ctx.Warn("failed to PCI device database: %s", err)
-		return
-	}
+func gpuFillPCIDevice(pci *pci.Info, cards []*GraphicsCard) {
 	for _, card := range cards {
 		if card.DeviceInfo == nil {
 			card.DeviceInfo = pci.GetDevice(card.Address)
@@ -133,9 +137,9 @@ func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
 // Loops through each GraphicsCard struct and find which NUMA node the card is
 // affined to, setting the GraphicsCard.Node field accordingly. If the host
 // system is not a NUMA system, the Node field will be set to nil.
-func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
-	paths := linuxpath.New(ctx)
-	topo, err := topology.New(context.WithContext(ctx))
+func gpuFillNUMANodes(opts *option.Options, cards []*GraphicsCard) {
+	paths := linuxpath.New(opts)
+	topo, err := topology.New()
 	if err != nil {
 		// Problem getting topology information so just set the graphics card's
 		// node to nil
@@ -157,7 +161,7 @@ func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
 			"device",
 			"numa_node",
 		)
-		nodeIdx := util.SafeIntFromFile(ctx, fpath)
+		nodeIdx := util.SafeIntFromFile(opts, fpath)
 		if nodeIdx == -1 {
 			continue
 		}

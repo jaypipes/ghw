@@ -7,6 +7,8 @@ package baseboard
 
 import (
 	"github.com/yusufpapurcu/wmi"
+
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
 const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version, Product FROM Win32_BaseBoard"
@@ -19,7 +21,7 @@ type win32Baseboard struct {
 	Product      *string
 }
 
-func (i *Info) load() error {
+func (i *Info) load(opts *option.Options) error {
 	// Getting data from WMI
 	var win32BaseboardDescriptions []win32Baseboard
 	if err := wmi.Query(wqlBaseboard, &win32BaseboardDescriptions); err != nil {
