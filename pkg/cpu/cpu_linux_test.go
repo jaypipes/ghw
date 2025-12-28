@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/testdata"
@@ -40,7 +40,7 @@ func TestArmCPU(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	info, err := cpu.New(option.WithChroot(unpackDir))
+	info, err := cpu.New(ghwcontext.WithChroot(unpackDir))
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -109,7 +109,7 @@ func TestCheckCPUTopologyFilesForOfflineCPU(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	info, err := cpu.New(option.WithChroot(unpackDir))
+	info, err := cpu.New(ghwcontext.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -154,7 +154,7 @@ func TestNumCoresAmongOfflineCPUs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	info, err := topology.New(option.WithChroot(unpackDir))
+	info, err := topology.New(ghwcontext.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Error determining node topology. %v", err)
 	}

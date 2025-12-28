@@ -1,14 +1,13 @@
 package cpu
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
 var (
@@ -16,7 +15,7 @@ var (
 	sysctlOutput       = make(map[string]string) // store all the sysctl output
 )
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	err := populateSysctlOutput()
 	if err != nil {
 		return errors.Wrap(err, "unable to populate sysctl map")

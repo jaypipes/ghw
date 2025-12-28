@@ -9,13 +9,12 @@
 package baseboard
 
 import (
+	"context"
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	return errors.New("baseboardFillInfo not implemented on " + runtime.GOOS)
 }
