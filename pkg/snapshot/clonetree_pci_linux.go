@@ -7,10 +7,11 @@
 package snapshot
 
 import (
-	"fmt"
+	"context"
 	"os"
 	"path/filepath"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 )
 
@@ -24,7 +25,9 @@ const (
 // ExpectedClonePCIContent return a slice of glob patterns which represent the pseudofiles
 // ghw cares about, pertaining to PCI devices only.
 // Beware: the content is host-specific, because the PCI topology is host-dependent and unpredictable.
-func ExpectedClonePCIContent() []string {
+func ExpectedClonePCIContent(
+	ctx context.Context,
+) ([]string, error) {
 	fileSpecs := []string{
 		"/sys/bus/pci/drivers/*",
 	}
@@ -37,11 +40,14 @@ func ExpectedClonePCIContent() []string {
 		}
 		pciRoot := pciRoots[0]
 		pciRoots = pciRoots[1:]
-		specs, roots := scanPCIDeviceRoot(pciRoot)
+		specs, roots, err := scanPCIDeviceRoot(ctx, pciRoot)
+		if err != nil {
+			return nil, err
+		}
 		pciRoots = append(pciRoots, roots...)
 		fileSpecs = append(fileSpecs, specs...)
 	}
-	return fileSpecs
+	return fileSpecs, nil
 }
 
 // scanPCIDeviceRoot reports a slice of glob patterns which represent the pseudofiles
@@ -50,13 +56,15 @@ func ExpectedClonePCIContent() []string {
 // level; more PCI bridges are (usually) attached to this level, creating deep nested trees.
 // hence we need to scan all possible roots, to make sure not to miss important devices.
 //
-// note about notifying errors. This function and its helper functions do use trace() everywhere
+// note about notifying errors. This function and its helper functions do use ghwcontext.Debug(ctx, ) everywhere
 // to report recoverable errors, even though it would have been appropriate to use Warn().
 // This is unfortunate, and again a byproduct of the fact we cannot use context.Context to avoid
 // circular dependencies.
-// TODO(fromani): switch to Warn() as soon as we figure out how to break this circular dep.
-func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
-	trace("scanning PCI device root %q\n", root)
+func scanPCIDeviceRoot(
+	ctx context.Context,
+	root string,
+) (fileSpecs []string, pciRoots []string, err error) {
+	ghwcontext.Debug(ctx, "scanning PCI device root %q", root)
 
 	perDevEntries := []string{
 		"class",
@@ -72,7 +80,7 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 	}
 	entries, err := os.ReadDir(root)
 	if err != nil {
-		return []string{}, []string{}
+		return nil, nil, err
 	}
 	for _, entry := range entries {
 		entryName := entry.Name()
@@ -84,31 +92,39 @@ func scanPCIDeviceRoot(root string) (fileSpecs []string, pciRoots []string) {
 		}
 
 		entryPath := filepath.Join(root, entryName)
-		pciEntry, err := findPCIEntryFromPath(root, entryName)
+		pciEntry, err := findPCIEntryFromPath(ctx, root, entryName)
 		if err != nil {
-			trace("error scanning %q: %v", entryName, err)
+			ghwcontext.Debug(ctx, "error scanning %q: %v. skipping", entryName, err)
 			continue
 		}
 
-		trace("PCI entry is %q\n", pciEntry)
+		ghwcontext.Debug(ctx, "PCI entry is %q", pciEntry)
 		fileSpecs = append(fileSpecs, entryPath)
 		for _, perNetEntry := range perDevEntries {
 			fileSpecs = append(fileSpecs, filepath.Join(pciEntry, perNetEntry))
 		}
 
-		if isPCIBridge(entryPath) {
-			trace("adding new PCI root %q\n", entryName)
+		bridge, err := isPCIBridge(entryPath)
+		if err != nil {
+			return nil, nil, err
+		}
+		if bridge {
+			ghwcontext.Debug(ctx, "adding new PCI root %q", entryName)
 			pciRoots = append(pciRoots, pciEntry)
 		}
 	}
-	return fileSpecs, pciRoots
+	return fileSpecs, pciRoots, nil
 }
 
-func findPCIEntryFromPath(root, entryName string) (string, error) {
+func findPCIEntryFromPath(
+	ctx context.Context,
+	root string,
+	entryName string,
+) (string, error) {
 	entryPath := filepath.Join(root, entryName)
 	fi, err := os.Lstat(entryPath)
 	if err != nil {
-		return "", fmt.Errorf("stat(%s) failed: %v\n", entryPath, err)
+		return "", err
 	}
 	if fi.Mode()&os.ModeSymlink == 0 {
 		// regular file, nothing to resolve
@@ -116,19 +132,17 @@ func findPCIEntryFromPath(root, entryName string) (string, error) {
 	}
 	// resolve symlink
 	target, err := os.Readlink(entryPath)
-	trace("entry %q is symlink resolved to %q\n", entryPath, target)
 	if err != nil {
-		return "", fmt.Errorf("readlink(%s) failed: %v - skipped\n", entryPath, err)
+		return "", err
 	}
+	ghwcontext.Debug(ctx, "entry %q is symlink resolved to %q", entryPath, target)
 	return filepath.Clean(filepath.Join(root, target)), nil
 }
 
-func isPCIBridge(entryPath string) bool {
+func isPCIBridge(entryPath string) (bool, error) {
 	subNodes, err := os.ReadDir(entryPath)
 	if err != nil {
-		// this is so unlikely we don't even return error. But we trace just in case.
-		trace("error scanning device entry path %q: %v", entryPath, err)
-		return false
+		return false, err
 	}
 	for _, subNode := range subNodes {
 		if !subNode.IsDir() {
@@ -144,8 +158,8 @@ func isPCIBridge(entryPath string) bool {
 			// This approach duplicates the logic within the `pci` subkpg
 			// - or forces us into awkward dep cycles, and has poorer forward
 			// compatibility.
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
@@ -29,23 +30,16 @@ var snapshotCmd = &cobra.Command{
 	RunE:  doSnapshot,
 }
 
-func trace(msg string, args ...interface{}) {
-	if !debug {
-		return
-	}
-	fmt.Printf(msg, args...)
-}
-
 // doSnapshot creates a ghw snapshot
 func doSnapshot(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
 	scratchDir, err := os.MkdirTemp("", "ghw-snapshot")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(scratchDir)
 
-	snapshot.SetTraceFunction(trace)
-	if err = snapshot.CloneTreeInto(scratchDir); err != nil {
+	if err = snapshot.CloneTreeInto(ctx, scratchDir); err != nil {
 		return err
 	}
 
@@ -54,10 +48,14 @@ func doSnapshot(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		trace("using default output filepath %s\n", outPath)
+		ghwcontext.Debug(
+			cmd.Context(),
+			"using default output filepath %s",
+			outPath,
+		)
 	}
 
-	return snapshot.PackFrom(outPath, scratchDir)
+	return snapshot.PackFrom(ctx, outPath, scratchDir)
 }
 
 func systemFingerprint() (string, error) {
