@@ -7,10 +7,13 @@
 package snapshot
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 )
 
 // Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
@@ -22,13 +25,19 @@ import (
 
 // CloneTreeInto copies all the pseudofiles that ghw will consume into the root
 // `scratchDir`, preserving the hieratchy.
-func CloneTreeInto(scratchDir string) error {
-	err := setupScratchDir(scratchDir)
+func CloneTreeInto(
+	ctx context.Context,
+	scratchDir string,
+) error {
+	err := setupScratchDir(ctx, scratchDir)
 	if err != nil {
 		return err
 	}
-	fileSpecs := ExpectedCloneContent()
-	return CopyFilesInto(fileSpecs, scratchDir, nil)
+	fileSpecs, err := ExpectedCloneContent(ctx)
+	if err != nil {
+		return err
+	}
+	return CopyFilesInto(ctx, fileSpecs, scratchDir, nil)
 }
 
 // ExpectedCloneContent return a slice of glob patterns which represent the pseudofiles
@@ -37,13 +46,17 @@ func CloneTreeInto(scratchDir string) error {
 // content matches the expectations.
 // Beware: the content is host-specific, because the content pertaining some subsystems,
 // most notably PCI, is host-specific and unpredictable.
-func ExpectedCloneContent() []string {
+func ExpectedCloneContent(ctx context.Context) ([]string, error) {
 	fileSpecs := ExpectedCloneStaticContent()
 	fileSpecs = append(fileSpecs, ExpectedCloneNetContent()...)
 	fileSpecs = append(fileSpecs, ExpectedCloneUSBContent()...)
-	fileSpecs = append(fileSpecs, ExpectedClonePCIContent()...)
+	pciContent, err := ExpectedClonePCIContent(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fileSpecs = append(fileSpecs, pciContent...)
 	fileSpecs = append(fileSpecs, ExpectedCloneGPUContent()...)
-	return fileSpecs
+	return fileSpecs, nil
 }
 
 // ValidateClonedTree checks the content of a cloned tree, whose root is `clonedDir`,
@@ -96,7 +109,12 @@ type CopyFileOptions struct {
 // - /some/deeply/
 // ...
 // all glob patterns supported in `filepath.Glob` are supported.
-func CopyFilesInto(fileSpecs []string, destDir string, opts *CopyFileOptions) error {
+func CopyFilesInto(
+	ctx context.Context,
+	fileSpecs []string,
+	destDir string,
+	opts *CopyFileOptions,
+) error {
 	if opts == nil {
 		opts = &CopyFileOptions{
 			IsSymlinkFn:       isSymlink,
@@ -104,21 +122,26 @@ func CopyFilesInto(fileSpecs []string, destDir string, opts *CopyFileOptions) er
 		}
 	}
 	for _, fileSpec := range fileSpecs {
-		trace("copying spec: %q\n", fileSpec)
+		ghwcontext.Debug(ctx, "copying spec: %q", fileSpec)
 		matches, err := filepath.Glob(fileSpec)
 		if err != nil {
 			return err
 		}
-		if err := copyFileTreeInto(matches, destDir, opts); err != nil {
+		if err := copyFileTreeInto(ctx, matches, destDir, opts); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) error {
+func copyFileTreeInto(
+	ctx context.Context,
+	paths []string,
+	destDir string,
+	opts *CopyFileOptions,
+) error {
 	for _, path := range paths {
-		trace("  copying path: %q\n", path)
+		ghwcontext.Debug(ctx, "  copying path: %q", path)
 		baseDir := filepath.Dir(path)
 		if err := os.MkdirAll(filepath.Join(destDir, baseDir), os.ModePerm); err != nil {
 			return err
@@ -138,18 +161,18 @@ func copyFileTreeInto(paths []string, destDir string, opts *CopyFileOptions) err
 					return err
 				}
 			} else {
-				trace("expanded glob path %q is a directory - skipped\n", path)
+				ghwcontext.Debug(ctx, "expanded glob path %q is a directory - skipped", path)
 			}
 			continue
 		}
 		if opts.IsSymlinkFn(path, fi) {
-			trace("    copying link: %q -> %q\n", path, destPath)
-			if err := copyLink(path, destPath); err != nil {
+			ghwcontext.Debug(ctx, "    copying link: %q -> %q", path, destPath)
+			if err := copyLink(ctx, path, destPath); err != nil {
 				return err
 			}
 		} else {
-			trace("    copying file: %q -> %q\n", path, destPath)
-			if err := copyPseudoFile(path, destPath); err != nil && !errors.Is(err, os.ErrPermission) {
+			ghwcontext.Debug(ctx, "    copying file: %q -> %q", path, destPath)
+			if err := copyPseudoFile(ctx, path, destPath); err != nil && !errors.Is(err, os.ErrPermission) {
 				return err
 			}
 		}
@@ -165,12 +188,16 @@ func isDriversDir(path string, fi os.FileInfo) bool {
 	return strings.Contains(path, "drivers")
 }
 
-func copyLink(path, targetPath string) error {
+func copyLink(
+	ctx context.Context,
+	path string,
+	targetPath string,
+) error {
 	target, err := os.Readlink(path)
 	if err != nil {
 		return err
 	}
-	trace("      symlink %q -> %q\n", target, targetPath)
+	ghwcontext.Debug(ctx, "      symlink %q -> %q", target, targetPath)
 	if err := os.Symlink(target, targetPath); err != nil {
 		if errors.Is(err, os.ErrExist) {
 			return nil
@@ -181,12 +208,16 @@ func copyLink(path, targetPath string) error {
 	return nil
 }
 
-func copyPseudoFile(path, targetPath string) error {
+func copyPseudoFile(
+	ctx context.Context,
+	path string,
+	targetPath string,
+) error {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	trace("creating %s\n", targetPath)
+	ghwcontext.Debug(ctx, "creating %s", targetPath)
 	f, err := os.Create(targetPath)
 	if err != nil {
 		return err

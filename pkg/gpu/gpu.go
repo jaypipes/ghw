@@ -9,8 +9,8 @@ package gpu
 import (
 	"fmt"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
@@ -53,9 +53,10 @@ type Info struct {
 
 // New returns a pointer to an Info struct that contains information about the
 // graphics cards on the host system
-func New(opt ...option.Option) (*Info, error) {
+func New(args ...any) (*Info, error) {
+	ctx := ghwcontext.FromArgs(args...)
 	info := &Info{}
-	if err := info.load(opt...); err != nil {
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	return info, nil

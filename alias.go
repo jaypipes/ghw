@@ -12,6 +12,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/memory"
@@ -26,19 +27,26 @@ import (
 
 // DEPRECATED: Please use Option
 type WithOption = option.Option
+
+// DEPRECATED: Please use WithXXX functions.
 type Option = option.Option
 
 var (
-	WithChroot      = option.WithChroot
-	WithAlerter     = option.WithAlerter
+	WithChroot = ghwcontext.WithChroot
+	// DEPRECATED: Please use WithLogger
+	WithAlerter = option.WithAlerter
+	// DEPRECATED: Please use WithDisableWarnings
 	WithNullAlerter = option.WithNullAlerter
 	// match the existing environ variable to minimize surprises
-	WithDisableWarnings = option.WithNullAlerter
-	WithDisableTools    = option.WithDisableTools
-	WithPathOverrides   = option.WithPathOverrides
+	WithDisableWarnings = ghwcontext.WithDisableWarnings
+	WithDisableTools    = ghwcontext.WithDisableTools
+	WithPathOverrides   = ghwcontext.WithPathOverrides
+	WithLogLevel        = ghwcontext.WithLogLevel
+	WithDebug           = ghwcontext.WithDebug
+	WithLogger          = ghwcontext.WithLogger
 )
 
-type PathOverrides = option.PathOverrides
+type PathOverrides map[string]string
 
 type CPUInfo = cpu.Info
 

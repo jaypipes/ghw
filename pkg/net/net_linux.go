@@ -8,14 +8,15 @@ package net
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -23,24 +24,24 @@ const (
 	warnEthtoolNotInstalled = `ethtool not installed. Cannot grab NIC capabilities`
 )
 
-func (i *Info) load(opts *option.Options) error {
-	i.NICs = nics(opts)
+func (i *Info) load(ctx context.Context) error {
+	i.NICs = nics(ctx)
 	return nil
 }
 
-func nics(opts *option.Options) []*NIC {
+func nics(ctx context.Context) []*NIC {
 	nics := make([]*NIC, 0)
 
-	paths := linuxpath.New(opts)
+	paths := linuxpath.New(ctx)
 	files, err := os.ReadDir(paths.SysClassNet)
 	if err != nil {
 		return nics
 	}
 
-	etAvailable := !opts.DisableTools
+	etAvailable := ghwcontext.ToolsEnabled(ctx)
 	if etAvailable {
 		if etInstalled := ethtoolInstalled(); !etInstalled {
-			opts.Warn(warnEthtoolNotInstalled)
+			ghwcontext.Warn(ctx, warnEthtoolNotInstalled)
 			etAvailable = false
 		}
 	}
@@ -68,7 +69,7 @@ func nics(opts *option.Options) []*NIC {
 		nic.MacAddress = mac
 		nic.MACAddress = mac
 		if etAvailable {
-			nic.netDeviceParseEthtool(opts, filename)
+			nic.netDeviceParseEthtool(ctx, filename)
 		} else {
 			nic.Capabilities = []*NICCapability{}
 			// Sets NIC struct fields from data in SysFs
@@ -108,7 +109,7 @@ func ethtoolInstalled() bool {
 	return err == nil
 }
 
-func (n *NIC) netDeviceParseEthtool(opts *option.Options, dev string) {
+func (n *NIC) netDeviceParseEthtool(ctx context.Context, dev string) {
 	var out bytes.Buffer
 	path, _ := exec.LookPath("ethtool")
 
@@ -133,7 +134,7 @@ func (n *NIC) netDeviceParseEthtool(opts *option.Options, dev string) {
 		n.AdvertisedFECModes = m["Advertised FEC modes"]
 	} else {
 		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
-		opts.Warn(msg)
+		ghwcontext.Warn(ctx, msg)
 	}
 
 	// Get all other capabilities from "ethtool -k"
@@ -171,7 +172,7 @@ func (n *NIC) netDeviceParseEthtool(opts *option.Options, dev string) {
 
 	} else {
 		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
-		opts.Warn(msg)
+		ghwcontext.Warn(ctx, msg)
 	}
 }
 

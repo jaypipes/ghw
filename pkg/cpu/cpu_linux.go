@@ -7,6 +7,7 @@ package cpu
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -16,8 +17,8 @@ import (
 	"strconv"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -26,8 +27,8 @@ var (
 	onlineFile       = "online"
 )
 
-func (i *Info) load(opts *option.Options) error {
-	i.Processors = processorsGet(opts)
+func (i *Info) load(ctx context.Context) error {
+	i.Processors = processorsGet(ctx)
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range i.Processors {
@@ -41,10 +42,10 @@ func (i *Info) load(opts *option.Options) error {
 	return nil
 }
 
-func processorsGet(opts *option.Options) []*Processor {
-	paths := linuxpath.New(opts)
+func processorsGet(ctx context.Context) []*Processor {
+	paths := linuxpath.New(ctx)
 
-	lps := logicalProcessorsFromProcCPUInfo(opts)
+	lps := logicalProcessorsFromProcCPUInfo(ctx)
 	// keyed by processor ID (physical_package_id)
 	procs := map[int]*Processor{}
 
@@ -53,7 +54,7 @@ func processorsGet(opts *option.Options) []*Processor {
 	// processor pseudodirs are of the pattern /sys/devices/system/cpu/cpu{N}
 	fnames, err := os.ReadDir(paths.SysDevicesSystemCPU)
 	if err != nil {
-		opts.Warn("failed to read /sys/devices/system/cpu: %s", err)
+		ghwcontext.Warn(ctx, "failed to read /sys/devices/system/cpu: %s", err)
 		return []*Processor{}
 	}
 	for _, fname := range fnames {
@@ -64,26 +65,26 @@ func processorsGet(opts *option.Options) []*Processor {
 
 		lpID, err := strconv.Atoi(matches[1])
 		if err != nil {
-			opts.Warn("failed to find numeric logical processor ID: %s", err)
+			ghwcontext.Warn(ctx, "failed to find numeric logical processor ID: %s", err)
 			continue
 		}
 
 		onlineFilePath := filepath.Join(paths.SysDevicesSystemCPU, fmt.Sprintf("cpu%d", lpID), onlineFile)
 		if _, err := os.Stat(onlineFilePath); err == nil {
-			if util.SafeIntFromFile(opts, onlineFilePath) == 0 {
+			if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
 				continue
 			}
 		} else if errors.Is(err, os.ErrNotExist) {
 			// Assume the CPU is online if the online state file doesn't exist
 			// (as is the case with older snapshots)
 		}
-		procID := processorIDFromLogicalProcessorID(opts, lpID)
+		procID := processorIDFromLogicalProcessorID(ctx, lpID)
 		proc, found := procs[procID]
 		if !found {
 			proc = &Processor{ID: procID}
 			lp, ok := lps[lpID]
 			if !ok {
-				opts.Warn(
+				ghwcontext.Warn(ctx,
 					"failed to find attributes for logical processor %d",
 					lpID,
 				)
@@ -120,7 +121,7 @@ func processorsGet(opts *option.Options) []*Processor {
 			procs[procID] = proc
 		}
 
-		coreID := coreIDFromLogicalProcessorID(opts, lpID)
+		coreID := coreIDFromLogicalProcessorID(ctx, lpID)
 		core := proc.CoreByID(coreID)
 		if core == nil {
 			core = &ProcessorCore{
@@ -155,37 +156,37 @@ func processorsGet(opts *option.Options) []*Processor {
 
 // processorIDFromLogicalProcessorID returns the processor physical package ID
 // for the supplied logical processor ID
-func processorIDFromLogicalProcessorID(opts *option.Options, lpID int) int {
-	paths := linuxpath.New(opts)
+func processorIDFromLogicalProcessorID(ctx context.Context, lpID int) int {
+	paths := linuxpath.New(ctx)
 	// Fetch CPU ID
 	path := filepath.Join(
 		paths.SysDevicesSystemCPU,
 		fmt.Sprintf("cpu%d", lpID),
 		"topology", "physical_package_id",
 	)
-	return util.SafeIntFromFile(opts, path)
+	return util.SafeIntFromFile(ctx, path)
 }
 
 // coreIDFromLogicalProcessorID returns the core ID for the supplied logical
 // processor ID
-func coreIDFromLogicalProcessorID(opts *option.Options, lpID int) int {
-	paths := linuxpath.New(opts)
+func coreIDFromLogicalProcessorID(ctx context.Context, lpID int) int {
+	paths := linuxpath.New(ctx)
 	// Fetch CPU ID
 	path := filepath.Join(
 		paths.SysDevicesSystemCPU,
 		fmt.Sprintf("cpu%d", lpID),
 		"topology", "core_id",
 	)
-	return util.SafeIntFromFile(opts, path)
+	return util.SafeIntFromFile(ctx, path)
 }
 
-func CoresForNode(opts *option.Options, nodeID int) ([]*ProcessorCore, error) {
+func CoresForNode(ctx context.Context, nodeID int) ([]*ProcessorCore, error) {
 	// The /sys/devices/system/node/nodeX directory contains a subdirectory
 	// called 'cpuX' for each logical processor assigned to the node. Each of
 	// those subdirectories contains a topology subdirectory which has a
 	// core_id file that indicates the 0-based identifier of the physical core
 	// the logical processor (hardware thread) is on.
-	paths := linuxpath.New(opts)
+	paths := linuxpath.New(ctx)
 	path := filepath.Join(
 		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),
@@ -227,7 +228,7 @@ func CoresForNode(opts *option.Options, nodeID int) ([]*ProcessorCore, error) {
 		cpuPath := filepath.Join(path, filename)
 		procID, err := strconv.Atoi(filename[3:])
 		if err != nil {
-			opts.Warn(
+			ghwcontext.Warn(ctx,
 				"failed to determine procID from %s. Expected integer after 3rd char.",
 				filename,
 			)
@@ -235,7 +236,7 @@ func CoresForNode(opts *option.Options, nodeID int) ([]*ProcessorCore, error) {
 		}
 		onlineFilePath := filepath.Join(cpuPath, onlineFile)
 		if _, err := os.Stat(onlineFilePath); err == nil {
-			if util.SafeIntFromFile(opts, onlineFilePath) == 0 {
+			if util.SafeIntFromFile(ctx, onlineFilePath) == 0 {
 				continue
 			}
 		} else if errors.Is(err, os.ErrNotExist) {
@@ -243,7 +244,7 @@ func CoresForNode(opts *option.Options, nodeID int) ([]*ProcessorCore, error) {
 			// (as is the case with older snapshots)
 		}
 		coreIDPath := filepath.Join(cpuPath, "topology", "core_id")
-		coreID := util.SafeIntFromFile(opts, coreIDPath)
+		coreID := util.SafeIntFromFile(ctx, coreIDPath)
 		core := findCoreByID(coreID)
 		core.LogicalProcessors = append(
 			core.LogicalProcessors,
@@ -339,9 +340,9 @@ type logicalProcessor struct {
 // with blank line-separated blocks of colon-delimited attribute name/value
 // pairs for a specific logical processor on the host.
 func logicalProcessorsFromProcCPUInfo(
-	opts *option.Options,
+	ctx context.Context,
 ) map[int]*logicalProcessor {
-	paths := linuxpath.New(opts)
+	paths := linuxpath.New(ctx)
 	r, err := os.Open(paths.ProcCpuinfo)
 	if err != nil {
 		return nil
@@ -362,7 +363,7 @@ func logicalProcessorsFromProcCPUInfo(
 			// collected for this logical processor block
 			lpIDstr, ok := lpAttrs["processor"]
 			if !ok {
-				opts.Warn("expected to find 'processor' key in /proc/cpuinfo attributes")
+				ghwcontext.Warn(ctx, "expected to find 'processor' key in /proc/cpuinfo attributes")
 				continue
 			}
 			lpID, _ := strconv.Atoi(lpIDstr)

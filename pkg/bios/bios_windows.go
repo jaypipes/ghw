@@ -6,9 +6,9 @@
 package bios
 
 import (
-	"github.com/yusufpapurcu/wmi"
+	"context"
 
-	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/yusufpapurcu/wmi"
 )
 
 const wqlBIOS = "SELECT InstallDate, Manufacturer, Version FROM CIM_BIOSElement"
@@ -19,7 +19,7 @@ type win32BIOS struct {
 	Version      *string
 }
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	// Getting data from WMI
 	var win32BIOSDescriptions []win32BIOS
 	if err := wmi.Query(wqlBIOS, &win32BIOSDescriptions); err != nil {

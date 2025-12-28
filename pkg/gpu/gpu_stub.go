@@ -9,13 +9,12 @@
 package gpu
 
 import (
+	"context"
 	"runtime"
 
 	"github.com/pkg/errors"
-
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load(opt ...option.Option) error {
+func (i *Info) load(ctx context.Context) error {
 	return errors.New("gpuFillInfo not implemented on " + runtime.GOOS)
 }

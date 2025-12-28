@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
 type Device struct {
@@ -84,13 +84,10 @@ func (i *Info) String() string {
 
 // New returns a pointer to an Info struct that contains information about the
 // network interface controllers (NICs) on the host system
-func New(opt ...option.Option) (*Info, error) {
-	opts := &option.Options{}
-	for _, o := range opt {
-		o(opts)
-	}
+func New(args ...any) (*Info, error) {
+	ctx := ghwcontext.FromArgs(args...)
 	info := &Info{}
-	if err := info.load(opts); err != nil {
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	return info, nil
