@@ -15,7 +15,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
@@ -39,8 +38,6 @@ func trace(msg string, args ...interface{}) {
 
 // doSnapshot creates a ghw snapshot
 func doSnapshot(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	_ = opts
 	scratchDir, err := os.MkdirTemp("", "ghw-snapshot")
 	if err != nil {
 		return err

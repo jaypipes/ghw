@@ -9,13 +9,12 @@
 package memory
 
 import (
+	"context"
 	"runtime"
-
-	"github.com/jaypipes/ghw/pkg/option"
 
 	"github.com/pkg/errors"
 )
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	return errors.New("mem.Info.load not implemented on " + runtime.GOOS)
 }

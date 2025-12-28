@@ -23,8 +23,7 @@ var biosCmd = &cobra.Command{
 
 // showBIOS shows BIOS host system.
 func showBIOS(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	bios, err := ghw.BIOS(opts...)
+	bios, err := ghw.BIOS(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting BIOS info")
 	}

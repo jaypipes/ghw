@@ -23,8 +23,7 @@ var baseboardCmd = &cobra.Command{
 
 // showBaseboard shows baseboard information for the host system.
 func showBaseboard(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	baseboard, err := ghw.Baseboard(opts...)
+	baseboard, err := ghw.Baseboard(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting baseboard info")
 	}

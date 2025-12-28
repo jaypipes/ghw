@@ -7,12 +7,12 @@
 package commands
 
 import (
-	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/jaypipes/ghw"
-	"github.com/jaypipes/ghw/pkg/option"
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -174,7 +174,7 @@ func validateRootCommand(rootCmd *cobra.Command, args []string) error {
 }
 
 func doPreRun(cmd *cobra.Command, args []string) error {
-	opts := []option.Option{}
+	ctx := ghwcontext.FromEnv()
 	if snapshotPath != "" {
 		// unpack the snapshot into a tempdir and clean up this tempdir after
 		// the run...
@@ -186,14 +186,15 @@ func doPreRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		opts = append(opts, ghw.WithChroot(unpackDir))
+		ctx = ghw.WithChroot(unpackDir)(ctx)
 		cmd.PersistentPostRunE = func(c *cobra.Command, args []string) error {
 			_ = os.RemoveAll(unpackDir)
 			return nil
 		}
 	}
-	ctx := context.TODO()
-	ctx = context.WithValue(ctx, optsKey, opts)
+	if debug {
+		ctx = ghw.WithLogLevel(slog.LevelDebug)(ctx)
+	}
 	cmd.SetContext(ctx)
 	return nil
 }

@@ -6,20 +6,21 @@
 package topology
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load(opts *option.Options) error {
-	i.Nodes = topologyNodes(opts)
+func (i *Info) load(ctx context.Context) error {
+	i.Nodes = topologyNodes(ctx)
 	if len(i.Nodes) == 1 {
 		i.Architecture = ArchitectureSMP
 	} else {
@@ -28,13 +29,13 @@ func (i *Info) load(opts *option.Options) error {
 	return nil
 }
 
-func topologyNodes(opts *option.Options) []*Node {
-	paths := linuxpath.New(opts)
+func topologyNodes(ctx context.Context) []*Node {
+	paths := linuxpath.New(ctx)
 	nodes := make([]*Node, 0)
 
 	files, err := os.ReadDir(paths.SysDevicesSystemNode)
 	if err != nil {
-		opts.Warn("failed to determine nodes: %s\n", err)
+		ghwcontext.Warn(ctx, "failed to determine nodes: %s\n", err)
 		return nodes
 	}
 	for _, file := range files {
@@ -45,33 +46,33 @@ func topologyNodes(opts *option.Options) []*Node {
 		node := &Node{}
 		nodeID, err := strconv.Atoi(filename[4:])
 		if err != nil {
-			opts.Warn("failed to determine node ID: %s\n", err)
+			ghwcontext.Warn(ctx, "failed to determine node ID: %s\n", err)
 			return nodes
 		}
 		node.ID = nodeID
-		cores, err := cpu.CoresForNode(opts, nodeID)
+		cores, err := cpu.CoresForNode(ctx, nodeID)
 		if err != nil {
-			opts.Warn("failed to determine cores for node: %s\n", err)
+			ghwcontext.Warn(ctx, "failed to determine cores for node: %s\n", err)
 			return nodes
 		}
 		node.Cores = cores
-		caches, err := memory.CachesForNode(opts, nodeID)
+		caches, err := memory.CachesForNode(ctx, nodeID)
 		if err != nil {
-			opts.Warn("failed to determine caches for node: %s\n", err)
+			ghwcontext.Warn(ctx, "failed to determine caches for node: %s\n", err)
 			return nodes
 		}
 		node.Caches = caches
 
 		distances, err := distancesForNode(paths, nodeID)
 		if err != nil {
-			opts.Warn("failed to determine node distances for node: %s\n", err)
+			ghwcontext.Warn(ctx, "failed to determine node distances for node: %s\n", err)
 			return nodes
 		}
 		node.Distances = distances
 
 		area, err := memory.AreaForNode(paths, nodeID)
 		if err != nil {
-			opts.Warn("failed to determine memory area for node: %s\n", err)
+			ghwcontext.Warn(ctx, "failed to determine memory area for node: %s\n", err)
 			return nodes
 		}
 		node.Memory = area

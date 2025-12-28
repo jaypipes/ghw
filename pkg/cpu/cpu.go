@@ -9,8 +9,8 @@ package cpu
 import (
 	"fmt"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
 // ProcessorCore describes a physical host processor core. A processor core is
@@ -138,13 +138,10 @@ type Info struct {
 
 // New returns a pointer to an Info struct that contains information about the
 // CPUs on the host system
-func New(opt ...option.Option) (*Info, error) {
-	opts := &option.Options{}
-	for _, o := range opt {
-		o(opts)
-	}
+func New(args ...any) (*Info, error) {
+	ctx := ghwcontext.FromArgs(args...)
 	info := &Info{}
-	if err := info.load(opts); err != nil {
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	return info, nil

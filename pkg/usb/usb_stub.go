@@ -9,13 +9,12 @@
 package usb
 
 import (
+	"context"
 	"runtime"
 
 	"errors"
-
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	return errors.New("usb load not implemented on " + runtime.GOOS)
 }

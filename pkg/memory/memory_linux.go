@@ -8,6 +8,7 @@ package memory
 import (
 	"bufio"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -17,21 +18,14 @@ import (
 	"strconv"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
 const (
-	warnCannotDeterminePhysicalMemory = `
-Could not determine total physical bytes of memory. This may
-be due to the host being a virtual machine or container with no
-/var/log/syslog file or /sys/devices/system/memory directory, or
-the current user may not have necessary privileges to read the syslog.
-We are falling back to setting the total physical amount of memory to
-the total usable amount of memory
-`
+	warnCannotDeterminePhysicalMemory = `Could not determine total physical bytes of memory. This may be due to the host being a virtual machine or container with no /var/log/syslog file or /sys/devices/system/memory directory, or the current user may not have necessary privileges to read the syslog. We are falling back to setting the total physical amount of memory to the total usable amount of memory`
 )
 
 var (
@@ -44,8 +38,8 @@ var (
 	regexMemoryBlockDirname = regexp.MustCompile(`memory\d+$`)
 )
 
-func (i *Info) load(opts *option.Options) error {
-	paths := linuxpath.New(opts)
+func (i *Info) load(ctx context.Context) error {
+	paths := linuxpath.New(ctx)
 	tub := memTotalUsableBytes(paths)
 	if tub < 1 {
 		return fmt.Errorf("Could not determine total usable bytes of memory")
@@ -54,7 +48,7 @@ func (i *Info) load(opts *option.Options) error {
 	tpb := memTotalPhysicalBytes(paths)
 	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		opts.Warn(warnCannotDeterminePhysicalMemory)
+		ghwcontext.Warn(ctx, warnCannotDeterminePhysicalMemory)
 		i.TotalPhysicalBytes = tub
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)

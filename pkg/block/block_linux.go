@@ -7,14 +7,15 @@ package block
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -22,8 +23,8 @@ const (
 	sectorSize = 512
 )
 
-func (i *Info) load(opts *option.Options) error {
-	i.Disks = disks(opts)
+func (i *Info) load(ctx context.Context) error {
+	i.Disks = disks(ctx)
 	var tsb uint64
 	for _, d := range i.Disks {
 		tsb += d.SizeBytes
@@ -219,7 +220,7 @@ func diskWWN(paths *linuxpath.Paths, disk string) string {
 // "/dev/nvme0n1") and returns a slice of pointers to Partition structs
 // representing the partitions in that disk
 func diskPartitions(
-	opts *option.Options,
+	ctx context.Context,
 	paths *linuxpath.Paths,
 	disk string,
 ) []*Partition {
@@ -227,7 +228,7 @@ func diskPartitions(
 	path := filepath.Join(paths.SysBlock, disk)
 	files, err := os.ReadDir(path)
 	if err != nil {
-		opts.Warn("failed to read disk partitions: %s\n", err)
+		ghwcontext.Warn(ctx, "failed to read disk partitions: %s\n", err)
 		return out
 	}
 	for _, file := range files {
@@ -318,8 +319,8 @@ func diskIsRemovable(paths *linuxpath.Paths, disk string) bool {
 	return removable == "1"
 }
 
-func disks(opts *option.Options) []*Disk {
-	paths := linuxpath.New(opts)
+func disks(ctx context.Context) []*Disk {
+	paths := linuxpath.New(ctx)
 	// In Linux, we could use the fdisk, lshw or blockdev commands to list disk
 	// information, however all of these utilities require root privileges to
 	// run. We can get all of this information by examining the /sys/block
@@ -338,7 +339,7 @@ func disks(opts *option.Options) []*Disk {
 		// Only reclassify HDD to SSD if non-rotational to avoid changing already correct types.
 		// This addresses changed kernel behavior where rotational detection may be unreliable,
 		// where some kernels report CD-ROM drives as non-rotational, incorrectly classifying them as SSD.
-		if !diskIsRotational(opts, paths, dname) && driveType == DRIVE_TYPE_HDD {
+		if !diskIsRotational(ctx, paths, dname) && driveType == DRIVE_TYPE_HDD {
 			driveType = DRIVE_TYPE_SSD
 		}
 		size := diskSizeBytes(paths, dname)
@@ -372,7 +373,7 @@ func disks(opts *option.Options) []*Disk {
 			WWNNoExtension:         wwnNoExtension,
 		}
 
-		parts := diskPartitions(opts, paths, dname)
+		parts := diskPartitions(ctx, paths, dname)
 		// Map this Disk object into the Partition...
 		for _, part := range parts {
 			part.Disk = d
@@ -426,9 +427,13 @@ func diskTypes(dname string) (
 	return driveType, storageController
 }
 
-func diskIsRotational(opts *option.Options, paths *linuxpath.Paths, devName string) bool {
+func diskIsRotational(
+	ctx context.Context,
+	paths *linuxpath.Paths,
+	devName string,
+) bool {
 	path := filepath.Join(paths.SysBlock, devName, "queue", "rotational")
-	contents := util.SafeIntFromFile(opts, path)
+	contents := util.SafeIntFromFile(ctx, path)
 	return contents == 1
 }
 

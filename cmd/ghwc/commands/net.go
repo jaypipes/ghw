@@ -23,8 +23,7 @@ var netCmd = &cobra.Command{
 
 // showNetwork show network information for the host system.
 func showNetwork(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	net, err := ghw.Network(opts...)
+	net, err := ghw.Network(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting network info")
 	}

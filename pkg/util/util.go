@@ -7,12 +7,13 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/option"
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 )
 
 const (
@@ -34,17 +35,17 @@ func SafeClose(c closer) {
 // -1 if there were file permissions or existence errors or if the contents
 // could not be successfully converted to an integer. In any error, a warning
 // message is printed to STDERR and -1 is returned.
-func SafeIntFromFile(opts *option.Options, path string) int {
+func SafeIntFromFile(ctx context.Context, path string) int {
 	msg := "failed to read int from file: %s\n"
 	buf, err := os.ReadFile(path)
 	if err != nil {
-		opts.Warn(msg, err)
+		ghwcontext.Warn(ctx, msg, err)
 		return -1
 	}
 	contents := strings.TrimSpace(string(buf))
 	res, err := strconv.Atoi(contents)
 	if err != nil {
-		opts.Warn(msg, err)
+		ghwcontext.Warn(ctx, msg, err)
 		return -1
 	}
 	return res

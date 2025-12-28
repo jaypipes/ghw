@@ -8,19 +8,19 @@ package usb
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	var errs []error
 
-	i.Devices, errs = usbs(opts)
+	i.Devices, errs = usbs(ctx)
 
 	if len(errs) == 0 {
 		return nil
@@ -76,8 +76,8 @@ func slurp(path string) string {
 	return string(bytes.TrimSpace(bs))
 }
 
-func usbs(opts *option.Options) ([]*Device, []error) {
-	paths := linuxpath.New(opts)
+func usbs(ctx context.Context) ([]*Device, []error) {
+	paths := linuxpath.New(ctx)
 	devs := make([]*Device, 0)
 	errs := []error{}
 

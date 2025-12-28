@@ -1206,17 +1206,12 @@ feature to quiet things down.
 ### Disabling warning messages
 
 When `ghw` isn't able to retrieve some information, it may print certain
-warning messages to `stderr`. To disable these warnings, simply set the
+warning messages to `stderr`. To disable these warnings, set the
 `GHW_DISABLE_WARNINGS` environs variable:
 
 ```
 $ ghwc memory
-WARNING:
-Could not determine total physical bytes of memory. This may
-be due to the host being a virtual machine or container with no
-/var/log/syslog file, or the current user may not have necessary
-privileges to read the syslog. We are falling back to setting the
-total physical amount of memory to the total usable amount of memory
+WARN:  Could not determine total physical bytes of memory. This may be due to the host being a virtual machine or container with no /var/log/syslog file, or the current user may not have necessary privileges to read the syslog. We are falling back to setting the total physical amount of memory to the total usable amount of memory
 memory (24GB physical, 24GB usable)
 ```
 
@@ -1225,10 +1220,10 @@ $ GHW_DISABLE_WARNINGS=1 ghwc memory
 memory (24GB physical, 24GB usable)
 ```
 
-You can disable warning programmatically using the `WithDisableWarnings` option:
+You can disable warning programmatically using the `WithDisableWarnings`
+modifier:
 
 ```go
-
 import (
 	"github.com/jaypipes/ghw"
 )
@@ -1236,14 +1231,172 @@ import (
 mem, err := ghw.Memory(ghw.WithDisableWarnings())
 ```
 
-`WithDisableWarnings` is a alias for the `WithNullAlerter` option, which in turn
-leverages the more general `Alerter` feature of ghw.
+### Controlling log output
 
-You may supply a `Alerter` to ghw to redirect all the warnings there, like
-logger objects (see for example golang's stdlib `log.Logger`).
-`Alerter` is in fact the minimal logging interface `ghw needs.
-To learn more, please check the `option.Alerter` interface and the `ghw.WithAlerter()`
-function.
+The default log output in `ghw` only writes WARN-level messages to `stderr` in
+a simple `WARN: <msg>` log record format:
+
+```
+$ ghwc baseboard
+WARN:  Unable to read board_serial: open /sys/class/dmi/id/board_serial: permission denied
+baseboard vendor=System76 version=thelio-mira-b4.1 product=Thelio Mira
+```
+
+You can control a number of log output options programmatically or by using
+environs variables.
+
+#### Change the log level
+
+To change the log level `ghw` uses, set the `GHW_LOG_LEVEL` environs variable:
+
+```
+$ GHW_LOG_LEVEL=debug ghwc baseboard
+DEBUG: reading from "/sys/class/dmi/id/board_asset_tag"
+DEBUG: reading from "/sys/class/dmi/id/board_serial"
+WARN:  Unable to read board_serial: open /sys/class/dmi/id/board_serial: permission denied
+DEBUG: reading from "/sys/class/dmi/id/board_vendor"
+DEBUG: reading from "/sys/class/dmi/id/board_version"
+DEBUG: reading from "/sys/class/dmi/id/board_name"
+baseboard vendor=System76 version=thelio-mira-b4.1 product=Thelio Mira
+```
+
+Changing `GHW_LOG_LEVEL` to `error` has the same effect of setting
+`GHW_DISABLE_WARNINGS`:
+
+```
+$ GHW_LOG_LEVEL=error ghwc baseboard
+baseboard vendor=System76 version=thelio-mira-b4.1 product=Thelio Mira
+```
+
+You can change the log level programmatically using the `WithLogLevel`
+modifier:
+
+```go
+import (
+    "log/slog"
+
+	"github.com/jaypipes/ghw"
+)
+
+bb, err := ghw.Baseboard(ghw.WithLogLevel(slog.LevelDebug))
+```
+
+#### Use logfmt output format
+
+To use the [logfmt][logfmt] standard log output format, set the
+`GHW_LOG_LOGFMT` envrions variable:
+
+```
+$ GHW_LOG_LOGFMT=1 ghwc baseboard
+time=2025-12-28T07:31:08.614-05:00 level=WARN msg="Unable to read board_serial: open /sys/class/dmi/id/board_serial: permission denied"
+baseboard vendor=System76 version=thelio-mira-b4.1 product=Thelio Mira
+```
+
+You can tell `ghw` to use `logfmt` standard output formatting using the `WithLogLogfmt`
+modifier:
+
+```go
+import (
+    "log/slog"
+
+	"github.com/jaypipes/ghw"
+)
+
+bb, err := ghw.Baseboard(ghw.WithLogLogfmt())
+```
+
+[logfmt]: https://www.cloudbees.com/blog/logfmt-a-log-format-thats-easy-to-read-and-write
+
+#### Provide a custom logger
+
+You can programmatically override the logger that `ghw` uses with the
+`WithLogger` modifier. You pass in an instance of `slog.Logger`, like this
+example that shows how to use a simple logger with colored log output:
+
+```go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "io"
+    "log"
+    "log/slog"
+
+    "github.com/fatih/color"
+    "github.com/jaypipes/ghw"
+)
+
+type PrettyHandlerOptions struct {
+    SlogOpts slog.HandlerOptions
+}
+
+type PrettyHandler struct {
+    slog.Handler
+    l *log.Logger
+}
+
+func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
+    level := r.Level.String() + ":"
+
+    switch r.Level {
+    case slog.LevelDebug:
+        level = color.MagentaString(level)
+    case slog.LevelInfo:
+        level = color.BlueString(level)
+    case slog.LevelWarn:
+        level = color.YellowString(level)
+    case slog.LevelError:
+        level = color.RedString(level)
+    }
+
+    fields := make(map[string]interface{}, r.NumAttrs())
+    r.Attrs(func(a slog.Attr) bool {
+        fields[a.Key] = a.Value.Any()
+
+        return true
+    })
+
+    b, err := json.MarshalIndent(fields, "", "  ")
+    if err != nil {
+        return err
+    }
+
+    timeStr := r.Time.Format("[15:05:05.000]")
+    msg := color.CyanString(r.Message)
+
+    h.l.Println(timeStr, level, msg, color.WhiteString(string(b)))
+
+    return nil
+}
+
+func NewPrettyHandler(
+    out io.Writer,
+    opts PrettyHandlerOptions,
+) *PrettyHandler {
+    h := &PrettyHandler{
+        Handler: slog.NewJSONHandler(out, &opts.SlogOpts),
+        l:       log.New(out, "", 0),
+    }
+
+    return h
+}
+
+func main() {
+    opts := PrettyHandlerOptions{
+        SlogOpts: slog.HandlerOptions{
+            Level: slog.LevelDebug,
+        },
+    }
+    handler := NewPrettyHandler(os.Stdout, opts)
+    logger := slog.New(handler)
+    bb, err := ghw.Baseboard(ghw.WithLogger(logger))
+    if err != nil {
+        logger.Error(err.String())
+    }
+    fmt.Println(bb)
+}
+```
 
 ### Overriding the root mountpoint `ghw` uses
 

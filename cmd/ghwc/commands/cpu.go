@@ -25,8 +25,7 @@ var cpuCmd = &cobra.Command{
 
 // showCPU show CPU information for the host system.
 func showCPU(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	cpu, err := ghw.CPU(opts...)
+	cpu, err := ghw.CPU(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting CPU info")
 	}

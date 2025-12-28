@@ -6,14 +6,15 @@
 package pci
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/jaypipes/pcidb"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -24,7 +25,7 @@ const (
 	modAliasExpectedLength = 54
 )
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	pcidbOpt := &pcidb.WithOption{}
 	if path := os.Getenv("PCIDB_PATH"); path != "" {
 		pcidbOpt = pcidb.WithPath(path)
@@ -36,7 +37,7 @@ func (i *Info) load(opts *option.Options) error {
 		}
 		i.db = db
 	}
-	i.Devices = i.getDevices(opts)
+	i.Devices = i.getDevices(ctx)
 	return nil
 }
 
@@ -65,15 +66,15 @@ func getDeviceRevision(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string 
 	return strings.TrimSpace(string(revision))
 }
 
-func getDeviceNUMANode(opts *option.Options, pciAddr *pciaddr.Address) *topology.Node {
-	paths := linuxpath.New(opts)
+func getDeviceNUMANode(ctx context.Context, pciAddr *pciaddr.Address) *topology.Node {
+	paths := linuxpath.New(ctx)
 	numaNodePath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "numa_node")
 
 	if _, err := os.Stat(numaNodePath); err != nil {
 		return nil
 	}
 
-	nodeIdx := util.SafeIntFromFile(opts, numaNodePath)
+	nodeIdx := util.SafeIntFromFile(ctx, numaNodePath)
 	if nodeIdx == -1 {
 		return nil
 	}
@@ -372,8 +373,8 @@ func (info *Info) getDeviceFromModaliasInfo(
 
 // getDevices returns a list of pointers to Device structs present on the
 // host system
-func (info *Info) getDevices(opts *option.Options) []*Device {
-	paths := linuxpath.New(opts)
+func (info *Info) getDevices(ctx context.Context) []*Device {
+	paths := linuxpath.New(ctx)
 	devs := make([]*Device, 0)
 	// We scan the /sys/bus/pci/devices directory which contains a collection
 	// of symlinks. The names of the symlinks are all the known PCI addresses
@@ -381,34 +382,34 @@ func (info *Info) getDevices(opts *option.Options) []*Device {
 	// address and append to the returned array.
 	links, err := os.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
-		opts.Warn("failed to read /sys/bus/pci/devices")
+		ghwcontext.Warn(ctx, "failed to read /sys/bus/pci/devices")
 		return nil
 	}
 	for _, link := range links {
 		address := link.Name()
 		pciAddr := pciaddr.FromString(address)
 		if pciAddr == nil {
-			opts.Warn("error parsing the pci address %q", address)
+			ghwcontext.Warn(ctx, "error parsing the pci address %q", address)
 			return nil
 		}
 
 		// no cached data, let's get the information from system.
 		fp := getDeviceModaliasPath(paths, pciAddr)
 		if fp == "" {
-			opts.Warn("error finding modalias info for device %q", address)
+			ghwcontext.Warn(ctx, "error finding modalias info for device %q", address)
 			return nil
 		}
 
 		modaliasInfo := parseModaliasFile(fp)
 		if modaliasInfo == nil {
-			opts.Warn("error parsing modalias info for device %q", address)
+			ghwcontext.Warn(ctx, "error parsing modalias info for device %q", address)
 			return nil
 		}
 
 		device := info.getDeviceFromModaliasInfo(address, modaliasInfo)
 		device.Revision = getDeviceRevision(paths, pciAddr)
 		if info.arch == topology.ArchitectureNUMA {
-			device.Node = getDeviceNUMANode(opts, pciAddr)
+			device.Node = getDeviceNUMANode(ctx, pciAddr)
 		}
 		device.Driver = getDeviceDriver(paths, pciAddr)
 		device.ParentAddress = getDeviceParentAddress(paths, pciAddr)

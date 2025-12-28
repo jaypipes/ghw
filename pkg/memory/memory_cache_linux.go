@@ -6,6 +6,7 @@
 package memory
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -14,12 +15,12 @@ import (
 	"strconv"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
-func CachesForNode(opts *option.Options, nodeID int) ([]*Cache, error) {
+func CachesForNode(ctx context.Context, nodeID int) ([]*Cache, error) {
 	// The /sys/devices/node/nodeX directory contains a subdirectory called
 	// 'cpuX' for each logical processor assigned to the node. Each of those
 	// subdirectories containers a 'cache' subdirectory which contains a number
@@ -27,7 +28,7 @@ func CachesForNode(opts *option.Options, nodeID int) ([]*Cache, error) {
 	// internal 0-based identifier. Those subdirectories contain a number of
 	// files, including 'shared_cpu_list', 'size', and 'type' which we use to
 	// determine cache characteristics.
-	paths := linuxpath.New(opts)
+	paths := linuxpath.New(ctx)
 	path := filepath.Join(
 		paths.SysDevicesSystemNode,
 		fmt.Sprintf("node%d", nodeID),
@@ -79,14 +80,14 @@ func CachesForNode(opts *option.Options, nodeID int) ([]*Cache, error) {
 			// The cache information is repeated for each node, so here, we
 			// just ensure that we only have a one Cache object for each
 			// unique combination of level, type and processor map
-			level := memoryCacheLevel(opts, paths, nodeID, lpID, cacheIndex)
-			cacheType := memoryCacheType(opts, paths, nodeID, lpID, cacheIndex)
-			sharedCpuMap := memoryCacheSharedCPUMap(opts, paths, nodeID, lpID, cacheIndex)
+			level := memoryCacheLevel(ctx, paths, nodeID, lpID, cacheIndex)
+			cacheType := memoryCacheType(ctx, paths, nodeID, lpID, cacheIndex)
+			sharedCpuMap := memoryCacheSharedCPUMap(ctx, paths, nodeID, lpID, cacheIndex)
 			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
 
 			cache, exists := caches[cacheKey]
 			if !exists {
-				size := memoryCacheSize(opts, paths, nodeID, lpID, level)
+				size := memoryCacheSize(ctx, paths, nodeID, lpID, level)
 				cache = &Cache{
 					Level:             uint8(level),
 					Type:              cacheType,
@@ -115,7 +116,7 @@ func CachesForNode(opts *option.Options, nodeID int) ([]*Cache, error) {
 }
 
 func memoryCacheLevel(
-	opts *option.Options,
+	ctx context.Context,
 	paths *linuxpath.Paths,
 	nodeID int,
 	lpID int,
@@ -127,21 +128,21 @@ func memoryCacheLevel(
 	)
 	levelContents, err := os.ReadFile(levelPath)
 	if err != nil {
-		opts.Warn("%s", err)
+		ghwcontext.Warn(ctx, "%s", err)
 		return -1
 	}
 	// levelContents is now a []byte with the last byte being a newline
 	// character. Trim that off and convert the contents to an integer.
 	level, err := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
 	if err != nil {
-		opts.Warn("Unable to parse int from %s", levelContents)
+		ghwcontext.Warn(ctx, "Unable to parse int from %s", levelContents)
 		return -1
 	}
 	return level
 }
 
 func memoryCacheSize(
-	opts *option.Options,
+	ctx context.Context,
 	paths *linuxpath.Paths,
 	nodeID int,
 	lpID int,
@@ -153,20 +154,20 @@ func memoryCacheSize(
 	)
 	sizeContents, err := os.ReadFile(sizePath)
 	if err != nil {
-		opts.Warn("%s", err)
+		ghwcontext.Warn(ctx, "%s", err)
 		return -1
 	}
 	// size comes as XK\n, so we trim off the K and the newline.
 	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
 	if err != nil {
-		opts.Warn("Unable to parse int from %s", sizeContents)
+		ghwcontext.Warn(ctx, "Unable to parse int from %s", sizeContents)
 		return -1
 	}
 	return size
 }
 
 func memoryCacheType(
-	opts *option.Options,
+	ctx context.Context,
 	paths *linuxpath.Paths,
 	nodeID int,
 	lpID int,
@@ -178,7 +179,7 @@ func memoryCacheType(
 	)
 	cacheTypeContents, err := os.ReadFile(typePath)
 	if err != nil {
-		opts.Warn("%s", err)
+		ghwcontext.Warn(ctx, "%s", err)
 		return CacheTypeUnified
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
@@ -192,7 +193,7 @@ func memoryCacheType(
 }
 
 func memoryCacheSharedCPUMap(
-	opts *option.Options,
+	ctx context.Context,
 	paths *linuxpath.Paths,
 	nodeID int,
 	lpID int,
@@ -204,7 +205,7 @@ func memoryCacheSharedCPUMap(
 	)
 	sharedCpuMap, err := os.ReadFile(scpuPath)
 	if err != nil {
-		opts.Warn("%s", err)
+		ghwcontext.Warn(ctx, "%s", err)
 		return ""
 	}
 	return string(sharedCpuMap[:len(sharedCpuMap)-1])

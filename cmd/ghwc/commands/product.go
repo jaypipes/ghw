@@ -23,8 +23,7 @@ var productCmd = &cobra.Command{
 
 // showProduct shows product information for the host system.
 func showProduct(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	product, err := ghw.Product(opts...)
+	product, err := ghw.Product(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting product info")
 	}
