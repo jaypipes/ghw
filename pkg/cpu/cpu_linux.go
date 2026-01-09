@@ -375,7 +375,7 @@ func logicalProcessorsFromProcCPUInfo(
 			lpAttrs = map[string]string{}
 			continue
 		}
-		parts := strings.Split(line, ":")
+		parts := strings.SplitN(line, ":", 2)
 		key := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
 		lpAttrs[key] = value
