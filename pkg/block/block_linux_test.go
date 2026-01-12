@@ -10,14 +10,15 @@
 package block
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -199,9 +200,9 @@ func TestDiskPartLabel(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	opts := &option.Options{}
-	opts.Chroot = baseDir
-	paths := linuxpath.New(opts)
+	ctx := context.TODO()
+	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	paths := linuxpath.New(ctx)
 	partLabel := "TEST_LABEL_GHW"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -230,9 +231,9 @@ func TestDiskFSLabel(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	opts := &option.Options{}
-	opts.Chroot = baseDir
-	paths := linuxpath.New(opts)
+	ctx := context.TODO()
+	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	paths := linuxpath.New(ctx)
 	fsLabel := "TEST_LABEL_GHW"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -261,9 +262,9 @@ func TestDiskTypeUdev(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	opts := &option.Options{}
-	opts.Chroot = baseDir
-	paths := linuxpath.New(opts)
+	ctx := context.TODO()
+	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	paths := linuxpath.New(ctx)
 	expectedPartType := "ext4"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -291,10 +292,9 @@ func TestDiskPartUUID(t *testing.T) {
 		t.Skip("Skipping block tests.")
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
-	defer os.RemoveAll(baseDir)
-	opts := &option.Options{}
-	opts.Chroot = baseDir
-	paths := linuxpath.New(opts)
+	ctx := context.TODO()
+	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	paths := linuxpath.New(ctx)
 	partUUID := "11111111-1111-1111-1111-111111111111"
 
 	_ = os.MkdirAll(paths.SysBlock, 0755)
@@ -317,17 +317,17 @@ func TestDiskPartUUID(t *testing.T) {
 	}
 }
 
-// TestLoopDevicesWithOption tests to see if we find loop devices when the option is activated
+// TestLoopDevicesWithOption tests to see if we find loop devices when the ghwcontext is activated
 func TestLoopDevicesWithOption(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	opts := &option.Options{}
-	opts.Chroot = baseDir
-	opts.DisableTools = true
-	paths := linuxpath.New(opts)
+	ctx := context.TODO()
+	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	ctx = ghwcontext.WithDisableTools()(ctx)
+	paths := linuxpath.New(ctx)
 	fsType := "ext4"
 	expectedLoopName := "loop0"
 	loopNotUsed := "loop1"
@@ -348,7 +348,7 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
 	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("102400\n"), 0644)
 	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
-	d := disks(opts)
+	d := disks(ctx)
 	// There should be one disk, the other should be ignored due to 0 size
 	if len(d) != 1 {
 		t.Fatalf("expected one disk device but the function reported %d", len(d))

@@ -7,6 +7,7 @@
 package snapshot_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/snapshot"
+	"github.com/stretchr/testify/require"
 )
 
 // NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
@@ -23,16 +25,13 @@ import (
 
 // nolint: gocyclo
 func TestCloneTree(t *testing.T) {
+	require := require.New(t)
 	root, err := snapshot.Unpack(testDataSnapshot)
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	defer os.RemoveAll(root)
 
 	cloneRoot, err := os.MkdirTemp("", "ghw-test-clonetree-*")
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	defer os.RemoveAll(cloneRoot)
 
 	fileSpecs := []string{
@@ -41,21 +40,16 @@ func TestCloneTree(t *testing.T) {
 		filepath.Join(root, "nested/ghw-test*"),
 		filepath.Join(root, "nested/tree/of/subdirectories/forming/deep/unbalanced/tree/ghw-test-3"),
 	}
-	err = snapshot.CopyFilesInto(fileSpecs, cloneRoot, nil)
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	ctx := context.TODO()
+	err = snapshot.CopyFilesInto(ctx, fileSpecs, cloneRoot, nil)
+	require.Nil(err)
 
 	origContent, err := scanTree(root, "", []string{""})
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	sort.Strings(origContent)
 
 	cloneContent, err := scanTree(cloneRoot, cloneRoot, []string{"", "/tmp"})
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	sort.Strings(cloneContent)
 
 	if len(origContent) != len(cloneContent) {
@@ -72,22 +66,20 @@ func TestCloneSystemTree(t *testing.T) {
 	// We do the bare minimum here to check that both the CloneTree and the ValidateClonedTree did something
 	// sensible. To really do a meaningful test we need a more advanced functional test, starting with from
 	// a ghw snapshot.
+	require := require.New(t)
 
 	cloneRoot, err := os.MkdirTemp("", "ghw-test-clonetree-*")
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	defer os.RemoveAll(cloneRoot)
 
-	err = snapshot.CloneTreeInto(cloneRoot)
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	ctx := context.TODO()
+	err = snapshot.CloneTreeInto(ctx, cloneRoot)
+	require.Nil(err)
 
-	missing, err := snapshot.ValidateClonedTree(snapshot.ExpectedCloneContent(), cloneRoot)
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	cloneContent, err := snapshot.ExpectedCloneContent(ctx)
+	require.Nil(err)
+	missing, err := snapshot.ValidateClonedTree(cloneContent, cloneRoot)
+	require.Nil(err)
 
 	if len(missing) > 0 && areEntriesOnSysfs(missing) {
 		t.Fatalf("Expected content %#v missing into the cloned tree %q", missing, cloneRoot)

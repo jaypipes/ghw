@@ -6,22 +6,24 @@
 package linuxdmi
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
-func Item(opts *option.Options, value string) string {
-	paths := linuxpath.New(opts)
+func Item(ctx context.Context, value string) string {
+	paths := linuxpath.New(ctx)
 	path := filepath.Join(paths.SysClassDMI, "id", value)
 
+	ghwcontext.Debug(ctx, "reading from %q", path)
 	b, err := os.ReadFile(path)
 	if err != nil {
-		opts.Warn("Unable to read %s: %s\n", value, err)
+		ghwcontext.Warn(ctx, "Unable to read %s: %s\n", value, err)
 		return util.UNKNOWN
 	}
 

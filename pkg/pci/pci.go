@@ -12,8 +12,8 @@ import (
 
 	"github.com/jaypipes/pcidb"
 
+	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -136,8 +136,9 @@ func (i *Info) String() string {
 
 // New returns a pointer to an Info struct that contains information about the
 // PCI devices on the host system
-func New(opt ...option.Option) (*Info, error) {
-	topo, err := topology.New(opt...)
+func New(args ...any) (*Info, error) {
+	ctx := ghwcontext.FromArgs(args...)
+	topo, err := topology.New(ctx)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to initialize PCI info dur to failure to initialize "+
@@ -145,16 +146,12 @@ func New(opt ...option.Option) (*Info, error) {
 			err,
 		)
 	}
-	opts := &option.Options{}
-	for _, o := range opt {
-		o(opts)
-	}
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
 	info := &Info{
 		arch: topo.Architecture,
 	}
-	if err := info.load(opts); err != nil {
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	return info, nil

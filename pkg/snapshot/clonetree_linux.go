@@ -7,11 +7,15 @@
 package snapshot
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 )
 
-func setupScratchDir(scratchDir string) error {
+func setupScratchDir(
+	ctx context.Context,
+	scratchDir string,
+) error {
 	var createPaths = []string{
 		"sys/block",
 	}
@@ -22,7 +26,7 @@ func setupScratchDir(scratchDir string) error {
 		}
 	}
 
-	return createBlockDevices(scratchDir)
+	return createBlockDevices(ctx, scratchDir)
 }
 
 // ExpectedCloneStaticContent return a slice of glob patterns which represent the pseudofiles
