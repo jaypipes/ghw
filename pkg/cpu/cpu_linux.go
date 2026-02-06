@@ -376,9 +376,11 @@ func logicalProcessorsFromProcCPUInfo(
 			continue
 		}
 		parts := strings.SplitN(line, ":", 2)
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-		lpAttrs[key] = value
+		if len(parts) >= 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			lpAttrs[key] = value
+		}
 	}
 	return lps
 }
