@@ -237,10 +237,6 @@ func pciTestSetupI7(t *testing.T) *pci.Info {
 }
 
 func pciTestSetup(t *testing.T, snapshotFilename string) *pci.Info {
-	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
-		t.Skip("Skipping PCI tests.")
-	}
-
 	testdataPath, err := testdata.SnapshotsDirectory()
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
