@@ -219,3 +219,51 @@ func TestS390xCPU(t *testing.T) {
 		t.Fatal("Expected capabilities to be populated from s390x 'features' key")
 	}
 }
+
+func TestQualcommCPUInfo(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
+		t.Skip("Skipping CPU tests.")
+	}
+
+	root := t.TempDir()
+
+	// Create /proc/cpuinfo
+	procDir := filepath.Join(root, "proc")
+	if err := os.MkdirAll(procDir, 0700); err != nil {
+		t.Fatalf("Failed to create proc dir: %v", err)
+	}
+
+	content := `processor       : 0
+BogoMIPS        : 38.40
+Features        : fp asimd evtstrm aes pmull sha1 sha2 crc32 cpuid
+CPU implementer : 0x51
+CPU architecture: 8
+CPU variant     : 0xa
+CPU part        : 0x800
+CPU revision    : 2
+
+Qualcomm Technologies, Inc QCM6125
+`
+	if err := os.WriteFile(filepath.Join(procDir, "cpuinfo"), []byte(content), 0600); err != nil {
+		t.Fatalf("Failed to write cpuinfo: %v", err)
+	}
+
+	// Create /sys/devices/system/cpu/cpu0
+	cpu0Dir := filepath.Join(root, "sys", "devices", "system", "cpu", "cpu0")
+	if err := os.MkdirAll(filepath.Join(cpu0Dir, "topology"), 0700); err != nil {
+		t.Fatalf("Failed to create cpu0 dir: %v", err)
+	}
+
+	info, err := cpu.New(ghw.WithChroot(root))
+	if err != nil {
+		t.Fatalf("Expected nil err, but got %v", err)
+	}
+	if info == nil {
+		t.Fatalf("Expected non-nil CPUInfo, but got nil")
+	}
+
+	// We expect 1 processor.
+	if len(info.Processors) != 1 {
+		t.Errorf("Expected 1 processor, got %d", len(info.Processors))
+	}
+}
