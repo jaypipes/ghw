@@ -42,6 +42,9 @@ jobs:
        env:
          GHW_TESTING_SKIP_BLOCK: "1"
          GHW_TESTING_SKIP_GPU: "1"
+         # As of ~Feb 2026, Ubuntu runner VMs on Azure no longer expose any PCI
+         # devices :(
+         GHW_TESTING_SKIP_PCI: "1"
        run: go test -v ./...
 
   ubuntu-2204:
@@ -73,6 +76,9 @@ jobs:
        env:
          GHW_TESTING_SKIP_BLOCK: "1"
          GHW_TESTING_SKIP_GPU: "1"
+         # As of ~Feb 2026, Ubuntu runner VMs on Azure no longer expose any PCI
+         # devices :(
+         GHW_TESTING_SKIP_PCI: "1"
        run: go test -v ./...
 
   windows-latest:
