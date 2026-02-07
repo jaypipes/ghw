@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/gpu"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 
 	"github.com/jaypipes/ghw/testdata"
@@ -52,7 +52,7 @@ func TestGPUWithoutNUMANodeInfo(t *testing.T) {
 		t.Fatalf("Cannot remove the NUMA node info: %v", err)
 	}
 
-	info, err := gpu.New(option.WithChroot(tmpRoot))
+	info, err := gpu.New(ghw.WithChroot(tmpRoot))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

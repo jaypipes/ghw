@@ -7,6 +7,7 @@
 package ghw
 
 import (
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/accelerator"
 	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
@@ -24,21 +25,24 @@ import (
 	"github.com/jaypipes/ghw/pkg/usb"
 )
 
-// DEPRECATED: Please use Option
-type WithOption = option.Option
-type Option = option.Option
-
 var (
-	WithChroot      = option.WithChroot
-	WithAlerter     = option.WithAlerter
+	ContextFromEnv = config.ContextFromEnv
+
+	WithChroot = config.WithChroot
+	// DEPRECATED: Please use WithLogger
+	WithAlerter = option.WithAlerter
+	// DEPRECATED: Please use WithDisableWarnings
 	WithNullAlerter = option.WithNullAlerter
 	// match the existing environ variable to minimize surprises
-	WithDisableWarnings = option.WithNullAlerter
-	WithDisableTools    = option.WithDisableTools
-	WithPathOverrides   = option.WithPathOverrides
+	WithDisableWarnings = config.WithDisableWarnings
+	WithDisableTools    = config.WithDisableTools
+	WithPathOverrides   = config.WithPathOverrides
+	WithLogLevel        = config.WithLogLevel
+	WithDebug           = config.WithDebug
+	WithLogger          = config.WithLogger
 )
 
-type PathOverrides = option.PathOverrides
+type PathOverrides map[string]string
 
 type CPUInfo = cpu.Info
 

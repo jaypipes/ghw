@@ -23,8 +23,7 @@ var acceleratorCmd = &cobra.Command{
 
 // showAccelerator show processing accelerators information for the host system.
 func showAccelerator(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	accel, err := ghw.Accelerator(opts...)
+	accel, err := ghw.Accelerator(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting Accelerator info")
 	}
