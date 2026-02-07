@@ -17,7 +17,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -54,7 +54,7 @@ func processorsGet(ctx context.Context) []*Processor {
 	// processor pseudodirs are of the pattern /sys/devices/system/cpu/cpu{N}
 	fnames, err := os.ReadDir(paths.SysDevicesSystemCPU)
 	if err != nil {
-		ghwcontext.Warn(ctx, "failed to read /sys/devices/system/cpu: %s", err)
+		log.Warn(ctx, "failed to read /sys/devices/system/cpu: %s", err)
 		return []*Processor{}
 	}
 	for _, fname := range fnames {
@@ -65,7 +65,7 @@ func processorsGet(ctx context.Context) []*Processor {
 
 		lpID, err := strconv.Atoi(matches[1])
 		if err != nil {
-			ghwcontext.Warn(ctx, "failed to find numeric logical processor ID: %s", err)
+			log.Warn(ctx, "failed to find numeric logical processor ID: %s", err)
 			continue
 		}
 
@@ -84,7 +84,7 @@ func processorsGet(ctx context.Context) []*Processor {
 			proc = &Processor{ID: procID}
 			lp, ok := lps[lpID]
 			if !ok {
-				ghwcontext.Warn(ctx,
+				log.Warn(ctx,
 					"failed to find attributes for logical processor %d",
 					lpID,
 				)
@@ -228,7 +228,7 @@ func CoresForNode(ctx context.Context, nodeID int) ([]*ProcessorCore, error) {
 		cpuPath := filepath.Join(path, filename)
 		procID, err := strconv.Atoi(filename[3:])
 		if err != nil {
-			ghwcontext.Warn(ctx,
+			log.Warn(ctx,
 				"failed to determine procID from %s. Expected integer after 3rd char.",
 				filename,
 			)
@@ -363,7 +363,7 @@ func logicalProcessorsFromProcCPUInfo(
 			// collected for this logical processor block
 			lpIDstr, ok := lpAttrs["processor"]
 			if !ok {
-				ghwcontext.Warn(ctx, "expected to find 'processor' key in /proc/cpuinfo attributes")
+				log.Warn(ctx, "expected to find 'processor' key in /proc/cpuinfo attributes")
 				continue
 			}
 			lpID, _ := strconv.Atoi(lpIDstr)

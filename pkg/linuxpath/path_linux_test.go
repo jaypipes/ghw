@@ -16,7 +16,7 @@ import (
 	"sort"
 	"testing"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/option"
@@ -33,7 +33,7 @@ func TestPathRoot(t *testing.T) {
 		defer os.Unsetenv("GHW_CHROOT")
 	}
 
-	ctx := ghwcontext.FromEnv()
+	ctx := ghw.ContextFromEnv()
 	paths := linuxpath.New(ctx)
 
 	// No environment variable is set for GHW_CHROOT, so pathProcCpuinfo() should
@@ -47,7 +47,7 @@ func TestPathRoot(t *testing.T) {
 	// returns that value
 	os.Setenv("GHW_CHROOT", "/host")
 
-	ctx = ghwcontext.FromEnv()
+	ctx = ghw.ContextFromEnv()
 	paths = linuxpath.New(ctx)
 
 	path = paths.ProcCpuinfo
@@ -57,8 +57,8 @@ func TestPathRoot(t *testing.T) {
 }
 
 func TestPathSpecificRoots(t *testing.T) {
-	ctx := ghwcontext.FromEnv()
-	ctx = ghwcontext.WithPathOverrides(map[string]string{
+	ctx := ghw.ContextFromEnv()
+	ctx = ghw.WithPathOverrides(map[string]string{
 		"/proc": "/host-proc",
 		"/sys":  "/host-sys",
 	})(ctx)
@@ -78,9 +78,9 @@ func TestPathSpecificRoots(t *testing.T) {
 }
 
 func TestPathChrootAndSpecifics(t *testing.T) {
-	ctx := ghwcontext.FromEnv()
-	ctx = ghwcontext.WithChroot("/redirect")(ctx)
-	ctx = ghwcontext.WithPathOverrides(map[string]string{
+	ctx := ghw.ContextFromEnv()
+	ctx = ghw.WithChroot("/redirect")(ctx)
+	ctx = ghw.WithPathOverrides(map[string]string{
 		"/proc": "/host2-proc",
 		"/sys":  "/host2-sys",
 	})(ctx)

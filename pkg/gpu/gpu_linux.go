@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
@@ -65,7 +65,7 @@ func (i *Info) load(ctx context.Context) error {
 	paths := linuxpath.New(ctx)
 	links, err := os.ReadDir(paths.SysClassDRM)
 	if err != nil {
-		ghwcontext.Warn(ctx, warnNoSysClassDRM)
+		log.Warn(ctx, warnNoSysClassDRM)
 		return nil
 	}
 	cards := make([]*GraphicsCard, 0)

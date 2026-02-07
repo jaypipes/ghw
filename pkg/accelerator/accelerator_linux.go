@@ -8,7 +8,7 @@ package accelerator
 import (
 	"context"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/pci"
 )
 
@@ -39,7 +39,7 @@ func (i *Info) load(ctx context.Context) error {
 	// get PCI devices
 	pciInfo, err := pci.New(ctx)
 	if err != nil {
-		ghwcontext.Warn(ctx, "error loading PCI information: %s", err)
+		log.Warn(ctx, "error loading PCI information: %s", err)
 		return nil
 	}
 

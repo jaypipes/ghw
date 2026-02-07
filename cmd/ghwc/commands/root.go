@@ -12,7 +12,7 @@ import (
 	"os"
 
 	"github.com/jaypipes/ghw"
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -174,7 +174,7 @@ func validateRootCommand(rootCmd *cobra.Command, args []string) error {
 }
 
 func doPreRun(cmd *cobra.Command, args []string) error {
-	ctx := ghwcontext.FromEnv()
+	ctx := config.ContextFromEnv()
 	if snapshotPath != "" {
 		// unpack the snapshot into a tempdir and clean up this tempdir after
 		// the run...

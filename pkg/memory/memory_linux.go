@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -48,7 +48,7 @@ func (i *Info) load(ctx context.Context) error {
 	tpb := memTotalPhysicalBytes(paths)
 	i.TotalPhysicalBytes = tpb
 	if tpb < 1 {
-		ghwcontext.Warn(ctx, warnCannotDeterminePhysicalMemory)
+		log.Warn(ctx, warnCannotDeterminePhysicalMemory)
 		i.TotalPhysicalBytes = tub
 	}
 	i.SupportedPageSizes, _ = memorySupportedPageSizes(paths.SysKernelMMHugepages)

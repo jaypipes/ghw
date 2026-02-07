@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 )
 
 const (
@@ -39,13 +39,13 @@ func SafeIntFromFile(ctx context.Context, path string) int {
 	msg := "failed to read int from file: %s\n"
 	buf, err := os.ReadFile(path)
 	if err != nil {
-		ghwcontext.Warn(ctx, msg, err)
+		log.Warn(ctx, msg, err)
 		return -1
 	}
 	contents := strings.TrimSpace(string(buf))
 	res, err := strconv.Atoi(contents)
 	if err != nil {
-		ghwcontext.Warn(ctx, msg, err)
+		log.Warn(ctx, msg, err)
 		return -1
 	}
 	return res

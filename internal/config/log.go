@@ -4,17 +4,14 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package context
+package config
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
 	"os"
-	"runtime"
 	"strings"
-	"time"
 )
 
 const (
@@ -23,10 +20,10 @@ const (
 )
 
 var (
-	logLevelKey     = ContextKey("ghw.log.level")
+	logLevelKey     = Key("ghw.log.level")
 	defaultLogLevel = slog.LevelWarn
 	logLevelVar     = new(slog.LevelVar)
-	loggerKey       = ContextKey("ghw.logger")
+	loggerKey       = Key("ghw.logger")
 	logfmtLogger    = slog.New(
 		slog.NewTextHandler(
 			os.Stderr,
@@ -67,7 +64,7 @@ func (h *simpleHandler) Handle(
 }
 
 // WithLogLevel allows overriding the default log level of WARN.
-func WithLogLevel(level slog.Level) ContextModifier {
+func WithLogLevel(level slog.Level) Modifier {
 	return func(ctx context.Context) context.Context {
 		logLevelVar.Set(level)
 		return context.WithValue(ctx, logLevelKey, level)
@@ -75,7 +72,7 @@ func WithLogLevel(level slog.Level) ContextModifier {
 }
 
 // WithLogLogfmt sets the log output to the logfmt standard.
-func WithLogLogfmt() ContextModifier {
+func WithLogLogfmt() Modifier {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, loggerKey, logfmtLogger)
 	}
@@ -91,7 +88,7 @@ func EnvOrDefaultLogLogfmt() bool {
 }
 
 // WithLogger allows overriding the default logger
-func WithLogger(logger *slog.Logger) ContextModifier {
+func WithLogger(logger *slog.Logger) Modifier {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, loggerKey, logger)
 	}
@@ -140,12 +137,12 @@ func Logger(ctx context.Context) *slog.Logger {
 }
 
 // WithDebug enables verbose debugging output.
-func WithDebug() ContextModifier {
+func WithDebug() Modifier {
 	return WithLogLevel(slog.LevelDebug)
 }
 
 // WithDisableWarnings tells ghw not to output warning messages.
-func WithDisableWarnings() ContextModifier {
+func WithDisableWarnings() Modifier {
 	return WithLogLevel(slog.LevelError)
 }
 
@@ -156,43 +153,4 @@ func EnvOrDefaultDisableWarnings() bool {
 		return true
 	}
 	return false
-}
-
-// Info outputs an INFO-level log message to the logger configured in the
-// supplied context.
-func Info(ctx context.Context, format string, args ...any) {
-	logger := Logger(ctx)
-	if logger == nil || !logger.Enabled(ctx, slog.LevelInfo) {
-		return
-	}
-	var stack [1]uintptr
-	runtime.Callers(2, stack[:]) // skip [Callers, Info]
-	r := slog.NewRecord(time.Now(), slog.LevelInfo, strings.TrimSpace(fmt.Sprintf(format, args...)), stack[0])
-	_ = logger.Handler().Handle(ctx, r)
-}
-
-// Warn outputs an WARN-level log message to the logger configured in the
-// supplied context.
-func Warn(ctx context.Context, format string, args ...any) {
-	logger := Logger(ctx)
-	if logger == nil || !logger.Enabled(ctx, slog.LevelWarn) {
-		return
-	}
-	var stack [1]uintptr
-	runtime.Callers(2, stack[:]) // skip [Callers, Warn]
-	r := slog.NewRecord(time.Now(), slog.LevelWarn, strings.TrimSpace(fmt.Sprintf(format, args...)), stack[0])
-	_ = logger.Handler().Handle(ctx, r)
-}
-
-// Debug outputs an DEBUG-level log message to the logger configured in the
-// supplied context.
-func Debug(ctx context.Context, format string, args ...any) {
-	logger := Logger(ctx)
-	if logger == nil || !logger.Enabled(ctx, slog.LevelDebug) {
-		return
-	}
-	var stack [1]uintptr
-	runtime.Callers(2, stack[:]) // skip [Callers, Debug]
-	r := slog.NewRecord(time.Now(), slog.LevelDebug, strings.TrimSpace(fmt.Sprintf(format, args...)), stack[0])
-	_ = logger.Handler().Handle(ctx, r)
 }

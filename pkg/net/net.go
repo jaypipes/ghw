@@ -9,7 +9,7 @@ package net
 import (
 	"fmt"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
@@ -102,7 +102,7 @@ type Info struct {
 // New returns a pointer to an Info struct that contains information about the
 // network interface controllers (NICs) on the host system
 func New(args ...any) (*Info, error) {
-	ctx := ghwcontext.FromArgs(args...)
+	ctx := config.ContextFromArgs(args...)
 	info := &Info{}
 	if err := info.load(ctx); err != nil {
 		return nil, err

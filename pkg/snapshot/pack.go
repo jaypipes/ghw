@@ -16,7 +16,7 @@ import (
 	"os"
 	"path/filepath"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 )
 
 // PackFrom creates the snapshot named `snapshotName` from the
@@ -89,7 +89,7 @@ func createSnapshot(
 		var err error
 
 		if fi.Mode()&os.ModeSymlink != 0 {
-			ghwcontext.Debug(ctx, "processing symlink %s\n", path)
+			log.Debug(ctx, "processing symlink %s\n", path)
 			link, err = os.Readlink(path)
 			if err != nil {
 				return err

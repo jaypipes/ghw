@@ -17,7 +17,7 @@ import (
 	"reflect"
 	"testing"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -201,7 +201,7 @@ func TestDiskPartLabel(t *testing.T) {
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
 	ctx := context.TODO()
-	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	partLabel := "TEST_LABEL_GHW"
 
@@ -232,7 +232,7 @@ func TestDiskFSLabel(t *testing.T) {
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
 	ctx := context.TODO()
-	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	fsLabel := "TEST_LABEL_GHW"
 
@@ -263,7 +263,7 @@ func TestDiskTypeUdev(t *testing.T) {
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
 	ctx := context.TODO()
-	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	expectedPartType := "ext4"
 
@@ -293,7 +293,7 @@ func TestDiskPartUUID(t *testing.T) {
 	}
 	baseDir, _ := os.MkdirTemp("", "test")
 	ctx := context.TODO()
-	ctx = ghwcontext.WithChroot(baseDir)(ctx)
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	partUUID := "11111111-1111-1111-1111-111111111111"
 
@@ -317,7 +317,7 @@ func TestDiskPartUUID(t *testing.T) {
 	}
 }
 
-// TestLoopDevicesWithOption tests to see if we find loop devices when the ghwcontext is activated
+// TestLoopDevicesWithOption tests to see if we find loop devices when the config is activated
 func TestLoopDevicesWithOption(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
@@ -325,8 +325,8 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
 	ctx := context.TODO()
-	ctx = ghwcontext.WithChroot(baseDir)(ctx)
-	ctx = ghwcontext.WithDisableTools()(ctx)
+	ctx = config.WithChroot(baseDir)(ctx)
+	ctx = config.WithDisableTools()(ctx)
 	paths := linuxpath.New(ctx)
 	fsType := "ext4"
 	expectedLoopName := "loop0"

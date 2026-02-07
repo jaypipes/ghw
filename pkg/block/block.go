@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -291,7 +291,7 @@ type Info struct {
 // New returns a pointer to an Info struct that describes the block storage
 // resources of the host system.
 func New(args ...any) (*Info, error) {
-	ctx := ghwcontext.FromArgs(args...)
+	ctx := config.ContextFromArgs(args...)
 	info := &Info{}
 	if err := info.load(ctx); err != nil {
 		return nil, err

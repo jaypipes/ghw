@@ -15,7 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -38,10 +39,10 @@ func nics(ctx context.Context) []*NIC {
 		return nics
 	}
 
-	etAvailable := ghwcontext.ToolsEnabled(ctx)
+	etAvailable := config.ToolsEnabled(ctx)
 	if etAvailable {
 		if etInstalled := ethtoolInstalled(); !etInstalled {
-			ghwcontext.Warn(ctx, warnEthtoolNotInstalled)
+			log.Warn(ctx, warnEthtoolNotInstalled)
 			etAvailable = false
 		}
 	}
@@ -134,7 +135,7 @@ func (n *NIC) netDeviceParseEthtool(ctx context.Context, dev string) {
 		n.AdvertisedFECModes = m["Advertised FEC modes"]
 	} else {
 		msg := fmt.Sprintf("could not grab NIC link info for %s: %s", dev, err)
-		ghwcontext.Warn(ctx, msg)
+		log.Warn(ctx, msg)
 	}
 
 	// Get all other capabilities from "ethtool -k"
@@ -172,7 +173,7 @@ func (n *NIC) netDeviceParseEthtool(ctx context.Context, dev string) {
 
 	} else {
 		msg := fmt.Sprintf("could not grab NIC capabilities for %s: %s", dev, err)
-		ghwcontext.Warn(ctx, msg)
+		log.Warn(ctx, msg)
 	}
 }
 

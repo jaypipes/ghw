@@ -7,12 +7,12 @@
 package ghw
 
 import (
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/accelerator"
 	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/memory"
@@ -25,25 +25,21 @@ import (
 	"github.com/jaypipes/ghw/pkg/usb"
 )
 
-// DEPRECATED: Please use Option
-type WithOption = option.Option
-
-// DEPRECATED: Please use WithXXX functions.
-type Option = option.Option
-
 var (
-	WithChroot = ghwcontext.WithChroot
+	ContextFromEnv = config.ContextFromEnv
+
+	WithChroot = config.WithChroot
 	// DEPRECATED: Please use WithLogger
 	WithAlerter = option.WithAlerter
 	// DEPRECATED: Please use WithDisableWarnings
 	WithNullAlerter = option.WithNullAlerter
 	// match the existing environ variable to minimize surprises
-	WithDisableWarnings = ghwcontext.WithDisableWarnings
-	WithDisableTools    = ghwcontext.WithDisableTools
-	WithPathOverrides   = ghwcontext.WithPathOverrides
-	WithLogLevel        = ghwcontext.WithLogLevel
-	WithDebug           = ghwcontext.WithDebug
-	WithLogger          = ghwcontext.WithLogger
+	WithDisableWarnings = config.WithDisableWarnings
+	WithDisableTools    = config.WithDisableTools
+	WithPathOverrides   = config.WithPathOverrides
+	WithLogLevel        = config.WithLogLevel
+	WithDebug           = config.WithDebug
+	WithLogger          = config.WithLogger
 )
 
 type PathOverrides map[string]string

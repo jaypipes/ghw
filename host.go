@@ -9,12 +9,12 @@ package ghw
 import (
 	"fmt"
 
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/accelerator"
 	"github.com/jaypipes/ghw/pkg/baseboard"
 	"github.com/jaypipes/ghw/pkg/bios"
 	"github.com/jaypipes/ghw/pkg/block"
 	"github.com/jaypipes/ghw/pkg/chassis"
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
@@ -47,7 +47,7 @@ type HostInfo struct {
 // Host returns a pointer to a HostInfo struct that contains fields with
 // information about the host system's CPU, memory, network devices, etc
 func Host(args ...any) (*HostInfo, error) {
-	ctx := ghwcontext.FromArgs(args...)
+	ctx := config.ContextFromArgs(args...)
 	memInfo, err := memory.New(ctx)
 	if err != nil {
 		return nil, err

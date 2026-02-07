@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 )
 
 // Attempting to tar up pseudofiles like /proc/cpuinfo is an exercise in
@@ -122,7 +122,7 @@ func CopyFilesInto(
 		}
 	}
 	for _, fileSpec := range fileSpecs {
-		ghwcontext.Debug(ctx, "copying spec: %q", fileSpec)
+		log.Debug(ctx, "copying spec: %q", fileSpec)
 		matches, err := filepath.Glob(fileSpec)
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func copyFileTreeInto(
 	opts *CopyFileOptions,
 ) error {
 	for _, path := range paths {
-		ghwcontext.Debug(ctx, "  copying path: %q", path)
+		log.Debug(ctx, "  copying path: %q", path)
 		baseDir := filepath.Dir(path)
 		if err := os.MkdirAll(filepath.Join(destDir, baseDir), os.ModePerm); err != nil {
 			return err
@@ -161,17 +161,17 @@ func copyFileTreeInto(
 					return err
 				}
 			} else {
-				ghwcontext.Debug(ctx, "expanded glob path %q is a directory - skipped", path)
+				log.Debug(ctx, "expanded glob path %q is a directory - skipped", path)
 			}
 			continue
 		}
 		if opts.IsSymlinkFn(path, fi) {
-			ghwcontext.Debug(ctx, "    copying link: %q -> %q", path, destPath)
+			log.Debug(ctx, "    copying link: %q -> %q", path, destPath)
 			if err := copyLink(ctx, path, destPath); err != nil {
 				return err
 			}
 		} else {
-			ghwcontext.Debug(ctx, "    copying file: %q -> %q", path, destPath)
+			log.Debug(ctx, "    copying file: %q -> %q", path, destPath)
 			if err := copyPseudoFile(ctx, path, destPath); err != nil && !errors.Is(err, os.ErrPermission) {
 				return err
 			}
@@ -197,7 +197,7 @@ func copyLink(
 	if err != nil {
 		return err
 	}
-	ghwcontext.Debug(ctx, "      symlink %q -> %q", target, targetPath)
+	log.Debug(ctx, "      symlink %q -> %q", target, targetPath)
 	if err := os.Symlink(target, targetPath); err != nil {
 		if errors.Is(err, os.ErrExist) {
 			return nil
@@ -217,7 +217,7 @@ func copyPseudoFile(
 	if err != nil {
 		return err
 	}
-	ghwcontext.Debug(ctx, "creating %s", targetPath)
+	log.Debug(ctx, "creating %s", targetPath)
 	f, err := os.Create(targetPath)
 	if err != nil {
 		return err

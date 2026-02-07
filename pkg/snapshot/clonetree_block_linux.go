@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 )
 
 func createBlockDevices(
@@ -33,14 +33,14 @@ func createBlockDevices(
 			continue
 		}
 		devPath := filepath.Join("/sys/block", dname)
-		ghwcontext.Debug(ctx, "processing block device %q", devPath)
+		log.Debug(ctx, "processing block device %q", devPath)
 
 		// from the sysfs layout, we know this is always a symlink
 		linkContentPath, err := os.Readlink(devPath)
 		if err != nil {
 			return err
 		}
-		ghwcontext.Debug(ctx, "link target for block device %q is %q", devPath, linkContentPath)
+		log.Debug(ctx, "link target for block device %q is %q", devPath, linkContentPath)
 
 		// Create a symlink in our build filesystem that is a directory
 		// pointing to the actual device bus path where the block device's
@@ -51,12 +51,12 @@ func createBlockDevices(
 			"sys/block",
 			strings.TrimPrefix(linkContentPath, string(os.PathSeparator)),
 		)
-		ghwcontext.Debug(ctx, "creating device directory %s", linkTargetPath)
+		log.Debug(ctx, "creating device directory %s", linkTargetPath)
 		if err = os.MkdirAll(linkTargetPath, os.ModePerm); err != nil {
 			return err
 		}
 
-		ghwcontext.Debug(ctx, "linking device directory %s to %s", linkPath, linkContentPath)
+		log.Debug(ctx, "linking device directory %s to %s", linkPath, linkContentPath)
 		// Make sure the link target is a relative path!
 		// if we use absolute path, the link target will be an absolute path starting
 		// with buildDir, hence the snapshot will contain broken link.
@@ -71,7 +71,7 @@ func createBlockDevices(
 			"/sys/block",
 			strings.TrimPrefix(linkContentPath, string(os.PathSeparator)),
 		)
-		ghwcontext.Debug(ctx, "creating device directory %q from %q", linkTargetPath, srcDeviceDir)
+		log.Debug(ctx, "creating device directory %q from %q", linkTargetPath, srcDeviceDir)
 		if err = createBlockDeviceDir(ctx, linkTargetPath, srcDeviceDir); err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func createBlockDeviceDir(
 				srcPartitionDir := filepath.Join(
 					srcDeviceDir, fname,
 				)
-				ghwcontext.Debug(ctx, "creating partition directory %s", buildPartitionDir)
+				log.Debug(ctx, "creating partition directory %s", buildPartitionDir)
 				err = os.MkdirAll(buildPartitionDir, os.ModePerm)
 				if err != nil {
 					return err
@@ -132,13 +132,13 @@ func createBlockDeviceDir(
 			if err != nil {
 				if errors.Is(err, os.ErrPermission) {
 					// example: /sys/devices/virtual/block/zram0/compact is 0400
-					ghwcontext.Debug(ctx, "permission denied reading %q - skipped", fp)
+					log.Debug(ctx, "permission denied reading %q - skipped", fp)
 					continue
 				}
 				return err
 			}
 			targetPath := filepath.Join(buildDeviceDir, fname)
-			ghwcontext.Debug(ctx, "creating %s", targetPath)
+			log.Debug(ctx, "creating %s", targetPath)
 			f, err := os.Create(targetPath)
 			if err != nil {
 				return err
@@ -170,7 +170,7 @@ func createBlockDeviceDir(
 		return err
 	}
 	targetPath := filepath.Join(buildQueueDir, "rotational")
-	ghwcontext.Debug(ctx, "creating %s", targetPath)
+	log.Debug(ctx, "creating %s", targetPath)
 	f, err := os.Create(targetPath)
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func createPartitionDir(
 				return err
 			}
 			targetPath := filepath.Join(buildPartitionDir, fname)
-			ghwcontext.Debug(ctx, "creating %s", targetPath)
+			log.Debug(ctx, "creating %s", targetPath)
 			f, err := os.Create(targetPath)
 			if err != nil {
 				return err

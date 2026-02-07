@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 )
 
@@ -56,7 +56,7 @@ func ExpectedClonePCIContent(
 // level; more PCI bridges are (usually) attached to this level, creating deep nested trees.
 // hence we need to scan all possible roots, to make sure not to miss important devices.
 //
-// note about notifying errors. This function and its helper functions do use ghwcontext.Debug(ctx, ) everywhere
+// note about notifying errors. This function and its helper functions do use log.Debug(ctx, ) everywhere
 // to report recoverable errors, even though it would have been appropriate to use Warn().
 // This is unfortunate, and again a byproduct of the fact we cannot use context.Context to avoid
 // circular dependencies.
@@ -64,7 +64,7 @@ func scanPCIDeviceRoot(
 	ctx context.Context,
 	root string,
 ) (fileSpecs []string, pciRoots []string, err error) {
-	ghwcontext.Debug(ctx, "scanning PCI device root %q", root)
+	log.Debug(ctx, "scanning PCI device root %q", root)
 
 	perDevEntries := []string{
 		"class",
@@ -94,11 +94,11 @@ func scanPCIDeviceRoot(
 		entryPath := filepath.Join(root, entryName)
 		pciEntry, err := findPCIEntryFromPath(ctx, root, entryName)
 		if err != nil {
-			ghwcontext.Debug(ctx, "error scanning %q: %v. skipping", entryName, err)
+			log.Debug(ctx, "error scanning %q: %v. skipping", entryName, err)
 			continue
 		}
 
-		ghwcontext.Debug(ctx, "PCI entry is %q", pciEntry)
+		log.Debug(ctx, "PCI entry is %q", pciEntry)
 		fileSpecs = append(fileSpecs, entryPath)
 		for _, perNetEntry := range perDevEntries {
 			fileSpecs = append(fileSpecs, filepath.Join(pciEntry, perNetEntry))
@@ -109,7 +109,7 @@ func scanPCIDeviceRoot(
 			return nil, nil, err
 		}
 		if bridge {
-			ghwcontext.Debug(ctx, "adding new PCI root %q", entryName)
+			log.Debug(ctx, "adding new PCI root %q", entryName)
 			pciRoots = append(pciRoots, pciEntry)
 		}
 	}
@@ -135,7 +135,7 @@ func findPCIEntryFromPath(
 	if err != nil {
 		return "", err
 	}
-	ghwcontext.Debug(ctx, "entry %q is symlink resolved to %q", entryPath, target)
+	log.Debug(ctx, "entry %q is symlink resolved to %q", entryPath, target)
 	return filepath.Clean(filepath.Join(root, target)), nil
 }
 

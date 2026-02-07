@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 )
 
 // PathRoots holds the roots of all the filesystem subtrees
@@ -38,7 +38,7 @@ func DefaultPathRoots() PathRoots {
 // allowing overrides of the canonical default paths.
 func PathRootsFromContext(ctx context.Context) PathRoots {
 	roots := DefaultPathRoots()
-	overrides := ghwcontext.PathOverrides(ctx)
+	overrides := config.PathOverrides(ctx)
 	if pathEtc, ok := overrides["/etc"]; ok {
 		roots.Etc = pathEtc
 	}
@@ -80,7 +80,7 @@ type Paths struct {
 // supplied Context
 func New(ctx context.Context) *Paths {
 	roots := PathRootsFromContext(ctx)
-	chroot := ghwcontext.Chroot(ctx)
+	chroot := config.Chroot(ctx)
 	return &Paths{
 		SysRoot:                filepath.Join(chroot, roots.Sys),
 		VarLog:                 filepath.Join(chroot, roots.Var, "log"),

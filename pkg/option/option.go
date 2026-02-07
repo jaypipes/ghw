@@ -4,6 +4,9 @@
 // See the COPYING file in the root project directory for full text.
 //
 
+// NOTE(jaypipes): This entire package is deprecated and will be removed in the
+// 1.0 release of ghw. Please use the aliased definitions of WithXXX functions
+// in the main `ghw` package.
 package option
 
 import (

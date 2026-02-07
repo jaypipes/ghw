@@ -4,7 +4,7 @@
 // See the COPYING file in the root project directory for full text.
 //
 
-package context
+package config
 
 import (
 	"context"
@@ -20,22 +20,22 @@ const (
 	envKeyDisableTools    = "GHW_DISABLE_TOOLS"
 )
 
-type ContextKey string
+type Key string
 
 var (
 	defaultChroot       = "/"
-	chrootKey           = ContextKey("ghw.chroot")
+	chrootKey           = Key("ghw.chroot")
 	defaultToolsEnabled = true
-	toolsEnabledKey     = ContextKey("ghw.tools.enabled")
-	pcidbKey            = ContextKey("ghw.pcidb")
-	pathOverridesKey    = ContextKey("ghw.path.overrides")
+	toolsEnabledKey     = Key("ghw.tools.enabled")
+	pcidbKey            = Key("ghw.pcidb")
+	pathOverridesKey    = Key("ghw.path.overrides")
 )
 
-// ContextModifier sets some value on the context
-type ContextModifier func(context.Context) context.Context
+// Modifier sets some value on the context
+type Modifier func(context.Context) context.Context
 
 // WithChroot allows overriding the root directory ghw examines.
-func WithChroot(path string) ContextModifier {
+func WithChroot(path string) Modifier {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, chrootKey, path)
 	}
@@ -64,7 +64,7 @@ func EnvOrDefaultChroot() string {
 
 // WithDisableTools prevents ghw from calling external tools to discover
 // hardware capabilities.
-func WithDisableTools() ContextModifier {
+func WithDisableTools() Modifier {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, toolsEnabledKey, false)
 	}
@@ -98,7 +98,7 @@ func EnvOrDefaultDisableTools() bool {
 // specially configured PCI database, such as one created with custom
 // pcidb.WithOption settings, instead of letting ghw load the PCI database
 // automatically.
-func WithPCIDB(db *pcidb.PCIDB) ContextModifier {
+func WithPCIDB(db *pcidb.PCIDB) Modifier {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, pcidbKey, db)
 	}
@@ -116,7 +116,7 @@ func PCIDB(ctx context.Context) *pcidb.PCIDB {
 }
 
 // WithPathOverrides supplies path-specific overrides for the context
-func WithPathOverrides(overrides map[string]string) ContextModifier {
+func WithPathOverrides(overrides map[string]string) Modifier {
 	return func(ctx context.Context) context.Context {
 		return context.WithValue(ctx, pathOverridesKey, overrides)
 	}
@@ -133,9 +133,9 @@ func PathOverrides(ctx context.Context) map[string]string {
 	return nil
 }
 
-// FromEnv returns a new context.Context populated from the environs or default
-// option values
-func FromEnv() context.Context {
+// ContextFromEnv returns a new context.Context populated from the environs or
+// default option values
+func ContextFromEnv() context.Context {
 	ctx := context.TODO()
 	ctx = context.WithValue(ctx, chrootKey, EnvOrDefaultChroot())
 	ctx = context.WithValue(ctx, toolsEnabledKey, EnvOrDefaultDisableTools())
@@ -177,9 +177,9 @@ func fromOptions(ctx context.Context, opts *option.Options) context.Context {
 	return ctx
 }
 
-// FromArgs returns a context.Context populated with any old-style options or
-// new-style arguments.
-func FromArgs(args ...any) context.Context {
+// ContextFromArgs returns a context.Context populated with any old-style
+// options or new-style arguments.
+func ContextFromArgs(args ...any) context.Context {
 	ctx := context.TODO()
 	optsUsed := false
 	opts := &option.Options{}
@@ -187,7 +187,7 @@ func FromArgs(args ...any) context.Context {
 		switch arg := arg.(type) {
 		case context.Context:
 			ctx = arg
-		case ContextModifier:
+		case Modifier:
 			ctx = arg(ctx)
 		case option.Option:
 			arg(opts)

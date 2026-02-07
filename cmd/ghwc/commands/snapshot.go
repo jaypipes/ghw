@@ -15,7 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 )
 
@@ -48,7 +48,7 @@ func doSnapshot(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		ghwcontext.Debug(
+		log.Debug(
 			cmd.Context(),
 			"using default output filepath %s",
 			outPath,

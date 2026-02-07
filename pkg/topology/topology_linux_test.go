@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/memory"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
@@ -37,7 +37,7 @@ func TestTopologyNUMADistances(t *testing.T) {
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
-	info, err := topology.New(ghwcontext.WithChroot(unpackDir))
+	info, err := topology.New(ghw.WithChroot(unpackDir))
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -68,7 +68,7 @@ func TestTopologyNUMADistances(t *testing.T) {
 // we have this test in topology_linux_test.go (and not in topology_test.go) because `topologyFillInfo`
 // is not implemented on darwin; so having it in the platform-independent tests would lead to false negatives.
 func TestTopologyMarshalUnmarshal(t *testing.T) {
-	data, err := topology.New(ghwcontext.WithDisableWarnings())
+	data, err := topology.New(ghw.WithDisableWarnings())
 	if err != nil {
 		t.Fatalf("Expected no error creating topology.Info, but got %v", err)
 	}
@@ -103,7 +103,7 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
-	memInfo, err := memory.New(ghwcontext.WithChroot(unpackDir))
+	memInfo, err := memory.New(ghw.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -111,7 +111,7 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 		t.Fatalf("Expected non-nil MemoryInfo, but got nil")
 	}
 
-	info, err := topology.New(ghwcontext.WithChroot(unpackDir))
+	info, err := topology.New(ghw.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

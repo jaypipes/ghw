@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -228,7 +228,7 @@ func diskPartitions(
 	path := filepath.Join(paths.SysBlock, disk)
 	files, err := os.ReadDir(path)
 	if err != nil {
-		ghwcontext.Warn(ctx, "failed to read disk partitions: %s\n", err)
+		log.Warn(ctx, "failed to read disk partitions: %s\n", err)
 		return out
 	}
 	for _, file := range files {

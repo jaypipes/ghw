@@ -7,7 +7,7 @@
 package product
 
 import (
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -67,7 +67,7 @@ func (i *Info) String() string {
 // New returns a pointer to a Info struct containing information
 // about the host's product
 func New(args ...any) (*Info, error) {
-	ctx := ghwcontext.FromArgs(args...)
+	ctx := config.ContextFromArgs(args...)
 	info := &Info{}
 	if err := info.load(ctx); err != nil {
 		return nil, err

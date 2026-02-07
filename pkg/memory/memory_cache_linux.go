@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 )
@@ -128,14 +128,14 @@ func memoryCacheLevel(
 	)
 	levelContents, err := os.ReadFile(levelPath)
 	if err != nil {
-		ghwcontext.Warn(ctx, "%s", err)
+		log.Warn(ctx, "%s", err)
 		return -1
 	}
 	// levelContents is now a []byte with the last byte being a newline
 	// character. Trim that off and convert the contents to an integer.
 	level, err := strconv.Atoi(string(levelContents[:len(levelContents)-1]))
 	if err != nil {
-		ghwcontext.Warn(ctx, "Unable to parse int from %s", levelContents)
+		log.Warn(ctx, "Unable to parse int from %s", levelContents)
 		return -1
 	}
 	return level
@@ -154,13 +154,13 @@ func memoryCacheSize(
 	)
 	sizeContents, err := os.ReadFile(sizePath)
 	if err != nil {
-		ghwcontext.Warn(ctx, "%s", err)
+		log.Warn(ctx, "%s", err)
 		return -1
 	}
 	// size comes as XK\n, so we trim off the K and the newline.
 	size, err := strconv.Atoi(string(sizeContents[:len(sizeContents)-2]))
 	if err != nil {
-		ghwcontext.Warn(ctx, "Unable to parse int from %s", sizeContents)
+		log.Warn(ctx, "Unable to parse int from %s", sizeContents)
 		return -1
 	}
 	return size
@@ -179,7 +179,7 @@ func memoryCacheType(
 	)
 	cacheTypeContents, err := os.ReadFile(typePath)
 	if err != nil {
-		ghwcontext.Warn(ctx, "%s", err)
+		log.Warn(ctx, "%s", err)
 		return CacheTypeUnified
 	}
 	switch string(cacheTypeContents[:len(cacheTypeContents)-1]) {
@@ -205,7 +205,7 @@ func memoryCacheSharedCPUMap(
 	)
 	sharedCpuMap, err := os.ReadFile(scpuPath)
 	if err != nil {
-		ghwcontext.Warn(ctx, "%s", err)
+		log.Warn(ctx, "%s", err)
 		return ""
 	}
 	return string(sharedCpuMap[:len(sharedCpuMap)-1])

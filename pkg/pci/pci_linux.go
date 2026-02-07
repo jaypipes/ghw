@@ -13,7 +13,7 @@ import (
 
 	"github.com/jaypipes/pcidb"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	pciaddr "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/topology"
@@ -382,27 +382,27 @@ func (info *Info) getDevices(ctx context.Context) []*Device {
 	// address and append to the returned array.
 	links, err := os.ReadDir(paths.SysBusPciDevices)
 	if err != nil {
-		ghwcontext.Warn(ctx, "failed to read /sys/bus/pci/devices")
+		log.Warn(ctx, "failed to read /sys/bus/pci/devices")
 		return nil
 	}
 	for _, link := range links {
 		address := link.Name()
 		pciAddr := pciaddr.FromString(address)
 		if pciAddr == nil {
-			ghwcontext.Warn(ctx, "error parsing the pci address %q", address)
+			log.Warn(ctx, "error parsing the pci address %q", address)
 			return nil
 		}
 
 		// no cached data, let's get the information from system.
 		fp := getDeviceModaliasPath(paths, pciAddr)
 		if fp == "" {
-			ghwcontext.Warn(ctx, "error finding modalias info for device %q", address)
+			log.Warn(ctx, "error finding modalias info for device %q", address)
 			return nil
 		}
 
 		modaliasInfo := parseModaliasFile(fp)
 		if modaliasInfo == nil {
-			ghwcontext.Warn(ctx, "error parsing modalias info for device %q", address)
+			log.Warn(ctx, "error parsing modalias info for device %q", address)
 			return nil
 		}
 

@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"howett.net/plist"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 )
 
 type diskOrPartitionPlistNode struct {
@@ -214,7 +214,7 @@ func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController 
 }
 
 func (info *Info) load(ctx context.Context) error {
-	if !ghwcontext.ToolsEnabled(ctx) {
+	if !config.ToolsEnabled(ctx) {
 		return fmt.Errorf("DisableTools=true on darwin disables block support entirely.")
 	}
 

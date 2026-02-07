@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	ghwcontext "github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -20,10 +20,10 @@ func Item(ctx context.Context, value string) string {
 	paths := linuxpath.New(ctx)
 	path := filepath.Join(paths.SysClassDMI, "id", value)
 
-	ghwcontext.Debug(ctx, "reading from %q", path)
+	log.Debug(ctx, "reading from %q", path)
 	b, err := os.ReadFile(path)
 	if err != nil {
-		ghwcontext.Warn(ctx, "Unable to read %s: %s\n", value, err)
+		log.Warn(ctx, "Unable to read %s: %s\n", value, err)
 		return util.UNKNOWN
 	}
 
