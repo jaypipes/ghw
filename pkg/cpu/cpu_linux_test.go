@@ -200,6 +200,14 @@ func TestS390xCPU(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
+	// Verify s390x specific expectations from the snapshot
+	if info == nil {
+		t.Fatalf("Expected non-nil CPUInfo, but got nil")
+	}
+	expectedCountProcs := 1
+	if len(info.Processors) != expectedCountProcs {
+		t.Fatalf("Expected %d processors but got %d", expectedCountProcs, len(info.Processors))
+	}
 
 	// Verify s390x specific expectations
 	if info.Processors[0].Vendor != "IBM/S390" {
