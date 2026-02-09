@@ -16,6 +16,7 @@ import (
 
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/cpu"
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/testdata"
@@ -175,5 +176,39 @@ func TestNumCoresAmongOfflineCPUs(t *testing.T) {
 	errorOutput := bufErr.String()
 	if strings.Contains(errorOutput, "WARNING: failed to read int from file:") {
 		t.Fatalf("Unexpected warnings related to missing files under topology directory was raised")
+	}
+}
+func TestS390xCPU(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
+		t.Skip("Skipping CPU tests.")
+	}
+
+	testdataPath, err := testdata.SnapshotsDirectory()
+	if err != nil {
+		t.Fatalf("Expected nil err, but got %v", err)
+	}
+
+	s390xSnapshot := filepath.Join(testdataPath, "linux-s390x-snapshot.tar.gz")
+
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(s390xSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info, err := cpu.New(option.WithChroot(unpackDir))
+
+	if err != nil {
+		t.Fatalf("Expected nil err, but got %v", err)
+	}
+
+	// Verify s390x specific expectations
+	if info.Processors[0].Vendor != "IBM/S390" {
+		t.Errorf("Expected Vendor IBM/S390, but got %s", info.Processors[0].Vendor)
+	}
+
+	// Check if capabilities were parsed from 'features'
+	if len(info.Processors[0].Capabilities) == 0 {
+		t.Fatal("Expected capabilities to be populated from s390x 'features' key")
 	}
 }
