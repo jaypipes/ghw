@@ -18,17 +18,20 @@ const (
 	envKeyChroot          = "GHW_CHROOT"
 	envKeyDisableWarnings = "GHW_DISABLE_WARNINGS"
 	envKeyDisableTools    = "GHW_DISABLE_TOOLS"
+	envKeyDisableTopology = "GHW_DISABLE_TOPOLOGY"
 )
 
 type Key string
 
 var (
-	defaultChroot       = "/"
-	chrootKey           = Key("ghw.chroot")
-	defaultToolsEnabled = true
-	toolsEnabledKey     = Key("ghw.tools.enabled")
-	pcidbKey            = Key("ghw.pcidb")
-	pathOverridesKey    = Key("ghw.path.overrides")
+	defaultChroot          = "/"
+	chrootKey              = Key("ghw.chroot")
+	defaultToolsEnabled    = true
+	toolsEnabledKey        = Key("ghw.tools.enabled")
+	defaultTopologyEnabled = true
+	topologyEnabledKey     = Key("ghw.topology.enabled")
+	pcidbKey               = Key("ghw.pcidb")
+	pathOverridesKey       = Key("ghw.path.overrides")
 )
 
 // Modifier sets some value on the context
@@ -91,6 +94,37 @@ func EnvOrDefaultDisableTools() bool {
 		return true
 	}
 	return false
+}
+
+// WithDisableTopology disables system topology detection to reduce memory
+// consumption.  When using this option, ghw will skip scanning NUMA topology,
+// CPU cores, memory caches, and node distances. This is useful when you only
+// need basic PCI or GPU information and want to minimize memory overhead. The
+// system architecture will be assumed to be SMP, and device Node fields will
+// be nil.
+func WithDisableTopology() Modifier {
+	return func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, topologyEnabledKey, false)
+	}
+}
+
+// EnvOrDefaultEnableTopology return true if ghw should detect system topology.
+func EnvOrDefaultEnableTopology() bool {
+	if _, exists := os.LookupEnv(envKeyDisableTopology); exists {
+		return false
+	}
+	return defaultTopologyEnabled
+}
+
+// TopologyEnabled returns true if the detection of system topology is enabled.
+func TopologyEnabled(ctx context.Context) bool {
+	if ctx == nil {
+		return defaultTopologyEnabled
+	}
+	if v := ctx.Value(topologyEnabledKey); v != nil {
+		return v.(bool)
+	}
+	return defaultTopologyEnabled
 }
 
 // WithPCIDB allows you to provide a custom instance of the PCI database
