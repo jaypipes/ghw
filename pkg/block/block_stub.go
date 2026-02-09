@@ -11,6 +11,7 @@ package block
 import (
 	"runtime"
 
+	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/pkg/errors"
 )
 

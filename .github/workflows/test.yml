@@ -161,3 +161,32 @@ jobs:
          GHW_TESTING_SKIP_PCI: "1"
          GHW_TESTING_SKIP_TOPOLOGY: "1"
        run: go test -v ./...
+  unsupported-platforms:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Update this list if we add support for any of these platforms.
+        os: ['freebsd', 'netbsd', 'openbsd', 'plan9']
+    steps:
+     - name: harden runner
+       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+       with:
+         egress-policy: block
+         disable-sudo: true
+         allowed-endpoints: >
+           github.com:443
+           api.github.com:443
+           proxy.github.com:443
+           proxy.golang.org:443
+           raw.githubusercontent.com:443
+           objects.githubusercontent.com:443
+           proxy.golang.org:443
+     - name: checkout code
+       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+     - name: setup go
+       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+     - name: unsupported platforms
+       env:
+         GOOS: ${{ matrix.os }}
+        # Run a simple build to make sure the code builds on (some) unsupported platforms.
+       run: go build ./...
