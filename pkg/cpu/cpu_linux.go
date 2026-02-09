@@ -95,11 +95,16 @@ func processorsGet(ctx context.Context) []*Processor {
 			// lps[lpID] describes logical processor `lpID`.
 			// Once got a more robust way of fetching the following info,
 			// can we drop /proc/cpuinfo.
+			// 1. Capabilities (Hardware Features)
 			if len(lp.Attrs["flags"]) != 0 { // x86
 				proc.Capabilities = strings.Split(lp.Attrs["flags"], " ")
 			} else if len(lp.Attrs["Features"]) != 0 { // ARM64
 				proc.Capabilities = strings.Split(lp.Attrs["Features"], " ")
+			} else if len(lp.Attrs["features"]) != 0 { // s390x
+				proc.Capabilities = strings.Split(lp.Attrs["features"], " ")
 			}
+
+			// 2. Model Detection
 			if len(lp.Attrs["model name"]) != 0 {
 				proc.Model = lp.Attrs["model name"]
 			} else if len(lp.Attrs["Processor"]) != 0 { // ARM
@@ -110,7 +115,10 @@ func processorsGet(ctx context.Context) []*Processor {
 				proc.Model = lp.Attrs["Model Name"]
 			} else if len(lp.Attrs["uarch"]) != 0 { // SiFive
 				proc.Model = lp.Attrs["uarch"]
+			} else if len(lp.Attrs["machine"]) != 0 {
+				proc.Model = lp.Attrs["machine"]
 			}
+			// 3. Vendor Detection
 			if len(lp.Attrs["vendor_id"]) != 0 {
 				proc.Vendor = lp.Attrs["vendor_id"]
 			} else if len(lp.Attrs["isa"]) != 0 { // RISCV64
@@ -361,19 +369,33 @@ func logicalProcessorsFromProcCPUInfo(
 			// Output of /proc/cpuinfo has a blank newline to separate logical
 			// processors, so here we collect up all the attributes we've
 			// collected for this logical processor block
-			lpIDstr, ok := lpAttrs["processor"]
+			// s390x identifies CPUs via "cpu number", while most other
+			// architectures use "processor".
+			idStr, ok := lpAttrs["processor"]
 			if !ok {
-				log.Warn(ctx, "expected to find 'processor' key in /proc/cpuinfo attributes")
-				continue
+				idStr, ok = lpAttrs["cpu number"]
 			}
-			lpID, _ := strconv.Atoi(lpIDstr)
-			lp := &logicalProcessor{
-				ID:    lpID,
-				Attrs: lpAttrs,
+
+			if ok {
+				id, _ := strconv.Atoi(idStr)
+				lps[id] = &logicalProcessor{
+					ID:    id,
+					Attrs: lpAttrs,
+				}
+				// Only reset attributes after a valid processor block is saved.
+				// This ensures that shared header metadata (like vendor_id on s390x)
+				// is carried over and available to the processor entries.
+				lpAttrs = map[string]string{}
+			} else if len(lpAttrs) > 0 {
+				// s390x header check: if we have 'vendor_id' but no 'processor' ID,
+				// it's the summary block. We don't warn and we don't reset lpAttrs
+				// so the vendor_id carries over to the first actual CPU block.
+				if _, isS390Header := lpAttrs["vendor_id"]; !isS390Header {
+					log.Warn(ctx,
+						"expected to find 'processor' or 'cpu number' key "+
+							"in /proc/cpuinfo attributes")
+				}
 			}
-			lps[lpID] = lp
-			// Reset the current set of processor attributes...
-			lpAttrs = map[string]string{}
 			continue
 		}
 		parts := strings.SplitN(line, ":", 2)
