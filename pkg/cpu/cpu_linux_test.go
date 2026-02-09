@@ -16,7 +16,6 @@ import (
 
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/cpu"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/testdata"
@@ -196,7 +195,7 @@ func TestS390xCPU(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	info, err := cpu.New(option.WithChroot(unpackDir))
+	info, err := cpu.New(ghw.WithChroot(unpackDir))
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
