@@ -6,14 +6,15 @@
 package bios
 
 import (
+	"context"
+
 	"github.com/jaypipes/ghw/pkg/linuxdmi"
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
-func (i *Info) load(opts *option.Options) error {
-	i.Vendor = linuxdmi.Item(opts, "bios_vendor")
-	i.Version = linuxdmi.Item(opts, "bios_version")
-	i.Date = linuxdmi.Item(opts, "bios_date")
+func (i *Info) load(ctx context.Context) error {
+	i.Vendor = linuxdmi.Item(ctx, "bios_vendor")
+	i.Version = linuxdmi.Item(ctx, "bios_version")
+	i.Date = linuxdmi.Item(ctx, "bios_date")
 
 	return nil
 }

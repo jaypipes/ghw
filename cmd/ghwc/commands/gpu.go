@@ -23,8 +23,7 @@ var gpuCmd = &cobra.Command{
 
 // showGPU show graphics/GPU information for the host system.
 func showGPU(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	gpu, err := ghw.GPU(opts...)
+	gpu, err := ghw.GPU(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting GPU info")
 	}

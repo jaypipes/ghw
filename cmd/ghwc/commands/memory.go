@@ -21,8 +21,7 @@ var memoryCmd = &cobra.Command{
 
 // showMemory show memory information for the host system.
 func showMemory(cmd *cobra.Command, args []string) error {
-	opts := cmd.Context().Value(optsKey).([]ghw.Option)
-	mem, err := ghw.Memory(opts...)
+	mem, err := ghw.Memory(cmd.Context())
 	if err != nil {
 		return errors.Wrap(err, "error getting memory info")
 	}

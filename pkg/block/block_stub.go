@@ -9,12 +9,12 @@
 package block
 
 import (
+	"context"
 	"runtime"
 
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/pkg/errors"
 )
 
-func (i *Info) load(_ *option.Options) error {
+func (i *Info) load(_ context.Context) error {
 	return errors.New("blockFillInfo not implemented on " + runtime.GOOS)
 }

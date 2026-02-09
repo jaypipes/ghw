@@ -9,9 +9,9 @@
 package cpu
 
 import (
-	"github.com/yusufpapurcu/wmi"
+	"context"
 
-	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/yusufpapurcu/wmi"
 )
 
 const wmqlProcessor = "SELECT Manufacturer, Name, NumberOfLogicalProcessors, NumberOfCores FROM Win32_Processor"
@@ -23,7 +23,7 @@ type win32Processor struct {
 	NumberOfCores             uint32
 }
 
-func (i *Info) load(opts *option.Options) error {
+func (i *Info) load(ctx context.Context) error {
 	// Getting info from WMI
 	var win32descriptions []win32Processor
 	if err := wmi.Query(wmqlProcessor, &win32descriptions); err != nil {

@@ -5,9 +5,9 @@
 
 package accelerator
 
-import "github.com/jaypipes/ghw/pkg/option"
+import "context"
 
-func (i *Info) load(opt ...option.Option) error {
+func (i *Info) load(ctx context.Context) error {
 	i.Devices = []*AcceleratorDevice{}
 	return nil
 }

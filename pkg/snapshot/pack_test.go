@@ -7,10 +7,12 @@
 package snapshot_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/snapshot"
+	"github.com/stretchr/testify/require"
 )
 
 // NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
@@ -19,34 +21,26 @@ import (
 
 // nolint: gocyclo
 func TestPackUnpack(t *testing.T) {
+	require := require.New(t)
 	root, err := snapshot.Unpack(testDataSnapshot)
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	defer os.RemoveAll(root)
 
 	tmpfile, err := os.CreateTemp("", "ght-test-snapshot-*.tgz")
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	defer func() {
 		tmpfile.Close()
 		os.Remove(tmpfile.Name())
 	}()
 
-	err = snapshot.PackWithWriter(tmpfile, root)
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	ctx := context.TODO()
+	err = snapshot.PackWithWriter(ctx, tmpfile, root)
+	require.Nil(err)
 	err = tmpfile.Close()
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 
 	cloneRoot, err := snapshot.Unpack(tmpfile.Name())
-	if err != nil {
-		t.Fatalf("Expected nil err, but got %v", err)
-	}
+	require.Nil(err)
 	defer os.RemoveAll(cloneRoot)
 
 	verifyTestData(t, cloneRoot)
