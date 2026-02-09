@@ -13,6 +13,7 @@ import (
 	"github.com/jaypipes/pcidb"
 
 	"github.com/jaypipes/ghw/internal/config"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/topology"
 	"github.com/jaypipes/ghw/pkg/util"
@@ -138,18 +139,26 @@ func (i *Info) String() string {
 // PCI devices on the host system
 func New(args ...any) (*Info, error) {
 	ctx := config.ContextFromArgs(args...)
-	topo, err := topology.New(ctx)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to initialize PCI info dur to failure to initialize "+
-				"Topology info: %w",
-			err,
-		)
-	}
 	// by default we don't report NUMA information;
 	// we will only if are sure we are running on NUMA architecture
 	info := &Info{
-		arch: topo.Architecture,
+		arch: topology.ArchitectureSMP, // default to SMP
+	}
+	// Skip topology detection if requested to reduce memory consumption
+	if !config.TopologyEnabled(ctx) {
+		log.Warn(
+			ctx, "topology detection disabled, assuming SMP architecture",
+		)
+	} else {
+		topo, err := topology.New(ctx)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to initialize PCI info due to failure to initialize "+
+					"Topology info: %w",
+				err,
+			)
+		}
+		info.arch = topo.Architecture
 	}
 	if err := info.load(ctx); err != nil {
 		return nil, err
