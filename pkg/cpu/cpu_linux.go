@@ -387,13 +387,14 @@ func logicalProcessorsFromProcCPUInfo(
 				// is carried over and available to the processor entries.
 				lpAttrs = map[string]string{}
 			} else if len(lpAttrs) > 0 {
-				// We only warn if we found attributes but NO identifier.
-				// Note: On s390x, the first block is a summary header and won't have an ID.
-				// We don't reset lpAttrs here so its data (vendor_id) can merge into
-				// the first actual CPU block.
-				log.Warn(ctx,
-					"expected to find 'processor' or 'cpu number' key "+
-						"in /proc/cpuinfo attributes")
+				// s390x header check: if we have 'vendor_id' but no 'processor' ID,
+				// it's the summary block. We don't warn and we don't reset lpAttrs
+				// so the vendor_id carries over to the first actual CPU block.
+				if _, isS390Header := lpAttrs["vendor_id"]; !isS390Header {
+					log.Warn(ctx,
+						"expected to find 'processor' or 'cpu number' key "+
+							"in /proc/cpuinfo attributes")
+				}
 			}
 			continue
 		}
