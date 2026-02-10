@@ -82,8 +82,20 @@ func CachesForNode(ctx context.Context, nodeID int) ([]*Cache, error) {
 			// unique combination of level, type and processor map
 			level := memoryCacheLevel(ctx, paths, nodeID, lpID, cacheIndex)
 			cacheType := memoryCacheType(ctx, paths, nodeID, lpID, cacheIndex)
-			sharedCpuMap := memoryCacheSharedCPUMap(ctx, paths, nodeID, lpID, cacheIndex)
-			cacheKey := fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
+			cacheID := memoryCacheID(ctx, paths, nodeID, lpID, cacheIndex)
+
+			// Generate cache key for deduplication.
+			// Use cache ID if available (modern kernels), otherwise fall back
+			// to shared_cpu_map for older kernels. This ensures that caches
+			// shared across NUMA nodes (e.g., L3 in Sub-NUMA Clustering) are
+			// correctly merged into a single cache object.
+			var cacheKey string
+			if cacheID != -1 {
+				cacheKey = fmt.Sprintf("%d-%d-%d", level, cacheType, cacheID)
+			} else {
+				sharedCpuMap := memoryCacheSharedCPUMap(ctx, paths, nodeID, lpID, cacheIndex)
+				cacheKey = fmt.Sprintf("%d-%d-%s", level, cacheType, sharedCpuMap)
+			}
 
 			cache, exists := caches[cacheKey]
 			if !exists {
@@ -139,6 +151,30 @@ func memoryCacheLevel(
 		return -1
 	}
 	return level
+}
+
+func memoryCacheID(
+	ctx context.Context,
+	paths *linuxpath.Paths,
+	nodeID int,
+	lpID int,
+	cacheIndex int,
+) int {
+	idPath := filepath.Join(
+		paths.NodeCPUCacheIndex(nodeID, lpID, cacheIndex),
+		"id",
+	)
+	idContents, err := os.ReadFile(idPath)
+	if err != nil {
+		// The id file may not exist in early kernel versions, so we don't warn
+		return -1
+	}
+	id, err := strconv.Atoi(string(idContents[:len(idContents)-1]))
+	if err != nil {
+		log.Warn(ctx, "Unable to parse int from %s", idContents)
+		return -1
+	}
+	return id
 }
 
 func memoryCacheSize(
