@@ -10,9 +10,8 @@ package topology
 
 import (
 	"context"
+	"errors"
 	"runtime"
-
-	"github.com/pkg/errors"
 )
 
 func (i *Info) load(ctx context.Context) error {

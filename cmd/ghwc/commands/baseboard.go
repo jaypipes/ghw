@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,7 @@ var baseboardCmd = &cobra.Command{
 func showBaseboard(cmd *cobra.Command, args []string) error {
 	baseboard, err := ghw.Baseboard(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting baseboard info")
+		return fmt.Errorf("error getting baseboard info: %w", err)
 	}
 
 	switch outputFormat {

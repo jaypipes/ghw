@@ -14,7 +14,6 @@ import (
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/snapshot"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -117,13 +116,13 @@ func showAll(cmd *cobra.Command, args []string) error {
 	case outputFormatJSON:
 		host, err := ghw.Host()
 		if err != nil {
-			return errors.Wrap(err, "error getting host info")
+			return fmt.Errorf("error getting host info: %w", err)
 		}
 		fmt.Printf("%s\n", host.JSONString(pretty))
 	case outputFormatYAML:
 		host, err := ghw.Host()
 		if err != nil {
-			return errors.Wrap(err, "error getting host info")
+			return fmt.Errorf("error getting host info: %w", err)
 		}
 		fmt.Printf("%s", host.YAMLString())
 	}

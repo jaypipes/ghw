@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 var (
@@ -18,7 +16,7 @@ var (
 func (i *Info) load(ctx context.Context) error {
 	err := populateSysctlOutput()
 	if err != nil {
-		return errors.Wrap(err, "unable to populate sysctl map")
+		return fmt.Errorf("unable to populate sysctl map: %w", err)
 	}
 
 	i.TotalCores = getTotalCores()

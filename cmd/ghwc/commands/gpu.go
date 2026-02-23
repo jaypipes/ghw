@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,7 @@ var gpuCmd = &cobra.Command{
 func showGPU(cmd *cobra.Command, args []string) error {
 	gpu, err := ghw.GPU(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting GPU info")
+		return fmt.Errorf("error getting GPU info: %w", err)
 	}
 
 	switch outputFormat {

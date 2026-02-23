@@ -7,8 +7,9 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ var memoryCmd = &cobra.Command{
 func showMemory(cmd *cobra.Command, args []string) error {
 	mem, err := ghw.Memory(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting memory info")
+		return fmt.Errorf("error getting memory info: %w", err)
 	}
 
 	printInfo(mem)
