@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,7 @@ var usbCmd = &cobra.Command{
 func showUSB(cmd *cobra.Command, args []string) error {
 	usb, err := ghw.USB(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting USB info")
+		return fmt.Errorf("error getting USB info: %w", err)
 	}
 
 	switch outputFormat {

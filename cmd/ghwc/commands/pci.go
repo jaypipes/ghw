@@ -7,8 +7,9 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ var pciCmd = &cobra.Command{
 func showPCI(cmd *cobra.Command, args []string) error {
 	pci, err := ghw.PCI(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting PCI info")
+		return fmt.Errorf("error getting PCI info: %w", err)
 	}
 
 	printInfo(pci)

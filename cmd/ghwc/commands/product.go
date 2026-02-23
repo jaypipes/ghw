@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,7 @@ var productCmd = &cobra.Command{
 func showProduct(cmd *cobra.Command, args []string) error {
 	product, err := ghw.Product(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting product info")
+		return fmt.Errorf("error getting product info: %w", err)
 	}
 
 	switch outputFormat {

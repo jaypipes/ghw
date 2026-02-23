@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,7 @@ var acceleratorCmd = &cobra.Command{
 func showAccelerator(cmd *cobra.Command, args []string) error {
 	accel, err := ghw.Accelerator(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting Accelerator info")
+		return fmt.Errorf("error getting Accelerator info: %w", err)
 	}
 
 	switch outputFormat {

@@ -10,9 +10,8 @@ package block
 
 import (
 	"context"
+	"errors"
 	"runtime"
-
-	"github.com/pkg/errors"
 )
 
 func (i *Info) load(_ context.Context) error {
