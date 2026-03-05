@@ -13,11 +13,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/cpu"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/option"
 )
 
 // Architecture describes the overall hardware architecture. It can be either
@@ -26,15 +25,24 @@ type Architecture int
 
 const (
 	// SMP is a Symmetric Multi-Processor system
-	ARCHITECTURE_SMP Architecture = iota
+	ArchitectureSMP Architecture = iota
 	// NUMA is a Non-Uniform Memory Access system
-	ARCHITECTURE_NUMA
+	ArchitectureNUMA
+)
+
+const (
+	// DEPRECATED: please use ArchitectureSMP.
+	// TODO(jaypipes): Remove before v1.0
+	ARCHITECTURE_SMP = ArchitectureSMP
+	// DEPRECATED: please use ArchitectureNUMA.
+	// TODO(jaypipes): Remove before v1.0
+	ARCHITECTURE_NUMA = ArchitectureNUMA
 )
 
 var (
 	architectureString = map[Architecture]string{
-		ARCHITECTURE_SMP:  "SMP",
-		ARCHITECTURE_NUMA: "NUMA",
+		ArchitectureSMP:  "SMP",
+		ArchitectureNUMA: "NUMA",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
@@ -43,8 +51,8 @@ var (
 	// Architecture:MarshalJSON.
 	// We use this table only in UnmarshalJSON, so it should be OK.
 	stringArchitecture = map[string]Architecture{
-		"smp":  ARCHITECTURE_SMP,
-		"numa": ARCHITECTURE_NUMA,
+		"smp":  ArchitectureSMP,
+		"numa": ArchitectureNUMA,
 	}
 )
 
@@ -98,24 +106,16 @@ func (n *Node) String() string {
 
 // Info describes the system topology for the host hardware
 type Info struct {
-	ctx          *context.Context
 	Architecture Architecture `json:"architecture"`
 	Nodes        []*Node      `json:"nodes"`
 }
 
 // New returns a pointer to an Info struct that contains information about the
 // NUMA topology on the host system
-func New(opts ...*option.Option) (*Info, error) {
-	merged := option.Merge(opts...)
-	ctx := context.New(merged)
-	info := &Info{ctx: ctx}
-	var err error
-	if context.Exists(merged) {
-		err = info.load()
-	} else {
-		err = ctx.Do(info.load)
-	}
-	if err != nil {
+func New(args ...any) (*Info, error) {
+	ctx := config.ContextFromArgs(args...)
+	info := &Info{}
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	for _, node := range info.Nodes {
@@ -126,7 +126,7 @@ func New(opts ...*option.Option) (*Info, error) {
 
 func (i *Info) String() string {
 	archStr := "SMP"
-	if i.Architecture == ARCHITECTURE_NUMA {
+	if i.Architecture == ArchitectureNUMA {
 		archStr = "NUMA"
 	}
 	res := fmt.Sprintf(
@@ -146,11 +146,11 @@ type topologyPrinter struct {
 // YAMLString returns a string with the topology information formatted as YAML
 // under a top-level "topology:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(i.ctx, topologyPrinter{i})
+	return marshal.SafeYAML(topologyPrinter{i})
 }
 
 // JSONString returns a string with the topology information formatted as JSON
 // under a top-level "topology:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(i.ctx, topologyPrinter{i}, indent)
+	return marshal.SafeJSON(topologyPrinter{i}, indent)
 }

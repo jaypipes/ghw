@@ -1,39 +1,35 @@
-VENDOR := vendor
-PKGS := $(shell go list ./... | grep -v /$(VENDOR)/)
-SRC = $(shell find . -type f -name '*.go' -not -path "*/$(VENDOR)/*")
-BIN_DIR := $(GOPATH)/bin
-GOMETALINTER := $(BIN_DIR)/gometalinter
+VERSION ?= $(shell git describe --tags --always --dirty)
 
-.PHONY: test
+.PHONY: test clean vet fmt fmtcheck build run
+
+bin/ghwc:
+	@cd cmd/ghwc && go build -o ../../bin/ghwc main.go && cd ../../
+
+# If the first argument is "run"...
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+build: clean bin/ghwc
+
+run: build
+	@bin/ghwc $(RUN_ARGS)
+
 test: vet
-	go test $(PKGS)
+	go test -v ./...
 
-$(GOMETALINTER):
-	go get -u github.com/alecthomas/gometalinter
-	$(GOMETALINTER) --install &> /dev/null
-
-.PHONY: lint
-lint: $(GOMETALINTER)
-	$(GOMETALINTER) ./... --vendor
-
-.PHONY: fmt
 fmt:
 	@echo "Running gofmt on all sources..."
-	@gofmt -s -l -w $(SRC)
+	@gofmt -s -l -w .
 
-.PHONY: fmtcheck
 fmtcheck:
-	@bash -c "diff -u <(echo -n) <(gofmt -d $(SRC))"
+	@bash -c "diff -u <(echo -n) <(gofmt -d .)"
 
-.PHONY: vet
 vet:
-	go vet $(PKGS)
+	go vet ./...
 
-.PHONY: cover
-cover:
-	$(shell [ -e coverage.out ] && rm coverage.out)
-	@echo "mode: count" > coverage-all.out
-	$(foreach pkg,$(PKGS),\
-		go test -coverprofile=coverage.out -covermode=count $(pkg);\
-		tail -n +2 coverage.out >> coverage-all.out;)
-	go tool cover -html=coverage-all.out -o=coverage-all.html
+clean:
+	@rm -f bin/ghwc

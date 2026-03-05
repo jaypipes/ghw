@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +22,9 @@ var biosCmd = &cobra.Command{
 
 // showBIOS shows BIOS host system.
 func showBIOS(cmd *cobra.Command, args []string) error {
-	bios, err := ghw.BIOS()
+	bios, err := ghw.BIOS(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting BIOS info")
+		return fmt.Errorf("error getting BIOS info: %w", err)
 	}
 
 	switch outputFormat {

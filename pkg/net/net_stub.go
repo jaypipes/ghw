@@ -9,11 +9,11 @@
 package net
 
 import (
+	"context"
+	"errors"
 	"runtime"
-
-	"github.com/pkg/errors"
 )
 
-func (i *Info) load() error {
+func (i *Info) load(ctx context.Context) error {
 	return errors.New("netFillInfo not implemented on " + runtime.GOOS)
 }

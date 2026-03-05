@@ -15,19 +15,35 @@ import (
 	"github.com/jaypipes/ghw/pkg/unitutil"
 )
 
+// CacheType indicates the type of memory stored in a memory cache.
 type CacheType int
 
 const (
-	CACHE_TYPE_UNIFIED CacheType = iota
-	CACHE_TYPE_INSTRUCTION
-	CACHE_TYPE_DATA
+	// CacheTypeUnified indicates the memory cache stores both instructions and
+	// data.
+	CacheTypeUnified CacheType = iota
+	// CacheTypeInstruction indicates the memory cache stores only instructions
+	// (executable bytecode).
+	CacheTypeInstruction
+	// CacheTypeData indicates the memory cache stores only data
+	// (non-executable bytecode).
+	CacheTypeData
+)
+
+const (
+	// DEPRECATED: Please use CacheTypeUnified
+	CACHE_TYPE_UNIFIED = CacheTypeUnified
+	// DEPRECATED: Please use CacheTypeUnified
+	CACHE_TYPE_INSTRUCTION = CacheTypeInstruction
+	// DEPRECATED: Please use CacheTypeUnified
+	CACHE_TYPE_DATA = CacheTypeData
 )
 
 var (
 	memoryCacheTypeString = map[CacheType]string{
-		CACHE_TYPE_UNIFIED:     "Unified",
-		CACHE_TYPE_INSTRUCTION: "Instruction",
-		CACHE_TYPE_DATA:        "Data",
+		CacheTypeUnified:     "Unified",
+		CacheTypeInstruction: "Instruction",
+		CacheTypeData:        "Data",
 	}
 
 	// NOTE(fromani): the keys are all lowercase and do not match
@@ -36,9 +52,9 @@ var (
 	// CacheType:MarshalJSON.
 	// We use this table only in UnmarshalJSON, so it should be OK.
 	stringMemoryCacheType = map[string]CacheType{
-		"unified":     CACHE_TYPE_UNIFIED,
-		"instruction": CACHE_TYPE_INSTRUCTION,
-		"data":        CACHE_TYPE_DATA,
+		"unified":     CacheTypeUnified,
+		"instruction": CacheTypeInstruction,
+		"data":        CacheTypeData,
 	}
 )
 
@@ -92,21 +108,33 @@ func (a SortByLogicalProcessorId) Len() int           { return len(a) }
 func (a SortByLogicalProcessorId) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a SortByLogicalProcessorId) Less(i, j int) bool { return a[i] < a[j] }
 
+// Cache contains information about a single memory cache on a physical CPU
+// package. Caches have a 1-based numeric level, with lower numbers indicating
+// the cache is "closer" to the processing cores and reading memory from the
+// cache will be faster relative to caches with higher levels. Note that this
+// has nothing to do with RAM or memory modules like DIMMs.
 type Cache struct {
-	Level     uint8     `json:"level"`
-	Type      CacheType `json:"type"`
-	SizeBytes uint64    `json:"size_bytes"`
-	// The set of logical processors (hardware threads) that have access to the
-	// cache
+	// Level is a 1-based numeric level that indicates the relative closeness
+	// of this cache to processing cores on the physical package. Lower numbers
+	// are "closer" to the processing cores and therefore have faster access
+	// times.
+	Level uint8 `json:"level"`
+	// Type indicates what type of memory is stored in the cache. Can be
+	// instruction (executable bytecodes), data or both.
+	Type CacheType `json:"type"`
+	// SizeBytes indicates the size of the cache in bytes.
+	SizeBytes uint64 `json:"size_bytes"`
+	// The set of logical processors (hardware threads) that have access to
+	// this cache.
 	LogicalProcessors []uint32 `json:"logical_processors"`
 }
 
 func (c *Cache) String() string {
 	sizeKb := c.SizeBytes / uint64(unitutil.KB)
 	typeStr := ""
-	if c.Type == CACHE_TYPE_INSTRUCTION {
+	if c.Type == CacheTypeInstruction {
 		typeStr = "i"
-	} else if c.Type == CACHE_TYPE_DATA {
+	} else if c.Type == CacheTypeData {
 		typeStr = "d"
 	}
 	cacheIDStr := fmt.Sprintf("L%d%s", c.Level, typeStr)

@@ -11,10 +11,13 @@ package linuxpath_test
 
 import (
 	"os"
-
+	"path/filepath"
+	"slices"
+	"sort"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/option"
 )
@@ -30,7 +33,7 @@ func TestPathRoot(t *testing.T) {
 		defer os.Unsetenv("GHW_CHROOT")
 	}
 
-	ctx := context.FromEnv()
+	ctx := ghw.ContextFromEnv()
 	paths := linuxpath.New(ctx)
 
 	// No environment variable is set for GHW_CHROOT, so pathProcCpuinfo() should
@@ -44,7 +47,7 @@ func TestPathRoot(t *testing.T) {
 	// returns that value
 	os.Setenv("GHW_CHROOT", "/host")
 
-	ctx = context.FromEnv()
+	ctx = ghw.ContextFromEnv()
 	paths = linuxpath.New(ctx)
 
 	path = paths.ProcCpuinfo
@@ -54,11 +57,11 @@ func TestPathRoot(t *testing.T) {
 }
 
 func TestPathSpecificRoots(t *testing.T) {
-	ctx := context.New(option.WithPathOverrides(option.PathOverrides{
+	ctx := ghw.ContextFromEnv()
+	ctx = ghw.WithPathOverrides(map[string]string{
 		"/proc": "/host-proc",
 		"/sys":  "/host-sys",
-	}))
-
+	})(ctx)
 	paths := linuxpath.New(ctx)
 
 	path := paths.ProcCpuinfo
@@ -75,14 +78,12 @@ func TestPathSpecificRoots(t *testing.T) {
 }
 
 func TestPathChrootAndSpecifics(t *testing.T) {
-	ctx := context.New(
-		option.WithPathOverrides(option.PathOverrides{
-			"/proc": "/host2-proc",
-			"/sys":  "/host2-sys",
-		}),
-		option.WithChroot("/redirect"),
-	)
-
+	ctx := ghw.ContextFromEnv()
+	ctx = ghw.WithChroot("/redirect")(ctx)
+	ctx = ghw.WithPathOverrides(map[string]string{
+		"/proc": "/host2-proc",
+		"/sys":  "/host2-sys",
+	})(ctx)
 	paths := linuxpath.New(ctx)
 
 	path := paths.ProcCpuinfo
@@ -95,5 +96,55 @@ func TestPathChrootAndSpecifics(t *testing.T) {
 	expectedPath = "/redirect/host2-sys/bus/pci/devices"
 	if path != expectedPath {
 		t.Fatalf("Expected path.SysBusPciDevices to return %q but got %q", expectedPath, path)
+	}
+}
+
+func TestGpuPathRegexp(t *testing.T) {
+	tmp := t.TempDir()
+
+	// Make sure that last element of path is unique across other paths.
+	var paths = []string{
+		"../../devices/pci0000:00/0000:00:03.1/0000:07:00.0/drm/card0",
+		"../../devices/pci0000:00/0000:00:0d.0/0000:01:00.1/drm/card1",
+		"../../devices/pci0000:25/0000:25:01.0/0000:26:00.0/drm/card2",
+		"../../devices/pci0000:89/0000:89:01.0/0000:8a:00.0/drm/card3",
+	}
+
+	// Expecting third element from paths above.
+	var expectedAddrs = []string{
+		"0000:07:00.0", "0000:01:00.1", "0000:26:00.0", "0000:8a:00.0",
+	}
+
+	drmPath := filepath.Join(tmp, "/sys/class/drm")
+	err := os.MkdirAll(drmPath, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, target := range paths {
+		linkname := filepath.Join(drmPath, filepath.Base(target))
+		err := os.Symlink(target, linkname)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	info, err := gpu.New(option.WithChroot(tmp))
+	if err != nil {
+		t.Fatalf("Expected nil err, but got %v", err)
+	}
+
+	if len(info.GraphicsCards) != len(expectedAddrs) {
+		t.Fatalf("Expected %d graphics cards, got %d", len(expectedAddrs), len(info.GraphicsCards))
+	}
+	foundAddrs := make([]string, 0)
+	for _, card := range info.GraphicsCards {
+		foundAddrs = append(foundAddrs, card.Address)
+	}
+
+	sort.Strings(expectedAddrs)
+	sort.Strings(foundAddrs)
+
+	if !slices.Equal(expectedAddrs, foundAddrs) {
+		t.Fatalf("Some cards not found")
 	}
 }

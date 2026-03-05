@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +22,9 @@ var topologyCmd = &cobra.Command{
 
 // showTopology show topology information for the host system.
 func showTopology(cmd *cobra.Command, args []string) error {
-	topology, err := ghw.Topology()
+	topology, err := ghw.Topology(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting topology info")
+		return fmt.Errorf("error getting topology info: %w", err)
 	}
 
 	switch outputFormat {

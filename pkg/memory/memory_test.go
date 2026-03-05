@@ -45,4 +45,12 @@ func TestMemory(t *testing.T) {
 	if len(sps) == 0 {
 		t.Fatalf("Expected >0 supported page sizes, but got 0.")
 	}
+
+	if mem.DefaultHugePageSize == 0 {
+		t.Fatalf("Expected >0 default hugepagesize, but got 0")
+	}
+
+	if len(sps) != len(mem.HugePageAmountsBySize) {
+		t.Fatalf("Expected %d hugepages, but got %d", len(sps), len(mem.HugePageAmountsBySize))
+	}
 }

@@ -6,13 +6,16 @@
 package gpu
 
 import (
-	"io/ioutil"
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
+	"github.com/jaypipes/ghw/internal/log"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
@@ -20,14 +23,16 @@ import (
 )
 
 const (
-	_WARN_NO_SYS_CLASS_DRM = `
-/sys/class/drm does not exist on this system (likely the host system is a
-virtual machine or container with no graphics). Therefore,
-GPUInfo.GraphicsCards will be an empty array.
-`
+	validPCIAddress = `\b(0{0,4}:[[:xdigit:]]{2}:[[:xdigit:]]{2}\.[[:xdigit:]]:?\w*)`
 )
 
-func (i *Info) load() error {
+var reValidPCIAddress = regexp.MustCompile(validPCIAddress)
+
+const (
+	warnNoSysClassDRM = `/sys/class/drm does not exist on this system (likely the host system is a virtual machine or container with no graphics). Therefore, GPUInfo.GraphicsCards will be an empty array.`
+)
+
+func (i *Info) load(ctx context.Context) error {
 	// In Linux, each graphics card is listed under the /sys/class/drm
 	// directory as a symbolic link named "cardN", where N is a zero-based
 	// index of the card in the system. "DRM" stands for Direct Rendering
@@ -54,10 +59,14 @@ func (i *Info) load() error {
 	// we follow to gather information about the actual device from the PCI
 	// subsystem (we query the modalias file of the PCI device's sysfs
 	// directory using the `ghw.PCIInfo.GetDevice()` function.
-	paths := linuxpath.New(i.ctx)
-	links, err := ioutil.ReadDir(paths.SysClassDRM)
+	pci, err := pci.New(ctx)
 	if err != nil {
-		i.ctx.Warn(_WARN_NO_SYS_CLASS_DRM)
+		return fmt.Errorf("failed to initialize PCI device database: %w", err)
+	}
+	paths := linuxpath.New(ctx)
+	links, err := os.ReadDir(paths.SysClassDRM)
+	if err != nil {
+		log.Warn(ctx, warnNoSysClassDRM)
 		return nil
 	}
 	cards := make([]*GraphicsCard, 0)
@@ -84,27 +93,34 @@ func (i *Info) load() error {
 			continue
 		}
 		pathParts := strings.Split(dest, "/")
-		numParts := len(pathParts)
-		pciAddress := pathParts[numParts-3]
+		// The PCI address of the graphics card is the *last* PCI address in
+		// the filepath...
+		pciAddress := ""
+		for x := len(pathParts) - 1; x >= 0; x-- {
+			part := pathParts[x]
+			if reValidPCIAddress.MatchString(part) {
+				pciAddress = part
+				break
+			}
+		}
+		if pciAddress == "" {
+			continue
+		}
 		card := &GraphicsCard{
 			Address: pciAddress,
 			Index:   cardIdx,
 		}
 		cards = append(cards, card)
 	}
-	gpuFillNUMANodes(i.ctx, cards)
-	gpuFillPCIDevice(i.ctx, cards)
+	gpuFillNUMANodes(ctx, cards)
+	gpuFillPCIDevice(pci, cards)
 	i.GraphicsCards = cards
 	return nil
 }
 
 // Loops through each GraphicsCard struct and attempts to fill the DeviceInfo
 // attribute with PCI device information
-func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
-	pci, err := pci.New(context.WithContext(ctx))
-	if err != nil {
-		return
-	}
+func gpuFillPCIDevice(pci *pci.Info, cards []*GraphicsCard) {
 	for _, card := range cards {
 		if card.DeviceInfo == nil {
 			card.DeviceInfo = pci.GetDevice(card.Address)
@@ -115,16 +131,22 @@ func gpuFillPCIDevice(ctx *context.Context, cards []*GraphicsCard) {
 // Loops through each GraphicsCard struct and find which NUMA node the card is
 // affined to, setting the GraphicsCard.Node field accordingly. If the host
 // system is not a NUMA system, the Node field will be set to nil.
-func gpuFillNUMANodes(ctx *context.Context, cards []*GraphicsCard) {
+func gpuFillNUMANodes(ctx context.Context, cards []*GraphicsCard) {
 	paths := linuxpath.New(ctx)
-	topo, err := topology.New(context.WithContext(ctx))
+	// Skip topology detection if requested to reduce memory consumption
+	if !config.TopologyEnabled(ctx) {
+		for _, card := range cards {
+			card.Node = nil
+		}
+		return
+	}
+
+	topo, err := topology.New(ctx)
 	if err != nil {
 		// Problem getting topology information so just set the graphics card's
 		// node to nil
 		for _, card := range cards {
-			if topo.Architecture != topology.ARCHITECTURE_NUMA {
-				card.Node = nil
-			}
+			card.Node = nil
 		}
 		return
 	}

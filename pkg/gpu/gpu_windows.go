@@ -6,22 +6,24 @@
 package gpu
 
 import (
+	"context"
 	"strings"
 
-	"github.com/StackExchange/wmi"
 	"github.com/jaypipes/pcidb"
+	"github.com/yusufpapurcu/wmi"
 
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
-const wqlVideoController = "SELECT Caption, CreationClassName, Description, DeviceID, Name, PNPDeviceID, SystemCreationClassName, SystemName, VideoArchitecture, VideoMemoryType, VideoModeDescription, VideoProcessor FROM Win32_VideoController"
+const wqlVideoController = "SELECT Caption, CreationClassName, Description, DeviceID, DriverVersion, Name, PNPDeviceID, SystemCreationClassName, SystemName, VideoArchitecture, VideoMemoryType, VideoModeDescription, VideoProcessor FROM Win32_VideoController"
 
 type win32VideoController struct {
 	Caption                 string
 	CreationClassName       string
 	Description             string
 	DeviceID                string
+	DriverVersion           string
 	Name                    string
 	PNPDeviceID             string
 	SystemCreationClassName string
@@ -45,7 +47,7 @@ type win32PnPEntity struct {
 	PNPDeviceID       string
 }
 
-func (i *Info) load() error {
+func (i *Info) load(ctx context.Context) error {
 	// Getting data from WMI
 	var win32VideoControllerDescriptions []win32VideoController
 	if err := wmi.Query(wqlVideoController, &win32VideoControllerDescriptions); err != nil {
@@ -55,7 +57,7 @@ func (i *Info) load() error {
 	// Building dynamic WHERE clause with addresses to create a single query collecting all desired data
 	queryAddresses := []string{}
 	for _, description := range win32VideoControllerDescriptions {
-		var queryAddres = strings.Replace(description.PNPDeviceID, "\\", `\\`, -1)
+		var queryAddres = strings.ReplaceAll(description.PNPDeviceID, "\\", `\\`)
 		queryAddresses = append(queryAddresses, "PNPDeviceID='"+queryAddres+"'")
 	}
 	whereClause := strings.Join(queryAddresses[:], " OR ")
@@ -75,6 +77,7 @@ func (i *Info) load() error {
 			Index:      0,
 			DeviceInfo: GetDevice(description.PNPDeviceID, win32PnPDescriptions),
 		}
+		card.DeviceInfo.Driver = description.DriverVersion
 		cards = append(cards, card)
 	}
 	i.GraphicsCards = cards
@@ -83,7 +86,7 @@ func (i *Info) load() error {
 
 func GetDevice(id string, entities []win32PnPEntity) *pci.Device {
 	// Backslashing PnP address ID as requested by JSON and VMI query: https://docs.microsoft.com/en-us/windows/win32/wmisdk/where-clause
-	var queryAddress = strings.Replace(id, "\\", `\\`, -1)
+	var queryAddress = strings.ReplaceAll(id, "\\", `\\`)
 	// Preparing default structure
 	var device = &pci.Device{
 		Address: queryAddress,

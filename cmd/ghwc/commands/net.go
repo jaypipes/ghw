@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +22,9 @@ var netCmd = &cobra.Command{
 
 // showNetwork show network information for the host system.
 func showNetwork(cmd *cobra.Command, args []string) error {
-	net, err := ghw.Network()
+	net, err := ghw.Network(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting network info")
+		return fmt.Errorf("error getting network info: %w", err)
 	}
 
 	switch outputFormat {

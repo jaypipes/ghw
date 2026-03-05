@@ -7,18 +7,23 @@
 package snapshot
 
 import (
+	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jaypipes/ghw/internal/log"
 )
 
-func createBlockDevices(buildDir string) error {
+func createBlockDevices(
+	ctx context.Context,
+	buildDir string,
+) error {
 	// Grab all the block device pseudo-directories from /sys/block symlinks
 	// (excluding loopback devices) and inject them into our build filesystem
 	// with all but the circular symlink'd subsystem directories
-	devLinks, err := ioutil.ReadDir("/sys/block")
+	devLinks, err := os.ReadDir("/sys/block")
 	if err != nil {
 		return err
 	}
@@ -28,14 +33,14 @@ func createBlockDevices(buildDir string) error {
 			continue
 		}
 		devPath := filepath.Join("/sys/block", dname)
-		trace("processing block device %q\n", devPath)
+		log.Debug(ctx, "processing block device %q", devPath)
 
 		// from the sysfs layout, we know this is always a symlink
 		linkContentPath, err := os.Readlink(devPath)
 		if err != nil {
 			return err
 		}
-		trace("link target for block device %q is %q\n", devPath, linkContentPath)
+		log.Debug(ctx, "link target for block device %q is %q", devPath, linkContentPath)
 
 		// Create a symlink in our build filesystem that is a directory
 		// pointing to the actual device bus path where the block device's
@@ -46,12 +51,12 @@ func createBlockDevices(buildDir string) error {
 			"sys/block",
 			strings.TrimPrefix(linkContentPath, string(os.PathSeparator)),
 		)
-		trace("creating device directory %s\n", linkTargetPath)
+		log.Debug(ctx, "creating device directory %s", linkTargetPath)
 		if err = os.MkdirAll(linkTargetPath, os.ModePerm); err != nil {
 			return err
 		}
 
-		trace("linking device directory %s to %s\n", linkPath, linkContentPath)
+		log.Debug(ctx, "linking device directory %s to %s", linkPath, linkContentPath)
 		// Make sure the link target is a relative path!
 		// if we use absolute path, the link target will be an absolute path starting
 		// with buildDir, hence the snapshot will contain broken link.
@@ -66,19 +71,23 @@ func createBlockDevices(buildDir string) error {
 			"/sys/block",
 			strings.TrimPrefix(linkContentPath, string(os.PathSeparator)),
 		)
-		trace("creating device directory %q from %q\n", linkTargetPath, srcDeviceDir)
-		if err = createBlockDeviceDir(linkTargetPath, srcDeviceDir); err != nil {
+		log.Debug(ctx, "creating device directory %q from %q", linkTargetPath, srcDeviceDir)
+		if err = createBlockDeviceDir(ctx, linkTargetPath, srcDeviceDir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
+func createBlockDeviceDir(
+	ctx context.Context,
+	buildDeviceDir string,
+	srcDeviceDir string,
+) error {
 	// Populate the supplied directory (in our build filesystem) with all the
 	// appropriate information pseudofile contents for the block device.
 	devName := filepath.Base(srcDeviceDir)
-	devFiles, err := ioutil.ReadDir(srcDeviceDir)
+	devFiles, err := os.ReadDir(srcDeviceDir)
 	if err != nil {
 		return err
 	}
@@ -105,12 +114,12 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 				srcPartitionDir := filepath.Join(
 					srcDeviceDir, fname,
 				)
-				trace("creating partition directory %s\n", buildPartitionDir)
+				log.Debug(ctx, "creating partition directory %s", buildPartitionDir)
 				err = os.MkdirAll(buildPartitionDir, os.ModePerm)
 				if err != nil {
 					return err
 				}
-				err = createPartitionDir(buildPartitionDir, srcPartitionDir)
+				err = createPartitionDir(ctx, buildPartitionDir, srcPartitionDir)
 				if err != nil {
 					return err
 				}
@@ -119,17 +128,17 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 			// Regular files in the block device directory are both regular and
 			// pseudofiles containing information such as the size (in sectors)
 			// and whether the device is read-only
-			buf, err := ioutil.ReadFile(fp)
+			buf, err := os.ReadFile(fp)
 			if err != nil {
 				if errors.Is(err, os.ErrPermission) {
 					// example: /sys/devices/virtual/block/zram0/compact is 0400
-					trace("permission denied reading %q - skipped\n", fp)
+					log.Debug(ctx, "permission denied reading %q - skipped", fp)
 					continue
 				}
 				return err
 			}
 			targetPath := filepath.Join(buildDeviceDir, fname)
-			trace("creating %s\n", targetPath)
+			log.Debug(ctx, "creating %s", targetPath)
 			f, err := os.Create(targetPath)
 			if err != nil {
 				return err
@@ -156,12 +165,12 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 		return err
 	}
 	fp := filepath.Join(srcQueueDir, "rotational")
-	buf, err := ioutil.ReadFile(fp)
+	buf, err := os.ReadFile(fp)
 	if err != nil {
 		return err
 	}
 	targetPath := filepath.Join(buildQueueDir, "rotational")
-	trace("creating %s\n", targetPath)
+	log.Debug(ctx, "creating %s", targetPath)
 	f, err := os.Create(targetPath)
 	if err != nil {
 		return err
@@ -174,10 +183,14 @@ func createBlockDeviceDir(buildDeviceDir string, srcDeviceDir string) error {
 	return nil
 }
 
-func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error {
+func createPartitionDir(
+	ctx context.Context,
+	buildPartitionDir string,
+	srcPartitionDir string,
+) error {
 	// Populate the supplied directory (in our build filesystem) with all the
 	// appropriate information pseudofile contents for the partition.
-	partFiles, err := ioutil.ReadDir(srcPartitionDir)
+	partFiles, err := os.ReadDir(srcPartitionDir)
 	if err != nil {
 		return err
 	}
@@ -201,12 +214,12 @@ func createPartitionDir(buildPartitionDir string, srcPartitionDir string) error 
 			// Regular files in the block device directory are both regular and
 			// pseudofiles containing information such as the size (in sectors)
 			// and whether the device is read-only
-			buf, err := ioutil.ReadFile(fp)
+			buf, err := os.ReadFile(fp)
 			if err != nil {
 				return err
 			}
 			targetPath := filepath.Join(buildPartitionDir, fname)
-			trace("creating %s\n", targetPath)
+			log.Debug(ctx, "creating %s", targetPath)
 			f, err := os.Create(targetPath)
 			if err != nil {
 				return err

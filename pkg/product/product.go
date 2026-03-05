@@ -7,15 +7,13 @@
 package product
 
 import (
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
 // Info defines product information
 type Info struct {
-	ctx          *context.Context
 	Family       string `json:"family"`
 	Name         string `json:"name"`
 	Vendor       string `json:"vendor"`
@@ -68,10 +66,10 @@ func (i *Info) String() string {
 
 // New returns a pointer to a Info struct containing information
 // about the host's product
-func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
-	info := &Info{ctx: ctx}
-	if err := ctx.Do(info.load); err != nil {
+func New(args ...any) (*Info, error) {
+	ctx := config.ContextFromArgs(args...)
+	info := &Info{}
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -86,11 +84,11 @@ type productPrinter struct {
 // YAMLString returns a string with the product information formatted as YAML
 // under a top-level "dmi:" key
 func (info *Info) YAMLString() string {
-	return marshal.SafeYAML(info.ctx, productPrinter{info})
+	return marshal.SafeYAML(productPrinter{info})
 }
 
 // JSONString returns a string with the product information formatted as JSON
 // under a top-level "product:" key
 func (info *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(info.ctx, productPrinter{info}, indent)
+	return marshal.SafeJSON(productPrinter{info}, indent)
 }

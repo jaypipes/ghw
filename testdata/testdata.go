@@ -29,3 +29,12 @@ func SamplesDirectory() (string, error) {
 	basedir := filepath.Dir(file)
 	return filepath.Join(basedir, "samples"), nil
 }
+
+func PCIDBChroot() string {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("cannot retrieve testdata directory")
+	}
+	basedir := filepath.Dir(file)
+	return filepath.Join(basedir, "usr", "share", "hwdata", "pci.ids")
+}

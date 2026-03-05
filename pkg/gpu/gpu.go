@@ -9,9 +9,8 @@ package gpu
 import (
 	"fmt"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
@@ -49,16 +48,15 @@ func (card *GraphicsCard) String() string {
 }
 
 type Info struct {
-	ctx           *context.Context
 	GraphicsCards []*GraphicsCard `json:"cards"`
 }
 
 // New returns a pointer to an Info struct that contains information about the
 // graphics cards on the host system
-func New(opts ...*option.Option) (*Info, error) {
-	ctx := context.New(opts...)
-	info := &Info{ctx: ctx}
-	if err := ctx.Do(info.load); err != nil {
+func New(args ...any) (*Info, error) {
+	ctx := config.ContextFromArgs(args...)
+	info := &Info{}
+	if err := info.load(ctx); err != nil {
 		return nil, err
 	}
 	return info, nil
@@ -85,11 +83,11 @@ type gpuPrinter struct {
 // YAMLString returns a string with the gpu information formatted as YAML
 // under a top-level "gpu:" key
 func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(i.ctx, gpuPrinter{i})
+	return marshal.SafeYAML(gpuPrinter{i})
 }
 
 // JSONString returns a string with the gpu information formatted as JSON
 // under a top-level "gpu:" key
 func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(i.ctx, gpuPrinter{i}, indent)
+	return marshal.SafeJSON(gpuPrinter{i}, indent)
 }

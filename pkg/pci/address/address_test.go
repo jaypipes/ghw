@@ -62,6 +62,16 @@ func TestPCIAddressFromString(t *testing.T) {
 				Function: "a",
 			},
 		},
+		{
+			// PCI-X / PCI Express extensions may use 5-digit domain
+			addrStr: "10000:03:00.A",
+			expected: &pciaddr.Address{
+				Domain:   "10000",
+				Bus:      "03",
+				Device:   "00",
+				Function: "a",
+			},
+		},
 	}
 	for x, test := range tests {
 		got := pciaddr.FromString(test.addrStr)

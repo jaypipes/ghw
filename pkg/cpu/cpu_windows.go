@@ -9,7 +9,9 @@
 package cpu
 
 import (
-	"github.com/StackExchange/wmi"
+	"context"
+
+	"github.com/yusufpapurcu/wmi"
 )
 
 const wmqlProcessor = "SELECT Manufacturer, Name, NumberOfLogicalProcessors, NumberOfCores FROM Win32_Processor"
@@ -21,7 +23,7 @@ type win32Processor struct {
 	NumberOfCores             uint32
 }
 
-func (i *Info) load() error {
+func (i *Info) load(ctx context.Context) error {
 	// Getting info from WMI
 	var win32descriptions []win32Processor
 	if err := wmi.Query(wmqlProcessor, &win32descriptions); err != nil {
@@ -32,10 +34,12 @@ func (i *Info) load() error {
 	var totCores uint32
 	var totThreads uint32
 	for _, p := range i.Processors {
-		totCores += p.NumCores
-		totThreads += p.NumThreads
+		totCores += p.TotalCores
+		totThreads += p.TotalHardwareThreads
 	}
 	i.TotalCores = totCores
+	i.TotalHardwareThreads = totThreads
+	// TODO(jaypipes): Remove TotalThreads by v1.0
 	i.TotalThreads = totThreads
 	return nil
 }
@@ -48,7 +52,11 @@ func processorsGet(win32descriptions []win32Processor) []*Processor {
 			ID:         index,
 			Model:      *description.Name,
 			Vendor:     *description.Manufacturer,
-			NumCores:   description.NumberOfCores,
+			TotalCores: description.NumberOfCores,
+			// TODO(jaypipes): Remove NumCores before v1.0
+			NumCores:             description.NumberOfCores,
+			TotalHardwareThreads: description.NumberOfLogicalProcessors,
+			// TODO(jaypipes): Remove NumThreads before v1.0
 			NumThreads: description.NumberOfLogicalProcessors,
 		}
 		procs = append(procs, p)

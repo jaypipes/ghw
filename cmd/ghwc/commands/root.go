@@ -8,11 +8,19 @@ package commands
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
+	"github.com/jaypipes/ghw/internal/config"
+	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/spf13/cobra"
+)
+
+type optKey string
+
+const (
+	optsKey optKey = "ghwc.opts"
 )
 
 const (
@@ -21,6 +29,7 @@ const (
 	outputFormatYAML  = "yaml"
 	usageOutputFormat = `Output format.
 Choices are 'json','yaml', and 'human'.`
+	usageSnapshotPath = `Specify path to snapshot.`
 )
 
 var (
@@ -34,7 +43,8 @@ var (
 		outputFormatJSON,
 		outputFormatYAML,
 	}
-	pretty bool
+	snapshotPath string
+	pretty       bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -42,8 +52,7 @@ var rootCmd = &cobra.Command{
 	Use:   "ghwc",
 	Short: "ghwc - Discover hardware information.",
 	Args:  validateRootCommand,
-	Long: `
-          __
+	Long: `          __
  .-----. |  |--. .--.--.--.
  |  _  | |     | |  |  |  |
  |___  | |__|__| |________|
@@ -53,89 +62,9 @@ Discover hardware information.
 
 https://github.com/jaypipes/ghw
 `,
-	RunE: showAll,
-}
-
-func showAll(cmd *cobra.Command, args []string) error {
-
-	switch outputFormat {
-	case outputFormatHuman:
-		if err := showBlock(cmd, args); err != nil {
-			return err
-		}
-		if err := showCPU(cmd, args); err != nil {
-			return err
-		}
-		if err := showGPU(cmd, args); err != nil {
-			return err
-		}
-		if err := showMemory(cmd, args); err != nil {
-			return err
-		}
-		if err := showNetwork(cmd, args); err != nil {
-			return err
-		}
-		if err := showTopology(cmd, args); err != nil {
-			return err
-		}
-		if err := showChassis(cmd, args); err != nil {
-			return err
-		}
-		if err := showBIOS(cmd, args); err != nil {
-			return err
-		}
-		if err := showBaseboard(cmd, args); err != nil {
-			return err
-		}
-		if err := showProduct(cmd, args); err != nil {
-			return err
-		}
-	case outputFormatJSON:
-		host, err := ghw.Host()
-		if err != nil {
-			return errors.Wrap(err, "error getting host info")
-		}
-		fmt.Printf("%s\n", host.JSONString(pretty))
-	case outputFormatYAML:
-		host, err := ghw.Host()
-		if err != nil {
-			return errors.Wrap(err, "error getting host info")
-		}
-		fmt.Printf("%s", host.YAMLString())
-	}
-	return nil
-}
-
-// Execute adds all child commands to the root command and sets flags
-// appropriately. This is called by main.main(). It only needs to happen once
-// to the rootCmd.
-func Execute(v string, bh string, bd string) {
-	version = v
-	buildHash = bh
-	buildDate = bd
-
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func haveValidOutputFormat() bool {
-	for _, choice := range outputFormats {
-		if choice == outputFormat {
-			return true
-		}
-	}
-	return false
-}
-
-// validateRootCommand ensures any CLI options or arguments are valid,
-// returning an error if not
-func validateRootCommand(rootCmd *cobra.Command, args []string) error {
-	if !haveValidOutputFormat() {
-		return fmt.Errorf("invalid output format %q", outputFormat)
-	}
-	return nil
+	PersistentPreRunE: doPreRun,
+	RunE:              showAll,
+	SilenceUsage:      true,
 }
 
 func init() {
@@ -151,4 +80,120 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(
 		&pretty, "pretty", false, "When outputting JSON, use indentation",
 	)
+	rootCmd.PersistentFlags().StringVarP(
+		&snapshotPath,
+		"snapshot-path", "s",
+		"",
+		usageSnapshotPath,
+	)
+}
+
+func showAll(cmd *cobra.Command, args []string) error {
+
+	switch outputFormat {
+	case outputFormatHuman:
+		for _, f := range []func(*cobra.Command, []string) error{
+			showBlock,
+			showCPU,
+			showGPU,
+			showMemory,
+			showNetwork,
+			showTopology,
+			showChassis,
+			showBIOS,
+			showBaseboard,
+			showProduct,
+			showAccelerator,
+			showUSB,
+		} {
+			err := f(cmd, args)
+			if err != nil {
+				return err
+			}
+
+		}
+
+	case outputFormatJSON:
+		host, err := ghw.Host()
+		if err != nil {
+			return fmt.Errorf("error getting host info: %w", err)
+		}
+		fmt.Printf("%s\n", host.JSONString(pretty))
+	case outputFormatYAML:
+		host, err := ghw.Host()
+		if err != nil {
+			return fmt.Errorf("error getting host info: %w", err)
+		}
+		fmt.Printf("%s", host.YAMLString())
+	}
+	return nil
+}
+
+// Execute adds all child commands to the root command and sets flags
+// appropriately. This is called by main.main(). It only needs to happen once
+// to the rootCmd.
+func Execute(v string, bh string, bd string) {
+	version = v
+	buildHash = bh
+	buildDate = bd
+
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func haveValidOutputFormat() bool {
+	for _, choice := range outputFormats {
+		if choice == outputFormat {
+			return true
+		}
+	}
+	return false
+}
+
+func validateSnapshotPath() error {
+	if _, err := os.Stat(snapshotPath); err != nil {
+		return fmt.Errorf("invalid snapshot path: %w", err)
+	}
+	return nil
+}
+
+// validateRootCommand ensures any CLI options or arguments are valid,
+// returning an error if not
+func validateRootCommand(rootCmd *cobra.Command, args []string) error {
+	if !haveValidOutputFormat() {
+		return fmt.Errorf("invalid output format %q", outputFormat)
+	}
+	if snapshotPath != "" {
+		if err := validateSnapshotPath(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doPreRun(cmd *cobra.Command, args []string) error {
+	ctx := config.ContextFromEnv()
+	if snapshotPath != "" {
+		// unpack the snapshot into a tempdir and clean up this tempdir after
+		// the run...
+		unpackDir, err := os.MkdirTemp("", "ghw-snap-*")
+		if err != nil {
+			return err
+		}
+		err = snapshot.UnpackInto(snapshotPath, unpackDir)
+		if err != nil {
+			return err
+		}
+		ctx = ghw.WithChroot(unpackDir)(ctx)
+		cmd.PersistentPostRunE = func(c *cobra.Command, args []string) error {
+			_ = os.RemoveAll(unpackDir)
+			return nil
+		}
+	}
+	if debug {
+		ctx = ghw.WithLogLevel(slog.LevelDebug)(ctx)
+	}
+	cmd.SetContext(ctx)
+	return nil
 }

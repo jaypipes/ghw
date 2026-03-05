@@ -10,16 +10,15 @@
 package block
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -221,10 +220,10 @@ func TestDiskPartLabel(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
-	baseDir, _ := ioutil.TempDir("", "test")
+	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
+	ctx := context.TODO()
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	partLabel := "TEST_LABEL_GHW"
 
@@ -234,8 +233,8 @@ func TestDiskPartLabel(t *testing.T) {
 	// Emulate a disk with one partition with label TEST_LABEL_GHW
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_PART_ENTRY_NAME=%s\n", partLabel)), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_PART_ENTRY_NAME=%s\n", partLabel)), 0644)
 	label := diskPartLabel(paths, "sda", "sda1")
 	if label != partLabel {
 		t.Fatalf("Got label %s but expected %s", label, partLabel)
@@ -252,10 +251,10 @@ func TestDiskFSLabel(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
-	baseDir, _ := ioutil.TempDir("", "test")
+	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
+	ctx := context.TODO()
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	fsLabel := "TEST_LABEL_GHW"
 
@@ -265,8 +264,8 @@ func TestDiskFSLabel(t *testing.T) {
 	// Emulate a disk with one partition with label TEST_LABEL_GHW
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", fsLabel)), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_LABEL=%s\n", fsLabel)), 0644)
 	label := diskFSLabel(paths, "sda", "sda1")
 	if label != fsLabel {
 		t.Fatalf("Got label %s but expected %s", label, fsLabel)
@@ -283,10 +282,10 @@ func TestDiskTypeUdev(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
-	baseDir, _ := ioutil.TempDir("", "test")
+	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
+	ctx := context.TODO()
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	expectedPartType := "ext4"
 
@@ -296,8 +295,8 @@ func TestDiskTypeUdev(t *testing.T) {
 	// Emulate a disk with one partition with label TEST_LABEL_GHW
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", expectedPartType)), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", expectedPartType)), 0644)
 	pt := diskPartTypeUdev(paths, "sda", "sda1")
 	if pt != expectedPartType {
 		t.Fatalf("Got partition type %s but expected %s", pt, expectedPartType)
@@ -314,10 +313,9 @@ func TestDiskPartUUID(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
-	baseDir, _ := ioutil.TempDir("", "test")
-	defer os.RemoveAll(baseDir)
-	ctx := context.New()
-	ctx.Chroot = baseDir
+	baseDir, _ := os.MkdirTemp("", "test")
+	ctx := context.TODO()
+	ctx = config.WithChroot(baseDir)(ctx)
 	paths := linuxpath.New(ctx)
 	partUUID := "11111111-1111-1111-1111-111111111111"
 
@@ -327,8 +325,8 @@ func TestDiskPartUUID(t *testing.T) {
 	// Emulate a disk with one partition with uuid
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda", "sda1"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_PART_ENTRY_UUID=%s\n", partUUID)), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, "sda", "sda1", "dev"), []byte("259:0\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_PART_ENTRY_UUID=%s\n", partUUID)), 0644)
 	uuid := diskPartUUID(paths, "sda", "sda1")
 	if uuid != partUUID {
 		t.Fatalf("Got uuid %s but expected %s", uuid, partUUID)
@@ -341,15 +339,16 @@ func TestDiskPartUUID(t *testing.T) {
 	}
 }
 
-// TestLoopDevicesWithOption tests to see if we find loop devices when the option is activated
+// TestLoopDevicesWithOption tests to see if we find loop devices when the config is activated
 func TestLoopDevicesWithOption(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
 	}
-	baseDir, _ := ioutil.TempDir("", "test")
+	baseDir, _ := os.MkdirTemp("", "test")
 	defer os.RemoveAll(baseDir)
-	ctx := context.New(option.WithNullAlerter(), option.WithDisableTools())
-	ctx.Chroot = baseDir
+	ctx := context.TODO()
+	ctx = config.WithChroot(baseDir)(ctx)
+	ctx = config.WithDisableTools()(ctx)
 	paths := linuxpath.New(ctx)
 	fsType := "ext4"
 	expectedLoopName := "loop0"
@@ -364,14 +363,14 @@ func TestLoopDevicesWithOption(t *testing.T) {
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, loopNotUsed), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, "queue"), 0755)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, loopNotUsed, "queue"), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "queue", "rotational"), []byte("1\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "size"), []byte("62810112\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, loopNotUsed, "size"), []byte("0\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "queue", "rotational"), []byte("1\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, "size"), []byte("62810112\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, loopNotUsed, "size"), []byte("0\n"), 0644)
 	_ = os.Mkdir(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName), 0755)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("102400\n"), 0644)
-	_ = ioutil.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
-	d := disks(ctx, paths)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "dev"), []byte("259:0\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, expectedLoopName, loopPartitionName, "size"), []byte("102400\n"), 0644)
+	_ = os.WriteFile(filepath.Join(paths.RunUdevData, "b259:0"), []byte(fmt.Sprintf("E:ID_FS_TYPE=%s\n", fsType)), 0644)
+	d := disks(ctx)
 	// There should be one disk, the other should be ignored due to 0 size
 	if len(d) != 1 {
 		t.Fatalf("expected one disk device but the function reported %d", len(d))

@@ -11,8 +11,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/memory"
-	"github.com/jaypipes/ghw/pkg/option"
+	"github.com/jaypipes/ghw/pkg/snapshot"
 	"github.com/jaypipes/ghw/pkg/topology"
 
 	"github.com/jaypipes/ghw/testdata"
@@ -26,14 +27,17 @@ func TestTopologyNUMADistances(t *testing.T) {
 	}
 
 	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(multiNumaSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
-	info, err := topology.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
+	info, err := topology.New(ghw.WithChroot(unpackDir))
 
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -64,7 +68,7 @@ func TestTopologyNUMADistances(t *testing.T) {
 // we have this test in topology_linux_test.go (and not in topology_test.go) because `topologyFillInfo`
 // is not implemented on darwin; so having it in the platform-independent tests would lead to false negatives.
 func TestTopologyMarshalUnmarshal(t *testing.T) {
-	data, err := topology.New(option.WithNullAlerter())
+	data, err := topology.New(ghw.WithDisableWarnings())
 	if err != nil {
 		t.Fatalf("Expected no error creating topology.Info, but got %v", err)
 	}
@@ -90,15 +94,16 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 	}
 
 	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(multiNumaSnapshot, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
-
-	memInfo, err := memory.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
-
+	memInfo, err := memory.New(ghw.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -106,10 +111,7 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 		t.Fatalf("Expected non-nil MemoryInfo, but got nil")
 	}
 
-	info, err := topology.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
-
+	info, err := topology.New(ghw.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -140,6 +142,12 @@ func TestTopologyPerNUMAMemory(t *testing.T) {
 		}
 		if node.Memory.TotalUsableBytes > node.Memory.TotalPhysicalBytes {
 			t.Fatalf("excessive usable size for node %d", node.ID)
+		}
+		if node.Memory.DefaultHugePageSize == 0 {
+			t.Fatalf("unexpected default HP size for node %d", node.ID)
+		}
+		if len(node.Memory.HugePageAmountsBySize) != 2 {
+			t.Fatalf("expected 2 huge page info records, but got '%d' for node %d", len(node.Memory.HugePageAmountsBySize), node.ID)
 		}
 	}
 }

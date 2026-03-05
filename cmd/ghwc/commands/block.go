@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +22,9 @@ var blockCmd = &cobra.Command{
 
 // showBlock show block storage information for the host system.
 func showBlock(cmd *cobra.Command, args []string) error {
-	block, err := ghw.Block()
+	block, err := ghw.Block(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting block device info")
+		return fmt.Errorf("error getting block device info: %w", err)
 	}
 
 	switch outputFormat {

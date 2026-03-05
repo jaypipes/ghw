@@ -8,13 +8,12 @@ package gpu_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/gpu"
-	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/snapshot"
 
 	"github.com/jaypipes/ghw/testdata"
@@ -33,31 +32,27 @@ func TestGPUWithoutNUMANodeInfo(t *testing.T) {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
+	t.Setenv("PCIDB_PATH", testdata.PCIDBChroot())
+
 	workstationSnapshot := filepath.Join(testdataPath, "linux-amd64-amd-ryzen-1600.tar.gz")
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-amd-ryzen-1600.tar.gz" ghwc gpu
 
-	tmpRoot, err := ioutil.TempDir("", "ghw-gpu-testing-*")
-	if err != nil {
-		t.Fatalf("Unable to create temporary directory: %v", err)
-	}
+	tmpRoot := t.TempDir()
 
-	_, err = snapshot.UnpackInto(workstationSnapshot, tmpRoot, 0)
+	err = snapshot.UnpackInto(workstationSnapshot, tmpRoot)
 	if err != nil {
 		t.Fatalf("Unable to unpack %q into %q: %v", workstationSnapshot, tmpRoot, err)
 	}
-	defer func() {
-		_ = snapshot.Cleanup(tmpRoot)
-	}()
 
 	err = os.Remove(filepath.Join(tmpRoot, "/sys/class/drm/card0/device/numa_node"))
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("Cannot remove the NUMA node info: %v", err)
 	}
 
-	info, err := gpu.New(option.WithChroot(tmpRoot))
+	info, err := gpu.New(ghw.WithChroot(tmpRoot))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}

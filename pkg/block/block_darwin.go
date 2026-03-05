@@ -6,14 +6,16 @@
 package block
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
 	"strings"
 
-	"github.com/pkg/errors"
 	"howett.net/plist"
+
+	"github.com/jaypipes/ghw/internal/config"
 )
 
 type diskOrPartitionPlistNode struct {
@@ -98,12 +100,12 @@ type ioregPlist struct {
 func getDiskUtilListPlist() (*diskUtilListPlist, error) {
 	out, err := exec.Command("diskutil", "list", "-plist").Output()
 	if err != nil {
-		return nil, errors.Wrap(err, "diskutil list failed")
+		return nil, fmt.Errorf("diskutil list failed: %w", err)
 	}
 
 	var data diskUtilListPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
-		return nil, errors.Wrap(err, "diskutil list plist unmarshal failed")
+		return nil, fmt.Errorf("diskutil list plist unmarshal failed: %w", err)
 	}
 
 	return &data, nil
@@ -112,12 +114,12 @@ func getDiskUtilListPlist() (*diskUtilListPlist, error) {
 func getDiskUtilInfoPlist(device string) (*diskUtilInfoPlist, error) {
 	out, err := exec.Command("diskutil", "info", "-plist", device).Output()
 	if err != nil {
-		return nil, errors.Wrapf(err, "diskutil info for %q failed", device)
+		return nil, fmt.Errorf("diskutil info for %q failed: %w", device, err)
 	}
 
 	var data diskUtilInfoPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
-		return nil, errors.Wrapf(err, "diskutil info plist unmarshal for %q failed", device)
+		return nil, fmt.Errorf("diskutil info plist unmarshal for %q failed: %w", device, err)
 	}
 
 	return &data, nil
@@ -135,7 +137,7 @@ func getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
 	}
 	out, err := exec.Command(args[0], args[1:]...).Output()
 	if err != nil {
-		return nil, errors.Wrapf(err, "ioreg query for %q failed", ioDeviceTreePath)
+		return nil, fmt.Errorf("ioreg query for %q failed: %w", ioDeviceTreePath, err)
 	}
 	if out == nil || len(out) == 0 {
 		return nil, nil
@@ -143,10 +145,14 @@ func getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
 
 	var data []ioregPlist
 	if _, err := plist.Unmarshal(out, &data); err != nil {
-		return nil, errors.Wrapf(err, "ioreg unmarshal for %q failed", ioDeviceTreePath)
+		return nil, fmt.Errorf("ioreg unmarshal for %q failed: %w", ioDeviceTreePath, err)
 	}
 	if len(data) != 1 {
-		err := errors.Errorf("ioreg unmarshal resulted in %d I/O device tree nodes (expected 1)", len(data))
+		err := fmt.Errorf(
+			"ioreg unmarshal resulted in %d I/O device tree nodes "+
+				"for path %q (expected 1)",
+			len(data), ioDeviceTreePath,
+		)
 		return nil, err
 	}
 
@@ -155,7 +161,7 @@ func getIoregPlist(ioDeviceTreePath string) (*ioregPlist, error) {
 
 func makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, error) {
 	if s.Size < 0 {
-		return nil, errors.Errorf("invalid size %q of partition %q", s.Size, s.DeviceIdentifier)
+		return nil, fmt.Errorf("invalid size %q of partition %q", s.Size, s.DeviceIdentifier)
 	}
 
 	var partType string
@@ -185,9 +191,9 @@ func makePartition(disk, s diskOrPartitionPlistNode, isAPFS bool) (*Partition, e
 // driveTypeFromPlist looks at the supplied property list struct and attempts to
 // determine the disk type
 func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
-	dt := DRIVE_TYPE_HDD
+	dt := DriveTypeHDD
 	if infoPlist.SolidState {
-		dt = DRIVE_TYPE_SSD
+		dt = DriveTypeSSD
 	}
 	// TODO(jaypipes): Figure out how to determine floppy and/or CD/optical
 	// drive type on Mac
@@ -197,18 +203,18 @@ func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
 // storageControllerFromPlist looks at the supplied property list struct and
 // attempts to determine the storage controller in use for the device
 func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController {
-	sc := STORAGE_CONTROLLER_SCSI
+	sc := StorageControllerSCSI
 	if strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController") {
-		sc = STORAGE_CONTROLLER_NVME
+		sc = StorageControllerNVMe
 	}
 	// TODO(jaypipes): I don't know if Mac even supports IDE controllers and
 	// the "virtio" controller is libvirt-specific
 	return sc
 }
 
-func (info *Info) load() error {
-	if !info.ctx.EnableTools {
-		return fmt.Errorf("EnableTools=false on darwin disables block support entirely.")
+func (info *Info) load(ctx context.Context) error {
+	if !config.ToolsEnabled(ctx) {
+		return fmt.Errorf("DisableTools=true on darwin disables block support entirely.")
 	}
 
 	listPlist, err := getDiskUtilListPlist()
@@ -217,13 +223,13 @@ func (info *Info) load() error {
 		return err
 	}
 
-	info.TotalPhysicalBytes = 0
+	var tsb uint64
 	info.Disks = make([]*Disk, 0, len(listPlist.AllDisksAndPartitions))
 	info.Partitions = []*Partition{}
 
 	for _, disk := range listPlist.AllDisksAndPartitions {
 		if disk.Size < 0 {
-			return errors.Errorf("invalid size %q of disk %q", disk.Size, disk.DeviceIdentifier)
+			return fmt.Errorf("invalid size %q of disk %q", disk.Size, disk.DeviceIdentifier)
 		}
 
 		infoPlist, err := getDiskUtilInfoPlist(disk.DeviceIdentifier)
@@ -231,7 +237,7 @@ func (info *Info) load() error {
 			return err
 		}
 		if infoPlist.DeviceBlockSize < 0 {
-			return errors.Errorf("invalid block size %q of disk %q", infoPlist.DeviceBlockSize, disk.DeviceIdentifier)
+			return fmt.Errorf("invalid block size %q of disk %q", infoPlist.DeviceBlockSize, disk.DeviceIdentifier)
 		}
 
 		busPath := strings.TrimPrefix(infoPlist.DeviceTreePath, "IODeviceTree:")
@@ -258,6 +264,7 @@ func (info *Info) load() error {
 			Model:                  ioregPlist.ModelNumber,
 			SerialNumber:           ioregPlist.SerialNumber,
 			WWN:                    "",
+			WWNNoExtension:         "",
 			Partitions:             make([]*Partition, 0, len(disk.Partitions)+len(disk.APFSVolumes)),
 		}
 
@@ -278,10 +285,12 @@ func (info *Info) load() error {
 			diskReport.Partitions = append(diskReport.Partitions, part)
 		}
 
-		info.TotalPhysicalBytes += uint64(disk.Size)
+		tsb += uint64(disk.Size)
 		info.Disks = append(info.Disks, diskReport)
 		info.Partitions = append(info.Partitions, diskReport.Partitions...)
 	}
+	info.TotalSizeBytes = tsb
+	info.TotalPhysicalBytes = tsb
 
 	return nil
 }

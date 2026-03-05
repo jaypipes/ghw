@@ -6,7 +6,9 @@
 package baseboard
 
 import (
-	"github.com/StackExchange/wmi"
+	"context"
+
+	"github.com/yusufpapurcu/wmi"
 )
 
 const wqlBaseboard = "SELECT Manufacturer, SerialNumber, Tag, Version, Product FROM Win32_BaseBoard"
@@ -19,7 +21,7 @@ type win32Baseboard struct {
 	Product      *string
 }
 
-func (i *Info) load() error {
+func (i *Info) load(ctx context.Context) error {
 	// Getting data from WMI
 	var win32BaseboardDescriptions []win32Baseboard
 	if err := wmi.Query(wqlBaseboard, &win32BaseboardDescriptions); err != nil {

@@ -9,7 +9,9 @@
 
 package snapshot
 
-func setupScratchDir(scratchDir string) error {
+import "context"
+
+func setupScratchDir(ctx context.Context, scratchDir string) error {
 	return nil
 }
 
@@ -25,6 +27,10 @@ func ExpectedCloneNetContent() []string {
 	return []string{}
 }
 
-func ExpectedClonePCIContent() []string {
+func ExpectedClonePCIContent(ctx context.Context) ([]string, error) {
+	return nil, nil
+}
+
+func ExpectedCloneUSBContent() []string {
 	return []string{}
 }

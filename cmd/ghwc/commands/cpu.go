@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,9 +24,9 @@ var cpuCmd = &cobra.Command{
 
 // showCPU show CPU information for the host system.
 func showCPU(cmd *cobra.Command, args []string) error {
-	cpu, err := ghw.CPU()
+	cpu, err := ghw.CPU(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting CPU info")
+		return fmt.Errorf("error getting CPU info: %w", err)
 	}
 
 	switch outputFormat {

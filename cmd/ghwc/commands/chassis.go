@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +22,9 @@ var chassisCmd = &cobra.Command{
 
 // showChassis shows chassis information for the host system.
 func showChassis(cmd *cobra.Command, args []string) error {
-	chassis, err := ghw.Chassis()
+	chassis, err := ghw.Chassis(cmd.Context())
 	if err != nil {
-		return errors.Wrap(err, "error getting chassis info")
+		return fmt.Errorf("error getting chassis info: %w", err)
 	}
 
 	switch outputFormat {

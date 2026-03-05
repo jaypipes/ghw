@@ -13,7 +13,7 @@ import (
 
 var (
 	regexAddress *regexp.Regexp = regexp.MustCompile(
-		`^(([0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
+		`^((1?[0-9a-f]{0,4}):)?([0-9a-f]{2}):([0-9a-f]{2})\.([0-9a-f]{1})$`,
 	)
 )
 
@@ -30,12 +30,11 @@ func (addr *Address) String() string {
 	return addr.Domain + ":" + addr.Bus + ":" + addr.Device + "." + addr.Function
 }
 
-// FromString returns an Address struct from an ddress string in either
-// $BUS:$DEVICE.$FUNCTION (BDF) format or it can be a full PCI address that
-// includes the 4-digit $DOMAIN information as well:
-// $DOMAIN:$BUS:$DEVICE.$FUNCTION.
+// FromString returns [Address] from an address string in either
+// $BUS:$DEVICE.$FUNCTION (BDF) format or a full PCI address that
+// includes the domain: $DOMAIN:$BUS:$DEVICE.$FUNCTION.
 //
-// Returns "" if the address string wasn't a valid PCI address.
+// If the address string isn't a valid PCI address, then nil is returned.
 func FromString(address string) *Address {
 	addrLowered := strings.ToLower(address)
 	matches := regexAddress.FindStringSubmatch(addrLowered)

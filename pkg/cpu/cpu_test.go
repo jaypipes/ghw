@@ -33,10 +33,10 @@ func TestCPU(t *testing.T) {
 	}
 
 	for _, p := range info.Processors {
-		if p.NumCores == 0 {
+		if p.TotalCores == 0 {
 			t.Fatalf("Expected >0 cores but got 0.")
 		}
-		if p.NumThreads == 0 {
+		if p.TotalHardwareThreads == 0 {
 			t.Fatalf("Expected >0 threads but got 0.")
 		}
 		if len(p.Capabilities) == 0 {
@@ -50,7 +50,7 @@ func TestCPU(t *testing.T) {
 			t.Fatalf("Expected >0 cores in processor, but got 0.")
 		}
 		for _, c := range p.Cores {
-			if c.NumThreads == 0 {
+			if c.TotalHardwareThreads == 0 {
 				t.Fatalf("Expected >0 threads but got 0.")
 			}
 			if len(c.LogicalProcessors) == 0 {

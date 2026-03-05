@@ -13,24 +13,27 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/context"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
+	"github.com/jaypipes/ghw/pkg/snapshot"
+	"github.com/jaypipes/ghw/pkg/util"
 
 	"github.com/jaypipes/ghw/testdata"
 )
 
 type pciTestCase struct {
-	addr     string
-	node     int
-	revision string
-	driver   string
+	addr       string
+	parentAddr string
+	node       int
+	revision   string
+	driver     string
+	iommuGroup string
 }
 
 // nolint: gocyclo
 func TestPCINUMANode(t *testing.T) {
-	info := pciTestSetup(t)
+	info := pciTestSetupXeon(t)
 
 	tCases := []pciTestCase{
 		{
@@ -55,6 +58,12 @@ func TestPCINUMANode(t *testing.T) {
 			}
 			if dev.Node == nil {
 				if tCase.node != -1 {
+					addrs := []string{}
+					for _, d := range info.Devices {
+						addrs = append(addrs, d.Address)
+					}
+					msg := fmt.Sprintf("address: %q device addresses: %v", tCase.addr, addrs)
+					t.Error(msg)
 					t.Fatalf("got nil numa NODE for address %q", tCase.addr)
 				}
 			} else {
@@ -68,7 +77,7 @@ func TestPCINUMANode(t *testing.T) {
 
 // nolint: gocyclo
 func TestPCIDeviceRevision(t *testing.T) {
-	info := pciTestSetup(t)
+	info := pciTestSetupXeon(t)
 
 	var tCases []pciTestCase = []pciTestCase{
 		{
@@ -94,8 +103,60 @@ func TestPCIDeviceRevision(t *testing.T) {
 }
 
 // nolint: gocyclo
+func TestPCIParent(t *testing.T) {
+	info := pciTestSetupI7(t)
+	tCases := []pciTestCase{
+		{
+			addr:       "0000:04:00.0",
+			parentAddr: "0000:00:06.0",
+		},
+	}
+	for _, tCase := range tCases {
+		t.Run(fmt.Sprintf("%s (%s)", tCase.addr, tCase.parentAddr), func(t *testing.T) {
+			dev := info.GetDevice(tCase.addr)
+			if dev == nil {
+				t.Fatalf("got nil device for address %q", tCase.addr)
+			}
+			if dev.ParentAddress != tCase.parentAddr {
+				t.Errorf("got parent %q expected %q", dev.ParentAddress, tCase.parentAddr)
+			}
+		})
+	}
+}
+
+// nolint: gocyclo
+func TestPCIIommuGroup(t *testing.T) {
+	info := pciTestSetupI7(t)
+	tCases := []pciTestCase{
+		{
+			addr:       "0000:00:1f.0",
+			iommuGroup: "13",
+		},
+		{
+			addr:       "0000:00:1f.5",
+			iommuGroup: "13",
+		},
+		{
+			addr:       "0000:04:00.0",
+			iommuGroup: "14",
+		},
+	}
+	for _, tCase := range tCases {
+		t.Run(fmt.Sprintf("%s (%s)", tCase.addr, tCase.iommuGroup), func(t *testing.T) {
+			dev := info.GetDevice(tCase.addr)
+			if dev == nil {
+				t.Fatalf("got nil device for address %q", tCase.addr)
+			}
+			if dev.IOMMUGroup != tCase.iommuGroup {
+				t.Errorf("got iommu_group %q expected %q", dev.IOMMUGroup, tCase.iommuGroup)
+			}
+		})
+	}
+}
+
+// nolint: gocyclo
 func TestPCIDriver(t *testing.T) {
-	info := pciTestSetup(t)
+	info := pciTestSetupXeon(t)
 
 	tCases := []pciTestCase{
 		{
@@ -133,8 +194,11 @@ func TestPCIMarshalJSON(t *testing.T) {
 		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
 	}
 
-	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02")
-	s := marshal.SafeJSON(context.FromEnv(), dev, true)
+	dev := info.ParseDevice("0000:3c:00.0", "pci:v0000144Dd0000A804sv0000144Dsd0000A801bc01sc08i02\n")
+	if dev == nil {
+		t.Fatalf("Failed to parse valid modalias")
+	}
+	s := marshal.SafeJSON(dev, true)
 	if s == "" {
 		t.Fatalf("Error marshalling device: %v", dev)
 	}
@@ -162,26 +226,35 @@ func TestPCIMalformedModalias(t *testing.T) {
 	}
 }
 
-func pciTestSetup(t *testing.T) *pci.Info {
-	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
-		t.Skip("Skipping PCI tests.")
-	}
+func pciTestSetupXeon(t *testing.T) *pci.Info {
+	const snapshotFilename = "linux-amd64-intel-xeon-L5640.tar.gz"
+	return pciTestSetup(t, snapshotFilename)
+}
 
+func pciTestSetupI7(t *testing.T) *pci.Info {
+	const snapshotFilename = "linux-amd64-intel-i7-1270P.tar.gz"
+	return pciTestSetup(t, snapshotFilename)
+}
+
+func pciTestSetup(t *testing.T, snapshotFilename string) *pci.Info {
 	testdataPath, err := testdata.SnapshotsDirectory()
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 
-	multiNumaSnapshot := filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz")
+	snapshotPath := filepath.Join(testdataPath, snapshotFilename)
+	unpackDir := t.TempDir()
+	err = snapshot.UnpackInto(snapshotPath, unpackDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// from now on we use constants reflecting the content of the snapshot we requested,
 	// which we reviewed beforehand. IOW, you need to know the content of the
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
-	info, err := pci.New(option.WithSnapshot(option.SnapshotOptions{
-		Path: multiNumaSnapshot,
-	}))
-
+	info, err := pci.New(option.WithChroot(unpackDir))
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
@@ -209,5 +282,23 @@ func TestPCIMarshalUnmarshal(t *testing.T) {
 	err = json.Unmarshal(jdata, &topo)
 	if err != nil {
 		t.Fatalf("Expected no error unmarshaling pci.Info, but got %v", err)
+	}
+}
+
+func TestPCIModaliasWithUpperCaseClassID(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_PCI"); ok {
+		t.Skip("Skipping PCI tests.")
+	}
+	info, err := pci.New()
+	if err != nil {
+		t.Fatalf("Expected no error creating PciInfo, but got %v", err)
+	}
+
+	dev := info.ParseDevice("0000:00:1f.4", "pci:v00008086d00009D23sv00001028sd000007EAbc0Csc05i00\n")
+	if dev == nil {
+		t.Fatalf("Failed to parse valid modalias")
+	}
+	if dev.Class.Name == util.UNKNOWN {
+		t.Fatalf("Failed to lookup class name")
 	}
 }

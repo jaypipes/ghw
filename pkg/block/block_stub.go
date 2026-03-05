@@ -9,11 +9,11 @@
 package block
 
 import (
+	"context"
+	"errors"
 	"runtime"
-
-	"github.com/pkg/errors"
 )
 
-func (i *Info) load() error {
+func (i *Info) load(_ context.Context) error {
 	return errors.New("blockFillInfo not implemented on " + runtime.GOOS)
 }
