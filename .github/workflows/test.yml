@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.22', '1.23', '1.24']
+        go: ['1.24', '1.25', '1.26']
     steps:
      - name: harden runner
-       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
        with:
          egress-policy: block
          disable-sudo: true
@@ -32,10 +32,12 @@ jobs:
            raw.githubusercontent.com:443
            objects.githubusercontent.com:443
            proxy.golang.org:443
+           storage.googleapis.com:443
+           release-assets.githubusercontent.com:443
      - name: checkout code
-       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
      - name: setup go
-       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+       uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
        with:
          go-version: ${{ matrix.go }}
      - name: run tests
@@ -51,12 +53,12 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        go: ['1.21', '1.22', '1.23']
+        go: ['1.26']
     steps:
      - name: harden runner
-       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
        with:
-         egress-policy: audit
+         egress-policy: block
          disable-sudo: true
          allowed-endpoints: >
            github.com:443
@@ -66,10 +68,12 @@ jobs:
            raw.githubusercontent.com:443
            objects.githubusercontent.com:443
            proxy.golang.org:443
+           storage.googleapis.com:443
+           release-assets.githubusercontent.com:443
      - name: checkout code
-       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
      - name: setup go
-       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+       uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
        with:
          go-version: ${{ matrix.go }}
      - name: run tests
@@ -85,10 +89,10 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        go: ['1.23', '1.24', '1.24']
+        go: ['1.24', '1.25', '1.26']
     steps:
      - name: harden runner
-       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
        with:
          egress-policy: block
          disable-sudo: true
@@ -100,10 +104,12 @@ jobs:
            raw.githubusercontent.com:443
            objects.githubusercontent.com:443
            proxy.golang.org:443
+           storage.googleapis.com:443
+           release-assets.githubusercontent.com:443
      - name: checkout code
-       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
      - name: setup go
-       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+       uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
        with:
          go-version: ${{ matrix.go }}
      - name: run tests
@@ -129,10 +135,10 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        go: ['1.22', '1.23']
+        go: ['1.26']
     steps:
      - name: harden runner
-       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
        with:
          egress-policy: block
          disable-sudo: true
@@ -144,10 +150,12 @@ jobs:
            raw.githubusercontent.com:443
            objects.githubusercontent.com:443
            proxy.golang.org:443
+           storage.googleapis.com:443
+           release-assets.githubusercontent.com:443
      - name: checkout code
-       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
      - name: setup go
-       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+       uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
        with:
          go-version: ${{ matrix.go }}
      - name: run tests
@@ -161,6 +169,7 @@ jobs:
          GHW_TESTING_SKIP_PCI: "1"
          GHW_TESTING_SKIP_TOPOLOGY: "1"
        run: go test -v ./...
+
   unsupported-platforms:
     runs-on: ubuntu-latest
     strategy:
@@ -169,7 +178,7 @@ jobs:
         os: ['freebsd', 'netbsd', 'openbsd', 'plan9']
     steps:
      - name: harden runner
-       uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
        with:
          egress-policy: block
          disable-sudo: true
@@ -181,11 +190,15 @@ jobs:
            raw.githubusercontent.com:443
            objects.githubusercontent.com:443
            proxy.golang.org:443
+           storage.googleapis.com:443
+           release-assets.githubusercontent.com:443
      - name: checkout code
-       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
      - name: setup go
-       uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-     - name: unsupported platforms
+       uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+       with:
+         go-version: 1.26
+     - name: build
        env:
          GOOS: ${{ matrix.os }}
         # Run a simple build to make sure the code builds on (some) unsupported platforms.
