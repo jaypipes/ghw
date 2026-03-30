@@ -42,6 +42,8 @@ var (
 	WithLogger          = config.WithLogger
 )
 
+type Modifier = config.Modifier
+
 type PathOverrides map[string]string
 
 type CPUInfo = cpu.Info
