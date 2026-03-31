@@ -6,15 +6,16 @@
 
 package commands
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func printInfo(f interface{}) {
 	switch outputFormat {
-	case outputFormatHuman:
-		fmt.Printf("%s\n", f)
 	case outputFormatJSON:
-		fmt.Printf("%s\n", JSONString(f, pretty))
+		f = JSONString(f, pretty)
 	case outputFormatYAML:
-		fmt.Printf("%s", YAMLString(f))
+		f = YAMLString(f)
 	}
+	fmt.Printf("%s", f)
 }
