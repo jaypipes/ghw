@@ -31,9 +31,9 @@ func showProduct(cmd *cobra.Command, args []string) error {
 	case outputFormatHuman:
 		fmt.Printf("%v\n", product)
 	case outputFormatJSON:
-		fmt.Printf("%s\n", product.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(product, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", product.YAMLString())
+		fmt.Printf("%s", YAMLString(product))
 	}
 	return nil
 }

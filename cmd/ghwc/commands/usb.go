@@ -34,9 +34,9 @@ func showUSB(cmd *cobra.Command, args []string) error {
 			fmt.Printf(" %+v\n", usb)
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", usb.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(usb, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", usb.YAMLString())
+		fmt.Printf("%s", YAMLString(usb))
 	}
 	return nil
 }

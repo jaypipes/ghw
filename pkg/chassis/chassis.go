@@ -8,7 +8,6 @@ package chassis
 
 import (
 	"github.com/jaypipes/ghw/internal/config"
-	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/util"
 )
 
@@ -94,22 +93,4 @@ func New(args ...any) (*Info, error) {
 		return nil, err
 	}
 	return info, nil
-}
-
-// simple private struct used to encapsulate chassis information in a top-level
-// "chassis" YAML/JSON map/object key
-type chassisPrinter struct {
-	Info *Info `json:"chassis"`
-}
-
-// YAMLString returns a string with the chassis information formatted as YAML
-// under a top-level "dmi:" key
-func (info *Info) YAMLString() string {
-	return marshal.SafeYAML(chassisPrinter{info})
-}
-
-// JSONString returns a string with the chassis information formatted as JSON
-// under a top-level "chassis:" key
-func (info *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(chassisPrinter{info}, indent)
 }

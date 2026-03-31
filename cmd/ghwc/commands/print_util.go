@@ -8,19 +8,13 @@ package commands
 
 import "fmt"
 
-type formattable interface {
-	String() string
-	JSONString(bool) string
-	YAMLString() string
-}
-
-func printInfo(f formattable) {
+func printInfo(f interface{}) {
 	switch outputFormat {
 	case outputFormatHuman:
 		fmt.Printf("%s\n", f)
 	case outputFormatJSON:
-		fmt.Printf("%s\n", f.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(f, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", f.YAMLString())
+		fmt.Printf("%s", YAMLString(f))
 	}
 }

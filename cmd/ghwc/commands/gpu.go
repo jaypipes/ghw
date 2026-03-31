@@ -35,9 +35,9 @@ func showGPU(cmd *cobra.Command, args []string) error {
 			fmt.Printf(" %v\n", card)
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", gpu.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(gpu, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", gpu.YAMLString())
+		fmt.Printf("%s", YAMLString(gpu))
 	}
 	return nil
 }

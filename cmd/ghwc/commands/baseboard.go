@@ -31,9 +31,9 @@ func showBaseboard(cmd *cobra.Command, args []string) error {
 	case outputFormatHuman:
 		fmt.Printf("%v\n", baseboard)
 	case outputFormatJSON:
-		fmt.Printf("%s\n", baseboard.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(baseboard, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", baseboard.YAMLString())
+		fmt.Printf("%s", YAMLString(baseboard))
 	}
 	return nil
 }

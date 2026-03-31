@@ -31,9 +31,9 @@ func showBIOS(cmd *cobra.Command, args []string) error {
 	case outputFormatHuman:
 		fmt.Printf("%v\n", bios)
 	case outputFormatJSON:
-		fmt.Printf("%s\n", bios.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(bios, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", bios.YAMLString())
+		fmt.Printf("%s", YAMLString(bios))
 	}
 	return nil
 }

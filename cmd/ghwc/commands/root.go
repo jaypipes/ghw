@@ -118,13 +118,13 @@ func showAll(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("error getting host info: %w", err)
 		}
-		fmt.Printf("%s\n", host.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(host, pretty))
 	case outputFormatYAML:
 		host, err := ghw.Host()
 		if err != nil {
 			return fmt.Errorf("error getting host info: %w", err)
 		}
-		fmt.Printf("%s", host.YAMLString())
+		fmt.Printf("%s", YAMLString(host))
 	}
 	return nil
 }
