@@ -214,6 +214,9 @@ func fromOptions(ctx context.Context, opts *option.Options) context.Context {
 // ContextFromArgs returns a context.Context populated with any old-style
 // options or new-style arguments.
 func ContextFromArgs(args ...any) context.Context {
+	if len(args) == 0 {
+		return ContextFromEnv()
+	}
 	ctx := context.TODO()
 	optsUsed := false
 	opts := &option.Options{}
