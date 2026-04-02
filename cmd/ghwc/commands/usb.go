@@ -27,17 +27,7 @@ func showUSB(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error getting USB info: %w", err)
 	}
 
-	switch outputFormat {
-	case outputFormatHuman:
-		fmt.Printf("%v\n", usb)
-		for _, usb := range usb.Devices {
-			fmt.Printf(" %+v\n", usb)
-		}
-	case outputFormatJSON:
-		fmt.Printf("%s\n", usb.JSONString(pretty))
-	case outputFormatYAML:
-		fmt.Printf("%s", usb.YAMLString())
-	}
+	printInfo(usb)
 	return nil
 }
 

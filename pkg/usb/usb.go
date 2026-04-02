@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/internal/config"
-	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 type Device struct {
@@ -91,22 +90,4 @@ func New(args ...any) (*Info, error) {
 		return nil, err
 	}
 	return info, nil
-}
-
-// simple private struct used to encapsulate usb information in a
-// top-level "usb" YAML/JSON map/object key
-type usbPrinter struct {
-	Info *Info `json:"usb"`
-}
-
-// YAMLString returns a string with the net information formatted as YAML
-// under a top-level "net:" key
-func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(usbPrinter{i})
-}
-
-// JSONString returns a string with the net information formatted as JSON
-// under a top-level "net:" key
-func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(usbPrinter{i}, indent)
 }

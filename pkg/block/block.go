@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/internal/config"
-	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/unitutil"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -394,22 +393,4 @@ func (p *Partition) String() string {
 		typeStr,
 		mountStr,
 	)
-}
-
-// simple private struct used to encapsulate block information in a top-level
-// "block" YAML/JSON map/object key
-type blockPrinter struct {
-	Info *Info `json:"block" yaml:"block"`
-}
-
-// YAMLString returns a string with the block information formatted as YAML
-// under a top-level "block:" key
-func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(blockPrinter{i})
-}
-
-// JSONString returns a string with the block information formatted as JSON
-// under a top-level "block:" key
-func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(blockPrinter{i}, indent)
 }

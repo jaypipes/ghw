@@ -27,14 +27,7 @@ func showChassis(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error getting chassis info: %w", err)
 	}
 
-	switch outputFormat {
-	case outputFormatHuman:
-		fmt.Printf("%v\n", chassis)
-	case outputFormatJSON:
-		fmt.Printf("%s\n", chassis.JSONString(pretty))
-	case outputFormatYAML:
-		fmt.Printf("%s", chassis.YAMLString())
-	}
+	printInfo(chassis)
 	return nil
 }
 

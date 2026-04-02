@@ -38,9 +38,9 @@ func showBlock(cmd *cobra.Command, args []string) error {
 			}
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", block.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(block, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", block.YAMLString())
+		fmt.Printf("%s", YAMLString(block))
 	}
 	return nil
 }

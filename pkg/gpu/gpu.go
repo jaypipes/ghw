@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/internal/config"
-	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/topology"
 )
@@ -78,16 +77,4 @@ func (i *Info) String() string {
 // "gpu" YAML/JSON map/object key
 type gpuPrinter struct {
 	Info *Info `json:"gpu"`
-}
-
-// YAMLString returns a string with the gpu information formatted as YAML
-// under a top-level "gpu:" key
-func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(gpuPrinter{i})
-}
-
-// JSONString returns a string with the gpu information formatted as JSON
-// under a top-level "gpu:" key
-func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(gpuPrinter{i}, indent)
 }

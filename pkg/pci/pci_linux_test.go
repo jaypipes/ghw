@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/snapshot"
@@ -198,9 +197,9 @@ func TestPCIMarshalJSON(t *testing.T) {
 	if dev == nil {
 		t.Fatalf("Failed to parse valid modalias")
 	}
-	s := marshal.SafeJSON(dev, true)
-	if s == "" {
-		t.Fatalf("Error marshalling device: %v", dev)
+	_, err = json.MarshalIndent(&dev, "", "  ")
+	if err != nil {
+		t.Fatalf("Error marshalling device %v, got %v", dev, err)
 	}
 }
 

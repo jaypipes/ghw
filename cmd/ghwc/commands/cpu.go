@@ -58,9 +58,9 @@ func showCPU(cmd *cobra.Command, args []string) error {
 			}
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", cpu.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(cpu, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", cpu.YAMLString())
+		fmt.Printf("%s", YAMLString(cpu))
 	}
 	return nil
 }

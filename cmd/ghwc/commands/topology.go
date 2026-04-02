@@ -43,9 +43,9 @@ func showTopology(cmd *cobra.Command, args []string) error {
 			}
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", topology.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(topology, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", topology.YAMLString())
+		fmt.Printf("%s", YAMLString(topology))
 	}
 	return nil
 }

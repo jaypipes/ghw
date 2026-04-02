@@ -35,9 +35,9 @@ func showAccelerator(cmd *cobra.Command, args []string) error {
 			fmt.Printf(" %v\n", card)
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", accel.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(accel, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", accel.YAMLString())
+		fmt.Printf("%s", YAMLString(accel))
 	}
 	return nil
 }

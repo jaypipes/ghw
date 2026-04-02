@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/jaypipes/ghw/internal/config"
-	"github.com/jaypipes/ghw/pkg/marshal"
 )
 
 // NICCapability is a feature/capability of a Network Interface Controller
@@ -117,22 +116,4 @@ func (i *Info) String() string {
 		"net (%d NICs)",
 		len(i.NICs),
 	)
-}
-
-// simple private struct used to encapsulate net information in a
-// top-level "net" YAML/JSON map/object key
-type netPrinter struct {
-	Info *Info `json:"network"`
-}
-
-// YAMLString returns a string with the net information formatted as YAML
-// under a top-level "net:" key
-func (i *Info) YAMLString() string {
-	return marshal.SafeYAML(netPrinter{i})
-}
-
-// JSONString returns a string with the net information formatted as JSON
-// under a top-level "net:" key
-func (i *Info) JSONString(indent bool) string {
-	return marshal.SafeJSON(netPrinter{i}, indent)
 }

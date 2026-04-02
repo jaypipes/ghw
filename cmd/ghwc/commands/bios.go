@@ -27,14 +27,7 @@ func showBIOS(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error getting BIOS info: %w", err)
 	}
 
-	switch outputFormat {
-	case outputFormatHuman:
-		fmt.Printf("%v\n", bios)
-	case outputFormatJSON:
-		fmt.Printf("%s\n", bios.JSONString(pretty))
-	case outputFormatYAML:
-		fmt.Printf("%s", bios.YAMLString())
-	}
+	printInfo(bios)
 	return nil
 }
 

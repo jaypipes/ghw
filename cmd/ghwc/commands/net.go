@@ -48,9 +48,9 @@ func showNetwork(cmd *cobra.Command, args []string) error {
 			}
 		}
 	case outputFormatJSON:
-		fmt.Printf("%s\n", net.JSONString(pretty))
+		fmt.Printf("%s\n", JSONString(net, pretty))
 	case outputFormatYAML:
-		fmt.Printf("%s", net.YAMLString())
+		fmt.Printf("%s", YAMLString(net))
 	}
 	return nil
 }
