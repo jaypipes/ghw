@@ -9,6 +9,7 @@ package pci
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/jaypipes/pcidb"
 
@@ -41,6 +42,25 @@ type Device struct {
 	// for IOMMU Groups see also:
 	// https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/virtualization_deployment_and_administration_guide/sect-iommu-deep-dive
 	IOMMUGroup string `json:"iommu_group"`
+	// Modalias is the raw contents of the device's sysfs `modalias` file.
+	// Useful for callers that want to do custom vendor/device/class matching
+	// beyond what the pcidb lookup provides.
+	Modalias string `json:"modalias,omitempty"`
+
+	// Parent is the resolved parent Device pointer for this device (the
+	// PCIe upstream port or root complex device). It is nil for root
+	// devices. Populated after enumeration; not included in JSON output to
+	// avoid cycles. Use ParentAddress for the serialized form.
+	Parent *Device `json:"-"`
+	// Children are the resolved downstream Device pointers, in
+	// no particular order. Populated after enumeration; not included in
+	// JSON output.
+	Children []*Device `json:"-"`
+
+	// Cached VPD result (lazy). Guarded by vpdOnce.
+	vpdOnce sync.Once
+	vpd     *VPD
+	vpdErr  error
 }
 
 type devIdent struct {
@@ -60,6 +80,7 @@ type devMarshallable struct {
 	Subclass      devIdent `json:"subclass"`
 	Interface     devIdent `json:"programming_interface"`
 	IOMMUGroup    string   `json:"iommu_group"`
+	Modalias      string   `json:"modalias,omitempty"`
 }
 
 // NOTE(jaypipes) Device has a custom JSON marshaller because we don't want
@@ -97,6 +118,7 @@ func (d *Device) MarshalJSON() ([]byte, error) {
 			Name: d.ProgrammingInterface.Name,
 		},
 		IOMMUGroup: d.IOMMUGroup,
+		Modalias:   d.Modalias,
 	}
 	return json.Marshal(dm)
 }

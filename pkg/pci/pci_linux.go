@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	// found running `wc` against real linux systems
-	modAliasExpectedLength = 54
+	// modalias content length, sans trailing newline
+	modAliasExpectedLength = 53
 )
 
 func (i *Info) load(ctx context.Context) error {
@@ -94,6 +94,15 @@ func getDeviceIommuGroup(paths *linuxpath.Paths, pciAddr *pciaddr.Address) strin
 	return filepath.Base(dest)
 }
 
+func getDeviceModalias(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
+	fp := getDeviceModaliasPath(paths, pciAddr)
+	data, err := os.ReadFile(fp)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
+}
+
 func getDeviceParentAddress(paths *linuxpath.Paths, pciAddr *pciaddr.Address) string {
 	devPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String())
 
@@ -133,18 +142,6 @@ type deviceModaliasInfo struct {
 	classID      string
 	subclassID   string
 	progIfaceID  string
-}
-
-func parseModaliasFile(fp string) *deviceModaliasInfo {
-	if _, err := os.Stat(fp); err != nil {
-		return nil
-	}
-	data, err := os.ReadFile(fp)
-	if err != nil {
-		return nil
-	}
-
-	return parseModaliasData(string(data))
 }
 
 func parseModaliasData(data string) *deviceModaliasInfo {
@@ -393,14 +390,13 @@ func (info *Info) getDevices(ctx context.Context) []*Device {
 			return nil
 		}
 
-		// no cached data, let's get the information from system.
-		fp := getDeviceModaliasPath(paths, pciAddr)
-		if fp == "" {
+		modalias := getDeviceModalias(paths, pciAddr)
+		if modalias == "" {
 			log.Warn(ctx, "error finding modalias info for device %q", address)
 			return nil
 		}
 
-		modaliasInfo := parseModaliasFile(fp)
+		modaliasInfo := parseModaliasData(modalias)
 		if modaliasInfo == nil {
 			log.Warn(ctx, "error parsing modalias info for device %q", address)
 			return nil
@@ -414,7 +410,33 @@ func (info *Info) getDevices(ctx context.Context) []*Device {
 		device.Driver = getDeviceDriver(paths, pciAddr)
 		device.ParentAddress = getDeviceParentAddress(paths, pciAddr)
 		device.IOMMUGroup = getDeviceIommuGroup(paths, pciAddr)
+		device.Modalias = modalias
 		devs = append(devs, device)
 	}
+	linkDeviceTree(devs)
 	return devs
+}
+
+// linkDeviceTree resolves ParentAddress strings into Parent pointers and
+// fills in each device's Children list. Devices with no matching parent
+// in the slice (e.g. root complex devices) keep Parent == nil.
+func linkDeviceTree(devs []*Device) {
+	if len(devs) == 0 {
+		return
+	}
+	byAddr := make(map[string]*Device, len(devs))
+	for _, d := range devs {
+		byAddr[d.Address] = d
+	}
+	for _, d := range devs {
+		if d.ParentAddress == "" {
+			continue
+		}
+		parent, ok := byAddr[d.ParentAddress]
+		if !ok {
+			continue
+		}
+		d.Parent = parent
+		parent.Children = append(parent.Children, d)
+	}
 }
