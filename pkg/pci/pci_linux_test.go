@@ -7,12 +7,14 @@
 package pci_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
 	"github.com/jaypipes/ghw/pkg/pci"
@@ -121,6 +123,74 @@ func TestPCIParent(t *testing.T) {
 				t.Errorf("got parent %q expected %q", dev.ParentAddress, tCase.parentAddr)
 			}
 		})
+	}
+}
+
+func TestPCIModalias(t *testing.T) {
+	info := pciTestSetupI7(t)
+	dev := info.GetDevice("0000:04:00.0")
+	if dev == nil {
+		t.Fatalf("got nil device for address 0000:04:00.0")
+	}
+	if dev.Modalias == "" {
+		t.Fatalf("expected non-empty Modalias for %q", dev.Address)
+	}
+	if got := dev.Modalias[:4]; got != "pci:" {
+		t.Errorf("modalias missing pci: prefix: got %q", dev.Modalias)
+	}
+}
+
+func TestPCIParentPointer(t *testing.T) {
+	info := pciTestSetupI7(t)
+	dev := info.GetDevice("0000:04:00.0")
+	if dev == nil {
+		t.Fatalf("got nil device for 0000:04:00.0")
+	}
+	if dev.Parent == nil {
+		t.Fatalf("expected non-nil Parent for 0000:04:00.0")
+	}
+	if dev.Parent.Address != "0000:00:06.0" {
+		t.Errorf("Parent.Address = %q, want 0000:00:06.0", dev.Parent.Address)
+	}
+	found := false
+	for _, c := range dev.Parent.Children {
+		if c.Address == dev.Address {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Parent.Children does not contain %q", dev.Address)
+	}
+}
+
+func TestPCIRootDeviceHasNoParent(t *testing.T) {
+	info := pciTestSetupI7(t)
+	dev := info.GetDevice("0000:00:06.0")
+	if dev == nil {
+		t.Fatalf("got nil device for 0000:00:06.0")
+	}
+	if dev.ParentAddress != "" {
+		t.Errorf("ParentAddress for root-attached device = %q, want empty", dev.ParentAddress)
+	}
+	if dev.Parent != nil {
+		t.Errorf("Parent for root-attached device = %v, want nil", dev.Parent)
+	}
+}
+
+func TestPCIDeviceNamesByLinuxSystemNVMe(t *testing.T) {
+	ctx, info := pciTestSetupI7WithContext(t)
+	dev := info.GetDevice("0000:04:00.0")
+	if dev == nil {
+		t.Fatalf("got nil device for 0000:04:00.0")
+	}
+	subs := pci.DeviceNamesByLinuxSystem(ctx, dev)
+	got, ok := subs["nvme"]
+	if !ok {
+		t.Fatalf("expected nvme system entry on %q, got %v", dev.Address, subs)
+	}
+	if len(got) != 1 || got[0] != "nvme0" {
+		t.Errorf("nvme entries = %v, want [nvme0]", got)
 	}
 }
 
@@ -237,6 +307,16 @@ func pciTestSetupI7(t *testing.T) *pci.Info {
 }
 
 func pciTestSetup(t *testing.T, snapshotFilename string) *pci.Info {
+	_, info := pciTestSetupWithContext(t, snapshotFilename)
+	return info
+}
+
+func pciTestSetupI7WithContext(t *testing.T) (context.Context, *pci.Info) {
+	const snapshotFilename = "linux-amd64-intel-i7-1270P.tar.gz"
+	return pciTestSetupWithContext(t, snapshotFilename)
+}
+
+func pciTestSetupWithContext(t *testing.T, snapshotFilename string) (context.Context, *pci.Info) {
 	testdataPath, err := testdata.SnapshotsDirectory()
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
@@ -254,14 +334,15 @@ func pciTestSetup(t *testing.T, snapshotFilename string) *pci.Info {
 	// snapshot to fully understand this test. Inspect it using
 	// GHW_SNAPSHOT_PATH="/path/to/linux-amd64-intel-xeon-L5640.tar.gz" ghwc topology
 
-	info, err := pci.New(option.WithChroot(unpackDir))
+	ctx := config.ContextFromArgs(option.WithChroot(unpackDir))
+	info, err := pci.New(ctx)
 	if err != nil {
 		t.Fatalf("Expected nil err, but got %v", err)
 	}
 	if info == nil {
 		t.Fatalf("Expected non-nil PCIInfo, but got nil")
 	}
-	return info
+	return ctx, info
 }
 
 // we have this test in pci_linux_test.go (and not in pci_test.go) because `pciFillInfo` is implemented
