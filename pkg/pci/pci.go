@@ -9,7 +9,6 @@ package pci
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/jaypipes/pcidb"
 
@@ -56,11 +55,6 @@ type Device struct {
 	// no particular order. Populated after enumeration; not included in
 	// JSON output.
 	Children []*Device `json:"-"`
-
-	// Cached VPD result (lazy). Guarded by vpdOnce.
-	vpdOnce sync.Once
-	vpd     *VPD
-	vpdErr  error
 }
 
 type devIdent struct {

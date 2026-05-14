@@ -85,8 +85,9 @@ var ErrVPDUnavailable = errors.New("vpd: no sysfs directory associated with devi
 var ErrVPDNotPresent = errors.New("vpd: not present for device")
 
 // VPD returns the parsed Vital Product Data for the device, reading it
-// from the device's sysfs `vpd` file on first call and caching the
-// result for subsequent calls.
+// from the device's sysfs `vpd` file. The sysfs root is taken from ctx,
+// so a ctx built via option.WithChroot reads VPD from inside the
+// chroot; context.Background() reads the live /sys.
 //
 // The sysfs VPD file is typically root-readable only. Callers running
 // without sufficient privilege will receive a wrapped permission
@@ -96,14 +97,7 @@ var ErrVPDNotPresent = errors.New("vpd: not present for device")
 // address (e.g. those constructed via Info.ParseDevice) and
 // ErrVPDNotPresent for devices whose sysfs entry exists but exposes
 // no `vpd` file.
-func (d *Device) VPD() (*VPD, error) {
-	d.vpdOnce.Do(func() {
-		d.vpd, d.vpdErr = d.readVPD()
-	})
-	return d.vpd, d.vpdErr
-}
-
-func (d *Device) readVPD() (*VPD, error) {
+func (d *Device) VPD(ctx context.Context) (*VPD, error) {
 	if d.Address == "" {
 		return nil, ErrVPDUnavailable
 	}
@@ -111,7 +105,7 @@ func (d *Device) readVPD() (*VPD, error) {
 	if pciAddr == nil {
 		return nil, ErrVPDUnavailable
 	}
-	paths := linuxpath.New(context.Background())
+	paths := linuxpath.New(ctx)
 	vpdPath := filepath.Join(paths.SysBusPciDevices, pciAddr.String(), "vpd")
 	data, err := os.ReadFile(vpdPath)
 	if err != nil {
