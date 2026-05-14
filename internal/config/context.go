@@ -213,11 +213,17 @@ func fromOptions(ctx context.Context, opts *option.Options) context.Context {
 
 // ContextFromArgs returns a context.Context populated with any old-style
 // options or new-style arguments.
+//
+// The environment-derived context (see ContextFromEnv) is used as the base, so
+// variables like GHW_CHROOT continue to take effect when callers also pass
+// Modifiers or Options. Any value present in the supplied args wins over the
+// env-derived value. If an explicit context.Context is passed as an arg, it
+// fully replaces the env-derived base.
 func ContextFromArgs(args ...any) context.Context {
+	ctx := ContextFromEnv()
 	if len(args) == 0 {
-		return ContextFromEnv()
+		return ctx
 	}
-	ctx := context.TODO()
 	optsUsed := false
 	opts := &option.Options{}
 	for _, arg := range args {
