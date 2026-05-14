@@ -56,6 +56,6 @@ var ErrVPDUnavailable = errors.New("vpd: no sysfs directory associated with devi
 var ErrVPDNotPresent = errors.New("vpd: not present for device")
 
 // VPD returns ErrVPDUnavailable on non-Linux platforms.
-func (d *Device) VPD() (*VPD, error) {
+func (d *Device) VPD(ctx context.Context) (*VPD, error) {
 	return nil, ErrVPDUnavailable
 }

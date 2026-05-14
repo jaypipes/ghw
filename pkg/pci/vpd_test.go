@@ -10,10 +10,16 @@
 package pci
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/jaypipes/ghw/internal/config"
+	"github.com/jaypipes/ghw/pkg/option"
 )
 
 // buildVPD assembles a synthetic VPD byte stream from a sequence of
@@ -211,7 +217,59 @@ func TestDeviceVPDUnavailableForParsedDevice(t *testing.T) {
 	// Info.ParseDevice) must surface ErrVPDUnavailable rather than
 	// trying to read a path-less file.
 	d := &Device{}
-	if _, err := d.VPD(); !errors.Is(err, ErrVPDUnavailable) {
+	if _, err := d.VPD(context.Background()); !errors.Is(err, ErrVPDUnavailable) {
 		t.Errorf("got %v, want ErrVPDUnavailable", err)
+	}
+}
+
+// TestDeviceVPDHonorsChroot is the regression test for Device.VPD
+// reading the live /sys regardless of option.WithChroot.
+func TestDeviceVPDHonorsChroot(t *testing.T) {
+	chroot := t.TempDir()
+	const addr = "0000:00:00.0"
+	realDir := filepath.Join(chroot, "sys", "devices", "pci0000:00", addr)
+	if err := os.MkdirAll(realDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	devsDir := filepath.Join(chroot, "sys", "bus", "pci", "devices")
+	if err := os.MkdirAll(devsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const modalias = "pci:v000010DEd000022B1sv00000000sd00000000bc06sc04i00"
+	if err := os.WriteFile(filepath.Join(realDir, "modalias"), []byte(modalias+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rel, err := filepath.Rel(devsDir, realDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(rel, filepath.Join(devsDir, addr)); err != nil {
+		t.Fatal(err)
+	}
+	vpd := buildVPD([]struct {
+		tag  byte
+		body []byte
+	}{
+		{vpdTagLargeIdent, []byte("chroot-test")},
+	})
+	if err := os.WriteFile(filepath.Join(realDir, "vpd"), vpd, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := config.ContextFromArgs(option.WithChroot(chroot), config.WithDisableTopology())
+	info, err := New(ctx)
+	if err != nil {
+		t.Fatalf("pci.New: %v", err)
+	}
+	if len(info.Devices) != 1 || info.Devices[0].Address != addr {
+		t.Fatalf("expected one device at %s, got %+v", addr, info.Devices)
+	}
+
+	v, err := info.Devices[0].VPD(ctx)
+	if err != nil {
+		t.Fatalf("VPD: %v", err)
+	}
+	if v.Identifier != "chroot-test" {
+		t.Errorf("got identifier %q, want %q", v.Identifier, "chroot-test")
 	}
 }
