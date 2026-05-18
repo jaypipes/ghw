@@ -140,6 +140,49 @@ func (d *Device) String() string {
 	)
 }
 
+// Walk visits d and each of its descendants in pre-order, invoking fn
+// on every node. If fn returns false the subtree below the current
+// node is skipped. Walk operates on the in-memory Parent/Children
+// pointers populated during enumeration, so it does no I/O.
+func (d *Device) Walk(fn func(*Device) bool) {
+	if d == nil {
+		return
+	}
+	if !fn(d) {
+		return
+	}
+	for _, c := range d.Children {
+		c.Walk(fn)
+	}
+}
+
+// Ancestors returns d's proper ancestors, nearest first: parent,
+// grandparent, and so on up to the root. The returned slice is empty
+// for a root device.
+func (d *Device) Ancestors() []*Device {
+	if d == nil {
+		return nil
+	}
+	var out []*Device
+	for p := d.Parent; p != nil; p = p.Parent {
+		out = append(out, p)
+	}
+	return out
+}
+
+// Root returns the topmost device in d's chain (the ancestor whose
+// Parent is nil). For a root device, Root returns d itself.
+func (d *Device) Root() *Device {
+	if d == nil {
+		return nil
+	}
+	cur := d
+	for cur.Parent != nil {
+		cur = cur.Parent
+	}
+	return cur
+}
+
 type Info struct {
 	db   *pcidb.PCIDB
 	arch topology.Architecture
