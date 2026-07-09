@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/jaypipes/ghw/internal/log"
+	"github.com/jaypipes/ghw/pkg/linuxdt"
 	"github.com/jaypipes/ghw/pkg/linuxpath"
 	"github.com/jaypipes/ghw/pkg/util"
 )
@@ -117,6 +118,14 @@ func processorsGet(ctx context.Context) []*Processor {
 				proc.Model = lp.Attrs["uarch"]
 			} else if len(lp.Attrs["machine"]) != 0 {
 				proc.Model = lp.Attrs["machine"]
+			}
+			// Last resort: many ARM/RISC-V boards expose no useful model in
+			// /proc/cpuinfo. Fall back to the DeviceTree SoC compatible, e.g.
+			// "rockchip,rk3576".
+			if proc.Model == "" && linuxdt.Available(ctx) {
+				if soc := linuxdt.SoC(ctx); soc != util.UNKNOWN {
+					proc.Model = soc
+				}
 			}
 			// 3. Vendor Detection
 			if len(lp.Attrs["vendor_id"]) != 0 {

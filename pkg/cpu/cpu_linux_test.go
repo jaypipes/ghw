@@ -84,6 +84,50 @@ func TestArmCPU(t *testing.T) {
 	}
 }
 
+// writeFile creates path (with parent dirs) under a chroot and writes data.
+func writeCPUFile(t *testing.T, path string, data []byte) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestCPUModelFromDeviceTree verifies that a board whose /proc/cpuinfo carries
+// no model attribute falls back to the DeviceTree SoC compatible (the last
+// entry of "compatible", e.g. "rockchip,rk3576").
+func TestCPUModelFromDeviceTree(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
+		t.Skip("Skipping CPU tests.")
+	}
+
+	root := t.TempDir()
+
+	// A /proc/cpuinfo with a single logical processor and no model attribute.
+	writeCPUFile(t, filepath.Join(root, "proc", "cpuinfo"),
+		[]byte("processor\t: 0\nFeatures\t: fp asimd\n\n"))
+
+	cpuBase := filepath.Join(root, "sys", "devices", "system", "cpu", "cpu0", "topology")
+	writeCPUFile(t, filepath.Join(cpuBase, "physical_package_id"), []byte("0\n"))
+	writeCPUFile(t, filepath.Join(cpuBase, "core_id"), []byte("0\n"))
+
+	writeCPUFile(t, filepath.Join(root, "sys", "firmware", "devicetree", "base", "compatible"),
+		[]byte("seeed,recomputer-rk3576-devkit\x00rockchip,rk3576\x00"))
+
+	info, err := cpu.New(ghw.WithChroot(root))
+	if err != nil {
+		t.Fatalf("Expected nil err, but got %v", err)
+	}
+	if len(info.Processors) != 1 {
+		t.Fatalf("Expected 1 processor but got %d", len(info.Processors))
+	}
+	if got, want := info.Processors[0].Model, "rockchip,rk3576"; got != want {
+		t.Errorf("Expected model %q from DeviceTree, but got %q", want, got)
+	}
+}
+
 func TestCheckCPUTopologyFilesForOfflineCPU(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
 		t.Skip("Skipping CPU tests.")
