@@ -79,6 +79,7 @@ type Paths struct {
 	SysClassDMI            string
 	SysClassNet            string
 	SysClassWatchdog       string
+	SysFirmwareDeviceTree  string
 	RunUdevData            string
 	DevWatchdog            string
 }
@@ -105,6 +106,7 @@ func New(ctx context.Context) *Paths {
 		SysClassDMI:            filepath.Join(chroot, roots.Sys, "class", "dmi"),
 		SysClassNet:            filepath.Join(chroot, roots.Sys, "class", "net"),
 		SysClassWatchdog:       filepath.Join(chroot, roots.Sys, "class", "watchdog"),
+		SysFirmwareDeviceTree:  filepath.Join(chroot, roots.Sys, "firmware", "devicetree", "base"),
 		RunUdevData:            filepath.Join(chroot, roots.Run, "udev", "data"),
 		DevWatchdog:            filepath.Join(chroot, roots.Dev, "watchdog"),
 	}
