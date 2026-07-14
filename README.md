@@ -1236,6 +1236,53 @@ Example output from my personal workstation:
 watchdog present: true
 ```
 
+### TPM (Linux only)
+
+The `ghw.TPM()` function returns a `ghw.TPMInfo` struct that contains
+information about the Trusted Platform Module(s) (TPM) on the host system.
+
+The `ghw.TPMInfo` struct contains a `Devices` field:
+
+* `ghw.TPMInfo.Devices` is a slice of pointers to `ghw.TPMDevice` structs, one
+  for each TPM detected under `/sys/class/tpm`
+
+Each `ghw.TPMDevice` struct contains multiple fields:
+
+* `ghw.TPMDevice.ManufacturerName` is a string with the human-readable TPM
+  manufacturer short name (e.g. `AMD`, `IFX` for Infineon, `STM` for
+  STMicroelectronics)
+* `ghw.TPMDevice.ManufacturerVendorID` is a string with the 16-bit TCG Vendor
+  ID assigned to the manufacturer, when the host exposes it (e.g. `0x1414`)
+* `ghw.TPMDevice.FirmwareVersion` is a string with the TPM firmware version, if
+  exposed by the driver
+* `ghw.TPMDevice.SpecVersion` is a string with the TCG specification version the
+  TPM implements (e.g. `1.2` or `2.0`)
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	tpm, err := ghw.TPM()
+	if err != nil {
+		fmt.Printf("Error getting TPM info: %v", err)
+	}
+
+	fmt.Printf("%v\n", tpm)
+}
+```
+
+Example output from my personal workstation:
+
+```
+tpm manufacturer_name=STM manufacturer_vendor_id= firmware_version= spec_version=2.0
+```
+
 ## Advanced Usage
 
 ### Disabling warning messages
