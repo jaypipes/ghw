@@ -16,6 +16,7 @@ import (
 // PathRoots holds the roots of all the filesystem subtrees
 // ghw wants to access.
 type PathRoots struct {
+	Dev  string
 	Etc  string
 	Proc string
 	Run  string
@@ -26,6 +27,7 @@ type PathRoots struct {
 // DefaultPathRoots return the canonical default value for PathRoots
 func DefaultPathRoots() PathRoots {
 	return PathRoots{
+		Dev:  "/dev",
 		Etc:  "/etc",
 		Proc: "/proc",
 		Run:  "/run",
@@ -39,6 +41,9 @@ func DefaultPathRoots() PathRoots {
 func PathRootsFromContext(ctx context.Context) PathRoots {
 	roots := DefaultPathRoots()
 	overrides := config.PathOverrides(ctx)
+	if pathDev, ok := overrides["/dev"]; ok {
+		roots.Dev = pathDev
+	}
 	if pathEtc, ok := overrides["/etc"]; ok {
 		roots.Etc = pathEtc
 	}
@@ -73,7 +78,11 @@ type Paths struct {
 	SysClassDRM            string
 	SysClassDMI            string
 	SysClassNet            string
+	SysClassTPM            string
+	SysClassWatchdog       string
+	SysFirmwareDeviceTree  string
 	RunUdevData            string
+	DevWatchdog            string
 }
 
 // New returns a new Paths struct containing filepath fields relative to the
@@ -97,7 +106,11 @@ func New(ctx context.Context) *Paths {
 		SysClassDRM:            filepath.Join(chroot, roots.Sys, "class", "drm"),
 		SysClassDMI:            filepath.Join(chroot, roots.Sys, "class", "dmi"),
 		SysClassNet:            filepath.Join(chroot, roots.Sys, "class", "net"),
+		SysClassTPM:            filepath.Join(chroot, roots.Sys, "class", "tpm"),
+		SysClassWatchdog:       filepath.Join(chroot, roots.Sys, "class", "watchdog"),
+		SysFirmwareDeviceTree:  filepath.Join(chroot, roots.Sys, "firmware", "devicetree", "base"),
 		RunUdevData:            filepath.Join(chroot, roots.Run, "udev", "data"),
+		DevWatchdog:            filepath.Join(chroot, roots.Dev, "watchdog"),
 	}
 }
 

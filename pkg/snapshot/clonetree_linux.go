@@ -51,6 +51,10 @@ func ExpectedCloneStaticContent() []string {
 		"/sys/devices/system/node/node*/meminfo",
 		"/sys/devices/system/node/node*/memory*",
 		"/sys/devices/system/node/node*/hugepages/hugepages-*/*",
+		"/sys/class/watchdog/*",
+		"/sys/class/tpm/tpm*/caps",
+		"/sys/class/tpm/tpm*/tpm_version_major",
+		"/sys/class/tpm/tpm*/device/vendor",
 	}
 }
 

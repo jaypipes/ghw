@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/snapshot"
-	"github.com/stretchr/testify/require"
 )
 
 // NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
@@ -21,13 +20,16 @@ import (
 
 // nolint: gocyclo
 func TestPackUnpack(t *testing.T) {
-	require := require.New(t)
 	root, err := snapshot.Unpack(testDataSnapshot)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer os.RemoveAll(root)
 
 	tmpfile, err := os.CreateTemp("", "ght-test-snapshot-*.tgz")
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer func() {
 		tmpfile.Close()
 		os.Remove(tmpfile.Name())
@@ -35,12 +37,18 @@ func TestPackUnpack(t *testing.T) {
 
 	ctx := context.TODO()
 	err = snapshot.PackWithWriter(ctx, tmpfile, root)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = tmpfile.Close()
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cloneRoot, err := snapshot.Unpack(tmpfile.Name())
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer os.RemoveAll(cloneRoot)
 
 	verifyTestData(t, cloneRoot)

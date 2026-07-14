@@ -105,6 +105,8 @@ func showAll(cmd *cobra.Command, args []string) error {
 			showProduct,
 			showAccelerator,
 			showUSB,
+			showWatchdog,
+			showTPM,
 		} {
 			err := f(cmd, args)
 			if err != nil {

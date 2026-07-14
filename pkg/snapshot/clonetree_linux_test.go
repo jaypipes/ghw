@@ -16,7 +16,6 @@ import (
 	"testing"
 
 	"github.com/jaypipes/ghw/pkg/snapshot"
-	"github.com/stretchr/testify/require"
 )
 
 // NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
@@ -25,13 +24,16 @@ import (
 
 // nolint: gocyclo
 func TestCloneTree(t *testing.T) {
-	require := require.New(t)
 	root, err := snapshot.Unpack(testDataSnapshot)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer os.RemoveAll(root)
 
 	cloneRoot, err := os.MkdirTemp("", "ghw-test-clonetree-*")
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer os.RemoveAll(cloneRoot)
 
 	fileSpecs := []string{
@@ -42,14 +44,20 @@ func TestCloneTree(t *testing.T) {
 	}
 	ctx := context.TODO()
 	err = snapshot.CopyFilesInto(ctx, fileSpecs, cloneRoot, nil)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	origContent, err := scanTree(root, "", []string{""})
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	sort.Strings(origContent)
 
 	cloneContent, err := scanTree(cloneRoot, cloneRoot, []string{"", "/tmp"})
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	sort.Strings(cloneContent)
 
 	if len(origContent) != len(cloneContent) {
@@ -66,20 +74,26 @@ func TestCloneSystemTree(t *testing.T) {
 	// We do the bare minimum here to check that both the CloneTree and the ValidateClonedTree did something
 	// sensible. To really do a meaningful test we need a more advanced functional test, starting with from
 	// a ghw snapshot.
-	require := require.New(t)
-
 	cloneRoot, err := os.MkdirTemp("", "ghw-test-clonetree-*")
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer os.RemoveAll(cloneRoot)
 
 	ctx := context.TODO()
 	err = snapshot.CloneTreeInto(ctx, cloneRoot)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cloneContent, err := snapshot.ExpectedCloneContent(ctx)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	missing, err := snapshot.ValidateClonedTree(cloneContent, cloneRoot)
-	require.Nil(err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if len(missing) > 0 && areEntriesOnSysfs(missing) {
 		t.Fatalf("Expected content %#v missing into the cloned tree %q", missing, cloneRoot)

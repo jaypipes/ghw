@@ -1,8 +1,7 @@
 # `ghw` - Go HardWare discovery/inspection library
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/jaypipes/ghw.svg)](https://pkg.go.dev/github.com/jaypipes/ghw)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jaypipes/ghw)](https://goreportcard.com/report/github.com/jaypipes/ghw)
-[![Build Status](https://github.com/jaypipes/ghw/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/jaypipes/ghw/actions)
+[![Test Status](https://github.com/jaypipes/ghw/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/jaypipes/ghw/actions)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 ![ghw mascot](images/ghw-gopher.png)
@@ -1200,6 +1199,89 @@ WARNING: Unable to read product_serial: open /sys/class/dmi/id/product_serial: p
 
 You can ignore them or use the [Disabling warning messages](#disabling-warning-messages)
 feature to quiet things down.
+
+### Watchdog (Linux only)
+
+The `ghw.Watchdog()` function returns a `ghw.WatchdogInfo` struct that
+indicates whether the host system has a hardware watchdog.
+
+The `ghw.WatchdogInfo` struct contains one field:
+
+* `ghw.WatchdogInfo.Present` is a bool indicating whether a hardware watchdog
+  was detected, either as an entry under `/sys/class/watchdog` or as the
+  `/dev/watchdog` character device on older kernels
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	watchdog, err := ghw.Watchdog()
+	if err != nil {
+		fmt.Printf("Error getting watchdog info: %v", err)
+	}
+
+	fmt.Printf("%v\n", watchdog)
+}
+```
+
+Example output from my personal workstation:
+
+```
+watchdog present: true
+```
+
+### TPM (Linux only)
+
+The `ghw.TPM()` function returns a `ghw.TPMInfo` struct that contains
+information about the Trusted Platform Module(s) (TPM) on the host system.
+
+The `ghw.TPMInfo` struct contains a `Devices` field:
+
+* `ghw.TPMInfo.Devices` is a slice of pointers to `ghw.TPMDevice` structs, one
+  for each TPM detected under `/sys/class/tpm`
+
+Each `ghw.TPMDevice` struct contains multiple fields:
+
+* `ghw.TPMDevice.ManufacturerName` is a string with the human-readable TPM
+  manufacturer short name (e.g. `AMD`, `IFX` for Infineon, `STM` for
+  STMicroelectronics)
+* `ghw.TPMDevice.ManufacturerVendorID` is a string with the 16-bit TCG Vendor
+  ID assigned to the manufacturer, when the host exposes it (e.g. `0x1414`)
+* `ghw.TPMDevice.FirmwareVersion` is a string with the TPM firmware version, if
+  exposed by the driver
+* `ghw.TPMDevice.SpecVersion` is a string with the TCG specification version the
+  TPM implements (e.g. `1.2` or `2.0`)
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/jaypipes/ghw"
+)
+
+func main() {
+	tpm, err := ghw.TPM()
+	if err != nil {
+		fmt.Printf("Error getting TPM info: %v", err)
+	}
+
+	fmt.Printf("%v\n", tpm)
+}
+```
+
+Example output from my personal workstation:
+
+```
+tpm manufacturer_name=STM manufacturer_vendor_id= firmware_version= spec_version=2.0
+```
 
 ## Advanced Usage
 

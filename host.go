@@ -23,7 +23,9 @@ import (
 	"github.com/jaypipes/ghw/pkg/pci"
 	"github.com/jaypipes/ghw/pkg/product"
 	"github.com/jaypipes/ghw/pkg/topology"
+	"github.com/jaypipes/ghw/pkg/tpm"
 	"github.com/jaypipes/ghw/pkg/usb"
+	"github.com/jaypipes/ghw/pkg/watchdog"
 )
 
 // HostInfo is a wrapper struct containing information about the host system's
@@ -42,6 +44,8 @@ type HostInfo struct {
 	Product     *product.Info     `json:"product"`
 	PCI         *pci.Info         `json:"pci"`
 	USB         *usb.Info         `json:"usb"`
+	Watchdog    *watchdog.Info    `json:"watchdog"`
+	TPM         *tpm.Info         `json:"tpm"`
 }
 
 // Host returns a pointer to a HostInfo struct that contains fields with
@@ -100,6 +104,14 @@ func Host(args ...any) (*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	watchdogInfo, err := watchdog.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+	tpmInfo, err := tpm.New(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	return &HostInfo{
 		CPU:         cpuInfo,
@@ -115,6 +127,8 @@ func Host(args ...any) (*HostInfo, error) {
 		Product:     productInfo,
 		PCI:         pciInfo,
 		USB:         usbInfo,
+		Watchdog:    watchdogInfo,
+		TPM:         tpmInfo,
 	}, nil
 }
 
@@ -122,7 +136,7 @@ func Host(args ...any) (*HostInfo, error) {
 // structs' String-ified output
 func (info *HostInfo) String() string {
 	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		info.Block.String(),
 		info.CPU.String(),
 		info.GPU.String(),
@@ -136,6 +150,8 @@ func (info *HostInfo) String() string {
 		info.Product.String(),
 		info.PCI.String(),
 		info.USB.String(),
+		info.Watchdog.String(),
+		info.TPM.String(),
 	)
 }
 

@@ -22,7 +22,9 @@ import (
 	pciaddress "github.com/jaypipes/ghw/pkg/pci/address"
 	"github.com/jaypipes/ghw/pkg/product"
 	"github.com/jaypipes/ghw/pkg/topology"
+	"github.com/jaypipes/ghw/pkg/tpm"
 	"github.com/jaypipes/ghw/pkg/usb"
+	"github.com/jaypipes/ghw/pkg/watchdog"
 )
 
 var (
@@ -200,4 +202,17 @@ type AcceleratorDevice = accelerator.AcceleratorDevice
 
 var (
 	Accelerator = accelerator.New
+)
+
+type WatchdogInfo = watchdog.Info
+
+var (
+	Watchdog = watchdog.New
+)
+
+type TPMInfo = tpm.Info
+type TPMDevice = tpm.Device
+
+var (
+	TPM = tpm.New
 )
