@@ -78,6 +78,7 @@ type Paths struct {
 	SysClassDRM            string
 	SysClassDMI            string
 	SysClassNet            string
+	SysClassTPM            string
 	SysClassWatchdog       string
 	SysFirmwareDeviceTree  string
 	RunUdevData            string
@@ -105,6 +106,7 @@ func New(ctx context.Context) *Paths {
 		SysClassDRM:            filepath.Join(chroot, roots.Sys, "class", "drm"),
 		SysClassDMI:            filepath.Join(chroot, roots.Sys, "class", "dmi"),
 		SysClassNet:            filepath.Join(chroot, roots.Sys, "class", "net"),
+		SysClassTPM:            filepath.Join(chroot, roots.Sys, "class", "tpm"),
 		SysClassWatchdog:       filepath.Join(chroot, roots.Sys, "class", "watchdog"),
 		SysFirmwareDeviceTree:  filepath.Join(chroot, roots.Sys, "firmware", "devicetree", "base"),
 		RunUdevData:            filepath.Join(chroot, roots.Run, "udev", "data"),
