@@ -172,7 +172,7 @@ func PathOverrides(ctx context.Context) map[string]string {
 func ContextFromEnv() context.Context {
 	ctx := context.TODO()
 	ctx = context.WithValue(ctx, chrootKey, EnvOrDefaultChroot())
-	ctx = context.WithValue(ctx, toolsEnabledKey, EnvOrDefaultDisableTools())
+	ctx = context.WithValue(ctx, toolsEnabledKey, !EnvOrDefaultDisableTools())
 	ll := EnvOrDefaultLogLevel()
 	logLevelVar.Set(ll)
 	ctx = context.WithValue(ctx, logLevelKey, ll)

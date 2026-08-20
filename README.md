@@ -1163,6 +1163,12 @@ The `ghw.ProductInfo` struct contains multiple fields:
 > **NOTE**: These fields are often missing for non-server hardware. Don't be
 > surprised to see empty string, "Default string" or "None" values.
 
+> **NOTE**: On MacOSX/Darwin, this information comes from the `IOPlatformExpertDevice`
+> node of the I/O Registry and from `system_profiler`, so `ghw.ProductInfo.Name`
+> is the machine model identifier (e.g. `Mac14,7`), `ghw.ProductInfo.Family` the
+> marketing name (e.g. `MacBook Pro`) and `ghw.ProductInfo.SKU` Apple's part
+> number (e.g. `Z1AB0001CLL/A`).
+
 ```go
 package main
 
@@ -1702,8 +1708,8 @@ external tools when available.
 
 > **WARNING**: on all platforms, disabling external tools make ghw return less
 > data.  Unless noted otherwise, there is _no fallback flow_ if external tools
-> are disabled. On MacOSX/Darwin, disabling external tools disables block
-> support entirely
+> are disabled. On MacOSX/Darwin, disabling external tools disables block and
+> product support entirely
 
 ## Developers
 
