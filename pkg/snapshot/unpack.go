@@ -9,9 +9,11 @@ package snapshot
 import (
 	"archive/tar"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -71,6 +73,11 @@ func Untar(root string, r io.Reader) error {
 		target := filepath.Join(root, header.Name)
 		mode := os.FileMode(header.Mode)
 
+		cleanRoot := filepath.Clean(root) + string(os.PathSeparator)
+		if !strings.HasPrefix(filepath.Clean(target)+string(os.PathSeparator), cleanRoot) {
+			return fmt.Errorf("tar entry %q would escape destination directory", header.Name)
+		}
+
 		switch header.Typeflag {
 		case tar.TypeDir:
 			err = os.MkdirAll(target, mode)
@@ -92,6 +99,10 @@ func Untar(root string, r io.Reader) error {
 			dst.Close()
 
 		case tar.TypeSymlink:
+			resolvedLink := filepath.Join(filepath.Dir(target), header.Linkname)
+			if !strings.HasPrefix(filepath.Clean(resolvedLink)+string(os.PathSeparator), cleanRoot) {
+				return fmt.Errorf("symlink target %q would escape destination directory", header.Linkname)
+			}
 			err = os.Symlink(header.Linkname, target)
 			if err != nil {
 				return err
