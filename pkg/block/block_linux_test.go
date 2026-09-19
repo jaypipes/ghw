@@ -194,6 +194,28 @@ func TestDiskTypes(t *testing.T) {
 	}
 }
 
+func TestDiskNoPartitions(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
+		t.Skip("Skipping block tests.")
+	}
+	baseDir, _ := os.MkdirTemp("", "test")
+	defer os.RemoveAll(baseDir) // nolint:errcheck
+	ctx := context.TODO()
+	ctx = config.WithChroot(baseDir)(ctx)
+	paths := linuxpath.New(ctx)
+
+	_ = os.MkdirAll(paths.SysBlock, 0755)
+	_ = os.MkdirAll(paths.RunUdevData, 0755)
+
+	// Emulate a disk with no partitions
+	_ = os.Mkdir(filepath.Join(paths.SysBlock, "sda"), 0755)
+	_ = os.WriteFile(filepath.Join(paths.SysBlock, "sda", "dev"), []byte("259:0\n"), 0644)
+	partitions := diskPartitions(ctx, paths, "sda")
+	if len(partitions) == 0 {
+		t.Fatalf("Got no partitions but expected sda")
+	}
+}
+
 func TestDiskPartLabel(t *testing.T) {
 	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_BLOCK"); ok {
 		t.Skip("Skipping block tests.")
