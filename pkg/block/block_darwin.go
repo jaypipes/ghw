@@ -204,7 +204,16 @@ func driveTypeFromPlist(infoPlist *diskUtilInfoPlist) DriveType {
 // attempts to determine the storage controller in use for the device
 func storageControllerFromPlist(infoPlist *diskUtilInfoPlist) StorageController {
 	sc := StorageControllerSCSI
-	if strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController") {
+	switch {
+	case strings.HasSuffix(infoPlist.DeviceTreePath, "IONVMeController"):
+		sc = StorageControllerNVMe
+	case infoPlist.BusProtocol == "Apple Fabric":
+		// Apple Silicon's internal NVMe controller is attached via the SoC's
+		// own integrated storage fabric rather than IONVMeController, and its
+		// device tree node name (e.g. AppleANS2Controller on T2 Macs,
+		// AppleANS3NVMeController on M-series Macs) varies across chip
+		// generations, so match on BusProtocol instead, which macOS reports
+		// consistently as "Apple Fabric" for it.
 		sc = StorageControllerNVMe
 	}
 	// TODO(jaypipes): I don't know if Mac even supports IDE controllers and
