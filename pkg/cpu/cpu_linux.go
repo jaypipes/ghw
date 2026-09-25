@@ -168,6 +168,9 @@ func processorsGet(ctx context.Context) []*Processor {
 		}
 		res = append(res, p)
 	}
+	// procs is a map, so the loop above appends in random order; sort so
+	// that repeated calls on the same host return the same order.
+	sort.Slice(res, func(i, j int) bool { return res[i].ID < res[j].ID })
 	return res
 }
 

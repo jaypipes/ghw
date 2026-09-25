@@ -8,6 +8,7 @@ package cpu_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -125,6 +126,43 @@ func TestCPUModelFromDeviceTree(t *testing.T) {
 	}
 	if got, want := info.Processors[0].Model, "rockchip,rk3576"; got != want {
 		t.Errorf("Expected model %q from DeviceTree, but got %q", want, got)
+	}
+}
+
+// TestProcessorsSortedByID verifies that processors come back in ID order
+// on a multi-package host. They are collected in a map keyed by physical
+// package ID, whose iteration order Go randomises, so this repeats the call
+// enough times that an unsorted result would almost surely show up.
+func TestProcessorsSortedByID(t *testing.T) {
+	if _, ok := os.LookupEnv("GHW_TESTING_SKIP_CPU"); ok {
+		t.Skip("Skipping CPU tests.")
+	}
+
+	root := t.TempDir()
+
+	// Four logical processors, alternating between packages 1 and 0 so
+	// that directory order does not match package ID order either.
+	var cpuinfo strings.Builder
+	for lp, pkg := range []string{"1", "0", "1", "0"} {
+		fmt.Fprintf(&cpuinfo, "processor\t: %d\nvendor_id\t: GenuineIntel\nflags\t: fpu\n\n", lp)
+		topo := filepath.Join(root, "sys", "devices", "system", "cpu", fmt.Sprintf("cpu%d", lp), "topology")
+		writeCPUFile(t, filepath.Join(topo, "physical_package_id"), []byte(pkg+"\n"))
+		writeCPUFile(t, filepath.Join(topo, "core_id"), []byte(fmt.Sprintf("%d\n", lp/2)))
+	}
+	writeCPUFile(t, filepath.Join(root, "proc", "cpuinfo"), []byte(cpuinfo.String()))
+
+	for i := 0; i < 50; i++ {
+		info, err := cpu.New(ghw.WithChroot(root))
+		if err != nil {
+			t.Fatalf("Expected nil err, but got %v", err)
+		}
+		if len(info.Processors) != 2 {
+			t.Fatalf("Expected 2 processors but got %d", len(info.Processors))
+		}
+		if info.Processors[0].ID != 0 || info.Processors[1].ID != 1 {
+			t.Fatalf("Expected processors in ID order [0 1], but got [%d %d]",
+				info.Processors[0].ID, info.Processors[1].ID)
+		}
 	}
 }
 
