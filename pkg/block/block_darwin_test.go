@@ -59,3 +59,86 @@ func TestStorageControllerFromPlist(t *testing.T) {
 		})
 	}
 }
+
+func TestFindEntryID(t *testing.T) {
+	// Two storage devices sharing the same node name, as seen under macOS
+	// virtualization (AppleVirtIOStorageDevice), to make sure they resolve
+	// to different, correct IDs rather than ambiguously matching either one.
+	tree := &ioregTreeNode{
+		Name: "Root",
+		Children: []ioregTreeNode{
+			{
+				Name: "device-tree",
+				Children: []ioregTreeNode{
+					{
+						Name:     "arm-io",
+						Location: "10F00000",
+						Children: []ioregTreeNode{
+							{
+								Name:     "pcie",
+								Location: "30000000",
+								Children: []ioregTreeNode{
+									{
+										Name:     "pci106b,1a00",
+										Location: "4",
+										Children: []ioregTreeNode{
+											{EntryID: 100, Name: "AppleVirtIOStorageDevice"},
+										},
+									},
+									{
+										Name:     "pci106b,1a00",
+										Location: "5",
+										Children: []ioregTreeNode{
+											{EntryID: 200, Name: "AppleVirtIOStorageDevice"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name    string
+		path    string
+		want    int64
+		wantErr bool
+	}{
+		{
+			name: "first of two same-named devices",
+			path: "IODeviceTree:/arm-io@10F00000/pcie@30000000/pci106b,1a00@4/AppleVirtIOStorageDevice",
+			want: 100,
+		},
+		{
+			name: "second of two same-named devices",
+			path: "IODeviceTree:/arm-io@10F00000/pcie@30000000/pci106b,1a00@5/AppleVirtIOStorageDevice",
+			want: 200,
+		},
+		{
+			name:    "nonexistent segment",
+			path:    "IODeviceTree:/arm-io@10F00000/pcie@30000000/does-not-exist",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := findEntryID(tree, tt.path)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("findEntryID() expected an error, got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("findEntryID() unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("findEntryID() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
