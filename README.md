@@ -300,6 +300,11 @@ Each `ghw.Disk` struct contains the following fields:
 * `ghw.Disk.PhysicalBlockSizeBytes` contains the size of the physical blocks
   used on the disk, in bytes. This is typically the minimum amount of data that
   will be written in a single write operation for the disk.
+* `ghw.Disk.LogicalBlockSizeBytes` (Linux only) contains the size of the
+  logical blocks used on the disk, in bytes. This is the disk's addressable
+  unit size, which may be smaller than `PhysicalBlockSizeBytes`, e.g. for a
+  512e drive that reports a 512-byte logical block size over 4096-byte
+  physical sectors.
 * `ghw.Disk.IsRemovable` contains a boolean indicating if the disk drive is
   removable
 * `ghw.Disk.DriveType` is the type of drive. It is of type `ghw.DriveType`

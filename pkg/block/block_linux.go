@@ -49,6 +49,21 @@ func diskPhysicalBlockSizeBytes(paths *linuxpath.Paths, disk string) uint64 {
 	return size
 }
 
+func diskLogicalBlockSizeBytes(paths *linuxpath.Paths, disk string) uint64 {
+	// We can find the sector size in Linux by looking at the
+	// /sys/block/$DEVICE/queue/logical_block_size file in sysfs
+	path := filepath.Join(paths.SysBlock, disk, "queue", "logical_block_size")
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return 0
+	}
+	size, err := strconv.ParseUint(strings.TrimSpace(string(contents)), 10, 64)
+	if err != nil {
+		return 0
+	}
+	return size
+}
+
 func diskSizeBytes(paths *linuxpath.Paths, disk string) uint64 {
 	// We can find the number of 512-byte sectors by examining the contents of
 	// /sys/block/$DEVICE/size and calculate the physical bytes accordingly.
@@ -344,6 +359,7 @@ func disks(ctx context.Context) []*Disk {
 		}
 		size := diskSizeBytes(paths, dname)
 		pbs := diskPhysicalBlockSizeBytes(paths, dname)
+		lbs := diskLogicalBlockSizeBytes(paths, dname)
 		busPath := diskBusPath(paths, dname)
 		node := diskNUMANodeID(paths, dname)
 		vendor := diskVendor(paths, dname)
@@ -361,6 +377,7 @@ func disks(ctx context.Context) []*Disk {
 			Name:                   dname,
 			SizeBytes:              size,
 			PhysicalBlockSizeBytes: pbs,
+			LogicalBlockSizeBytes:  lbs,
 			DriveType:              driveType,
 			IsRemovable:            removable,
 			StorageController:      storageController,

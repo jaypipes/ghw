@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -60,6 +61,10 @@ func TestBlock(t *testing.T) {
 	}
 	if d0.PhysicalBlockSizeBytes <= 0 {
 		t.Fatalf("Expected >0 sector size, but got %d", d0.PhysicalBlockSizeBytes)
+	}
+	// LogicalBlockSizeBytes is currently only populated on Linux.
+	if runtime.GOOS == "linux" && d0.LogicalBlockSizeBytes <= 0 {
+		t.Fatalf("Expected >0 logical sector size, but got %d", d0.LogicalBlockSizeBytes)
 	}
 
 	if len(d0.Partitions) > 0 {

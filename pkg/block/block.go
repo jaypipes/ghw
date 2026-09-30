@@ -212,6 +212,11 @@ type Disk struct {
 	// this disk. This is typically the minimum amount of data that can be
 	// written to a disk in a single write operation.
 	PhysicalBlockSizeBytes uint64 `json:"physical_block_size_bytes"`
+	// LogicalBlockSizeBytes is the size, in bytes, of the logical blocks in
+	// this disk. This is the disk's addressable unit size, which may be
+	// smaller than PhysicalBlockSizeBytes (e.g. a 512e drive reporting a
+	// 512-byte logical block size over 4096-byte physical sectors).
+	LogicalBlockSizeBytes uint64 `json:"logical_block_size_bytes"`
 	// DriveType is the category of disk drive for this disk.
 	DriveType DriveType `json:"drive_type"`
 	// IsRemovable indicates if the disk drive is removable.
