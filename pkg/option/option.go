@@ -160,7 +160,7 @@ func WithDisableTools() Option {
 // PCI database, such as one created with custom pcidb.WithOption settings, instead
 // of letting ghw load the PCI database automatically.
 //
-// DEPRECATED. Use `pkg/context.WithPCIDB`
+// DEPRECATED. Use `ghw.WithPCIDB`
 func WithPCIDB(pcidb *pcidb.PCIDB) Option {
 	return func(opts *Options) {
 		opts.PCIDB = pcidb

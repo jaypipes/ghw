@@ -39,6 +39,7 @@ var (
 	WithDisableTools    = config.WithDisableTools
 	WithDisableTopology = config.WithDisableTopology
 	WithPathOverrides   = config.WithPathOverrides
+	WithPCIDB           = config.WithPCIDB
 	WithLogLevel        = config.WithLogLevel
 	WithDebug           = config.WithDebug
 	WithLogger          = config.WithLogger

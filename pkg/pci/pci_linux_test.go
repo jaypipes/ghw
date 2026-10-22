@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jaypipes/pcidb"
+
 	"github.com/jaypipes/ghw/internal/config"
 	"github.com/jaypipes/ghw/pkg/marshal"
 	"github.com/jaypipes/ghw/pkg/option"
@@ -382,4 +384,76 @@ func TestPCIModaliasWithUpperCaseClassID(t *testing.T) {
 	if dev.Class.Name == util.UNKNOWN {
 		t.Fatalf("Failed to lookup class name")
 	}
+}
+
+// A PCI database passed in, with the modifier or the old-style option, is the
+// one ghw looks devices up in.
+func TestPCICustomPCIDB(t *testing.T) {
+	root := unpackXeonSnapshot(t)
+	db := &pcidb.PCIDB{
+		Classes:  map[string]*pcidb.Class{},
+		Vendors:  map[string]*pcidb.Vendor{"8086": {ID: "8086", Name: "custom vendor"}},
+		Products: map[string]*pcidb.Product{},
+	}
+	for name, args := range map[string][]any{
+		"modifier": {config.WithChroot(root), config.WithPCIDB(db)},
+		"option":   {option.WithChroot(root), option.WithPCIDB(db)},
+	} {
+		t.Run(name, func(t *testing.T) {
+			info, err := pci.New(args...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			dev := info.GetDevice("0000:00:00.0")
+			if dev == nil {
+				t.Fatal("no device 0000:00:00.0")
+			}
+			if dev.Vendor.Name != "custom vendor" {
+				t.Errorf("vendor name = %q, want %q", dev.Vendor.Name, "custom vendor")
+			}
+		})
+	}
+}
+
+// An empty PCI database, for callers that need only the IDs, leaves every ID
+// as the device reports it and every name unknown.
+func TestPCIEmptyPCIDB(t *testing.T) {
+	empty := &pcidb.PCIDB{
+		Classes:  map[string]*pcidb.Class{},
+		Vendors:  map[string]*pcidb.Vendor{},
+		Products: map[string]*pcidb.Product{},
+	}
+	info, err := pci.New(config.WithChroot(unpackXeonSnapshot(t)), config.WithPCIDB(empty))
+	if err != nil {
+		t.Fatal(err)
+	}
+	dev := info.GetDevice("0000:05:00.0")
+	if dev == nil {
+		t.Fatal("no device 0000:05:00.0")
+	}
+	got := fmt.Sprintf("%s:%s subsystem %s:%s class %s subclass %s revision %s",
+		dev.Vendor.ID, dev.Product.ID, dev.Subsystem.VendorID, dev.Subsystem.ID,
+		dev.Class.ID, dev.Subclass.ID, dev.Revision)
+	want := "8086:1521 subsystem ffff:0000 class 02 subclass 00 revision 0x01"
+	if got != want {
+		t.Errorf("IDs = %q, want %q", got, want)
+	}
+	for _, dev := range info.Devices {
+		if dev.Vendor.Name != util.UNKNOWN || dev.Product.Name != util.UNKNOWN {
+			t.Errorf("%s: vendor %q, product %q from an empty database", dev.Address, dev.Vendor.Name, dev.Product.Name)
+		}
+	}
+}
+
+func unpackXeonSnapshot(t *testing.T) string {
+	t.Helper()
+	testdataPath, err := testdata.SnapshotsDirectory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	if err := snapshot.UnpackInto(filepath.Join(testdataPath, "linux-amd64-intel-xeon-L5640.tar.gz"), root); err != nil {
+		t.Fatal(err)
+	}
+	return root
 }

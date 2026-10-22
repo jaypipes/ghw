@@ -666,6 +666,13 @@ information.
 > can read that library's README for more information about the various structs
 > that are exposed on the `ghw.PCIInfo` struct.
 
+To use a PCI database you loaded or built yourself instead of the one `ghw`
+loads, pass it with `ghw.WithPCIDB()`:
+
+```go
+pci, err := ghw.PCI(ghw.WithPCIDB(db))
+```
+
 The `ghw.PCI()` function returns a `ghw.PCIInfo` struct that contains
 information about the host computer's PCI devices.
 
