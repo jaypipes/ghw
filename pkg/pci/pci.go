@@ -202,6 +202,7 @@ func New(args ...any) (*Info, error) {
 	// we will only if are sure we are running on NUMA architecture
 	info := &Info{
 		arch: topology.ArchitectureSMP, // default to SMP
+		db:   config.PCIDB(ctx),
 	}
 	// Skip topology detection if requested to reduce memory consumption
 	if !config.TopologyEnabled(ctx) {
