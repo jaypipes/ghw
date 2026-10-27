@@ -15,7 +15,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jaypipes/ghw/internal/config"
+	"github.com/jaypipes/ghw/pkg/linuxdt"
 	"github.com/jaypipes/ghw/pkg/snapshot"
+	"github.com/jaypipes/ghw/pkg/util"
 )
 
 // NOTE: we intentionally use `os.RemoveAll` - not `snapshot.Cleanup` because we
@@ -135,4 +138,48 @@ func includedInto(s string, items []string) bool {
 		}
 	}
 	return false
+}
+
+// A snapshot of a DeviceTree board carries the properties ghw reads from the
+// DeviceTree, all but the board's serial number.
+func TestCloneDeviceTree(t *testing.T) {
+	host := t.TempDir()
+	base := filepath.Join(host, "sys", "firmware", "devicetree", "base")
+	for name, value := range map[string]string{
+		"compatible":            "nvidia,p3737-0000+p3701-0000\x00nvidia,tegra234\x00",
+		"model":                 "Jetson AGX Orin Developer Kit\x00",
+		"chassis-type":          "embedded\x00",
+		"serial-number":         "0123456789\x00",
+		"chosen/u-boot,version": "2023.04\x00",
+	} {
+		path := filepath.Join(base, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(value), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var specs []string
+	for _, spec := range snapshot.ExpectedCloneStaticContent() {
+		specs = append(specs, filepath.Join(host, spec))
+	}
+	clone := t.TempDir()
+	if err := snapshot.CopyFilesInto(context.Background(), specs, clone, nil); err != nil {
+		t.Fatal(err)
+	}
+	read := func(root string) []string {
+		ctx := config.ContextFromArgs(config.WithChroot(root))
+		return []string{
+			linuxdt.Model(ctx), linuxdt.Vendor(ctx), linuxdt.SoC(ctx),
+			linuxdt.ChassisType(ctx), linuxdt.UBootVersion(ctx),
+		}
+	}
+	if got, want := read(filepath.Join(clone, host)), read(host); !reflect.DeepEqual(got, want) {
+		t.Errorf("from the snapshot = %q, want %q", got, want)
+	}
+	ctx := config.ContextFromArgs(config.WithChroot(filepath.Join(clone, host)))
+	if serial := linuxdt.SerialNumber(ctx); serial != util.UNKNOWN {
+		t.Errorf("snapshot carries the serial number %q", serial)
+	}
 }

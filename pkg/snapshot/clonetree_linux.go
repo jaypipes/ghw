@@ -55,6 +55,12 @@ func ExpectedCloneStaticContent() []string {
 		"/sys/class/tpm/tpm*/caps",
 		"/sys/class/tpm/tpm*/tpm_version_major",
 		"/sys/class/tpm/tpm*/device/vendor",
+		// The DeviceTree properties ghw reads, but not serial-number: like
+		// the MAC addresses, it identifies the machine.
+		"/sys/firmware/devicetree/base/compatible",
+		"/sys/firmware/devicetree/base/model",
+		"/sys/firmware/devicetree/base/chassis-type",
+		"/sys/firmware/devicetree/base/chosen/u-boot,version",
 	}
 }
 
