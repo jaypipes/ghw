@@ -136,3 +136,27 @@ func includedInto(s string, items []string) bool {
 	}
 	return false
 }
+
+// The network interfaces and GPUs a snapshot clones are found under /sys/class
+// whatever the working directory.
+func TestExpectedCloneContentByClassFromAnyDir(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(cwd) })
+	specs := func(dir string) []string {
+		t.Helper()
+		if err := os.Chdir(dir); err != nil {
+			t.Fatal(err)
+		}
+		return append(snapshot.ExpectedCloneNetContent(), snapshot.ExpectedCloneGPUContent()...)
+	}
+	fromRoot := specs("/")
+	if len(fromRoot) == 0 {
+		t.Skip("no physical network interface or GPU on this host")
+	}
+	if got := specs(t.TempDir()); !reflect.DeepEqual(got, fromRoot) {
+		t.Errorf("from another directory = %v, want %v", got, fromRoot)
+	}
+}

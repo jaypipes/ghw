@@ -74,7 +74,7 @@ func cloneContentByClass(devClass string, subEntries []string, filterName filter
 
 	// warning: don't use the context package here, this means not even the linuxpath package.
 	// TODO(fromani) remove the path duplication
-	sysClass := filepath.Join("sys", "class", devClass)
+	sysClass := filepath.Join("/sys", "class", devClass)
 	entries, err := os.ReadDir(sysClass)
 	if err != nil {
 		// we should not import context, hence we can't Warn()
